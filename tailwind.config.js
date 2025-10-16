@@ -1,19 +1,11 @@
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Aquí defines tu color personalizado
         'virtus-fondos': '#f3f1ed',
         'virtus-fondos-2': '#e8e3db',
-        // Puedes nombrarlo como prefieras
-        // Si Bolt.new tiene un color primario, lo definirías aquí también:
-        // 'primary': {
-        //   50: '#e0f2fe',
-        //   100: '#bae6fd',
-        //   // ... y así sucesivamente
-        //   600: '#0284c7',
-        // },
         primary: {
           50: '#f7f5f0',
           100: '#ebe6d9',
