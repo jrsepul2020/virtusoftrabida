@@ -15,7 +15,7 @@ export function EmpresaScreen({
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-10 px-6 bg-primary-50">
       <div className="w-full max-w-4xl bg-white shadow-lg rounded-2xl p-12 border border-primary-100">
-        <h2 className="text-2xl font-bold text-primary-800 mb-6 text-center">Datos de la Empresa</h2>
+        <h2 className="text-2xl font-bold text-primary-800 mb-6 text-center">Datos de la Empresa / Bodega</h2>
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-2">
             <label className="block text-primary-800 font-medium mb-1">NIF</label>
