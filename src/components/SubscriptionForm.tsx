@@ -39,7 +39,9 @@ export default function SubscriptionForm() {
       }
 
       setStatus('enviado');
-      setName(''); setEmail(''); setPhone('');
+      setName('');
+      setEmail('');
+      setPhone('');
     } catch (err) {
       console.error(err);
       setStatus('error');
