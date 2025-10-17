@@ -6,8 +6,10 @@ import UserDashboard from './components/UserDashboard';
 import LoginForm from './components/LoginForm';
 import UserLoginForm from './components/UserLoginForm';
 import MainLayout from './components/MainLayout';
+import Header from './components/Header';
+import CataForm from './components/CataForm';
 
-type View = 'home' | 'userLogin' | 'adminLogin' | 'user' | 'admin' | 'subscribe';
+type View = 'home' | 'userLogin' | 'adminLogin' | 'user' | 'admin' | 'subscribe' | 'cata';
 
 function App() {
   const [view, setView] = useState<View>('home');
@@ -72,6 +74,15 @@ function App() {
     setView('home');
   };
 
+  const handleCataNext = async (results: Record<string, any>, total: number) => {
+    try {
+      await supabase.from('catas').insert([{ data: results, total }]);
+    } catch (err) {
+      console.error('Error saving cata:', err);
+    }
+    setView('home');
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -84,6 +95,8 @@ function App() {
 
   return (
     <MainLayout>
+      <Header setView={setView} />
+
       {view === 'adminLogin' && (
         <LoginForm onLogin={() => setView('admin')} onBack={() => setView('home')} />
       )}
@@ -97,6 +110,8 @@ function App() {
       {view === 'user' && <UserDashboard onLogout={handleLogout} />}
 
       {view === 'subscribe' && <SubscriptionForm />}
+
+      {view === 'cata' && <CataForm onNext={handleCataNext} />}
 
       {view === 'home' && (
         <div
