@@ -11,6 +11,8 @@ import CataForm, { CataResults } from './components/CataForm';
 
 type View = 'home' | 'userLogin' | 'adminLogin' | 'user' | 'admin' | 'subscribe' | 'cata';
 
+const VALID_VIEWS: View[] = ['home', 'userLogin', 'adminLogin', 'user', 'admin', 'subscribe', 'cata'];
+
 function App() {
   const [view, setView] = useState<View>('home');
   const [loading, setLoading] = useState(true);
@@ -77,16 +79,17 @@ function App() {
   const handleCataNext = async (results: CataResults, total: number) => {
     try {
       await supabase.from('catas').insert([{ data: results, total }]);
-      setView('home');
+      alert('Cata guardada exitosamente.');
     } catch (err) {
       console.error('Error saving cata:', err);
       alert('Error al guardar la cata. Por favor, inténtelo de nuevo.');
+    } finally {
+      setView('home');
     }
   };
 
   const handleViewChange = (view: string) => {
-    const validViews: View[] = ['home', 'userLogin', 'adminLogin', 'user', 'admin', 'subscribe', 'cata'];
-    if (validViews.includes(view as View)) {
+    if (VALID_VIEWS.includes(view as View)) {
       setView(view as View);
     } else {
       console.warn(`Invalid view: ${view}, defaulting to home`);
