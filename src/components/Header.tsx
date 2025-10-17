@@ -10,6 +10,7 @@ export default function Header({ setView }: { setView: (view: string) => void })
 
   const menuItems = [
     { name: "Inscripción", onClick: () => setView('subscribe') },
+    { name: "Cata", onClick: () => setView('cata') },
     { name: "Normativa", onClick: () => window.location.href = "/normativa" },
     { name: "Reglamento", onClick: () => window.location.href = "/reglamento" },
     { name: "Ediciones Anteriores", onClick: () => window.location.href = "/ediciones-anteriores" },
