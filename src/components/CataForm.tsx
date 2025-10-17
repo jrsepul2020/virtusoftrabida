@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 
+export interface CataResults {
+  vista: number;
+  olfato: number;
+  gusto: number;
+  observaciones: string;
+}
+
 interface CataFormProps {
-  onNext: (results: Record<string, any>, total: number) => void;
+  onNext: (results: CataResults, total: number) => void;
 }
 
 export default function CataForm({ onNext }: CataFormProps) {
@@ -18,7 +25,7 @@ export default function CataForm({ onNext }: CataFormProps) {
     const gusto = parseFloat(gustoPuntuacion) || 0;
     const total = vista + olfato + gusto;
 
-    const results = {
+    const results: CataResults = {
       vista,
       olfato,
       gusto,

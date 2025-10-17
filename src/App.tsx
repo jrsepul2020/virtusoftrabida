@@ -7,7 +7,7 @@ import LoginForm from './components/LoginForm';
 import UserLoginForm from './components/UserLoginForm';
 import MainLayout from './components/MainLayout';
 import Header from './components/Header';
-import CataForm from './components/CataForm';
+import CataForm, { CataResults } from './components/CataForm';
 
 type View = 'home' | 'userLogin' | 'adminLogin' | 'user' | 'admin' | 'subscribe' | 'cata';
 
@@ -74,17 +74,24 @@ function App() {
     setView('home');
   };
 
-  const handleCataNext = async (results: Record<string, any>, total: number) => {
+  const handleCataNext = async (results: CataResults, total: number) => {
     try {
       await supabase.from('catas').insert([{ data: results, total }]);
+      setView('home');
     } catch (err) {
       console.error('Error saving cata:', err);
+      alert('Error al guardar la cata. Por favor, inténtelo de nuevo.');
     }
-    setView('home');
   };
 
   const handleViewChange = (view: string) => {
-    setView(view as View);
+    const validViews: View[] = ['home', 'userLogin', 'adminLogin', 'user', 'admin', 'subscribe', 'cata'];
+    if (validViews.includes(view as View)) {
+      setView(view as View);
+    } else {
+      console.warn(`Invalid view: ${view}, defaulting to home`);
+      setView('home');
+    }
   };
 
   if (loading) {
