@@ -11,13 +11,19 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+interface InscriptionPayload {
+  name: string;
+  email: string;
+  phone?: string;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  let payload: any;
+  let payload: InscriptionPayload;
   try {
     payload = req.body;
     if (typeof payload === 'string') payload = JSON.parse(payload);
@@ -31,12 +37,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!email) return res.status(400).json({ error: 'Missing email in payload' });
 
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
-  const SENDER_EMAIL = process.env.SENDER_EMAIL || 'no-reply@example.com';
+  const SENDER_EMAIL = process.env.SENDER_EMAIL;
   const SENDER_NAME = process.env.SENDER_NAME || 'Virtus La Rábida';
   const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
   const ADMIN_NAME = process.env.ADMIN_NAME || 'Administrador';
 
   if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY not configured' });
+  if (!SENDER_EMAIL) return res.status(500).json({ error: 'SENDER_EMAIL not configured' });
   if (!ADMIN_EMAIL) return res.status(500).json({ error: 'ADMIN_EMAIL not configured' });
 
   const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
