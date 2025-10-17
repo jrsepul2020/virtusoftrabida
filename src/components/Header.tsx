@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, Dispatch, SetStateAction } from "react";
 import { supabase } from '../lib/supabase';
+import { View } from '../types';
 
-export default function Header({ setView }: { setView: (view: string) => void }) {
+export default function Header({ setView }: { setView: Dispatch<SetStateAction<View>> }) {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminUser, setAdminUser] = useState("");
   const [adminPass, setAdminPass] = useState("");
