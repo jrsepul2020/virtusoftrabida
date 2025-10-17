@@ -6,8 +6,7 @@ import UserDashboard from './components/UserDashboard';
 import LoginForm from './components/LoginForm';
 import UserLoginForm from './components/UserLoginForm';
 import MainLayout from './components/MainLayout';
-
-type View = 'home' | 'userLogin' | 'adminLogin' | 'user' | 'admin' | 'subscribe';
+import { View } from './types';
 
 function App() {
   const [view, setView] = useState<View>('home');
