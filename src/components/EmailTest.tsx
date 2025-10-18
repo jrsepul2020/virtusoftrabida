@@ -11,6 +11,9 @@ const EmailTest: React.FC = () => {
     setErrorMessage('');
     setResponseData(null);
 
+    // Detectar si estamos en desarrollo local
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
     // Datos de prueba específicos para jrsepul2000@gmail.com
     const testData = {
       empresa: {
@@ -50,6 +53,28 @@ const EmailTest: React.FC = () => {
     try {
       console.log('Enviando email de prueba...');
       
+      if (isLocalhost) {
+        // Simulación para desarrollo local
+        console.log('🧪 MODO DESARROLLO LOCAL - Simulando envío de email');
+        console.log('📧 Datos que se enviarían:', testData);
+        
+        // Simular delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setTestStatus('success');
+        setResponseData({
+          success: true,
+          message: 'Email simulado en desarrollo local',
+          simulation: true,
+          destinatarios: [testData.empresa.email, 'jrsepul2000@gmail.com'],
+          nota: 'En producción (Vercel) se enviarían emails reales via Brevo'
+        });
+        
+        console.log('✅ Simulación completada - En producción se enviarían emails reales');
+        return;
+      }
+      
+      // Llamada real a la API (solo funciona en producción/Vercel)
       const response = await fetch('/api/send-inscription-email', {
         method: 'POST',
         headers: {
@@ -112,6 +137,14 @@ const EmailTest: React.FC = () => {
             Los datos están claramente marcados como "PRUEBA DEL SISTEMA" para identificarlos fácilmente.
           </p>
         </div>
+
+        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-3">
+          <p className="text-sm text-blue-700">
+            🧪 <strong>Desarrollo vs Producción:</strong><br/>
+            • <strong>Localhost:</strong> Se simula el envío (no se envían emails reales)<br/>
+            • <strong>Vercel:</strong> Se envían emails reales via Brevo API
+          </p>
+        </div>
       </div>
 
       <button
@@ -141,13 +174,35 @@ const EmailTest: React.FC = () => {
         <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
-            <h3 className="font-semibold text-green-800">¡Email enviado a jrsepul2000@gmail.com!</h3>
+            <h3 className="font-semibold text-green-800">
+              {responseData?.simulation 
+                ? '🧪 Simulación completada!' 
+                : '¡Email enviado a jrsepul2000@gmail.com!'
+              }
+            </h3>
           </div>
-          <p className="text-green-700 text-sm">
-            <strong>✅ Sistema funcionando correctamente</strong><br/>
-            Se ha enviado un email de prueba a jrsepul2000@gmail.com. 
-            Revisa tu bandeja de entrada (incluyendo spam/promociones) para ver el email de confirmación de inscripción con datos de prueba.
-          </p>
+          {responseData?.simulation ? (
+            <div className="text-green-700 text-sm space-y-2">
+              <p><strong>✅ Simulación en desarrollo local</strong></p>
+              <p>El sistema está funcionando correctamente. En desarrollo local se simula el envío de emails.</p>
+              <div className="bg-green-100 p-2 rounded mt-2">
+                <p className="text-xs"><strong>📧 Emails que se enviarían en producción:</strong></p>
+                <ul className="text-xs mt-1 space-y-1">
+                  <li>• Email de confirmación → jrsepul2000@gmail.com</li>
+                  <li>• Email de notificación administrativa → jrsepul2000@gmail.com</li>
+                </ul>
+              </div>
+              <p className="text-xs text-green-600 mt-2">
+                💡 <strong>Para prueba real:</strong> Despliega en Vercel con las variables de entorno configuradas.
+              </p>
+            </div>
+          ) : (
+            <p className="text-green-700 text-sm">
+              <strong>✅ Sistema funcionando correctamente</strong><br/>
+              Se ha enviado un email de prueba a jrsepul2000@gmail.com. 
+              Revisa tu bandeja de entrada (incluyendo spam/promociones) para ver el email de confirmación de inscripción con datos de prueba.
+            </p>
+          )}
           {responseData && (
             <details className="mt-3">
               <summary className="cursor-pointer text-sm text-green-700 hover:text-green-800">
