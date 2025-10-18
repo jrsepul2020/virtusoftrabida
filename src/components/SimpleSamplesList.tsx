@@ -210,15 +210,15 @@ export default function SimpleSamplesList() {
 
   return (
     <div>
-      <div className="bg-white rounded-xl shadow-md p-4 mb-4">
-        <div className="flex items-center gap-4 mb-3">
-          <div className="relative">
+      <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 mb-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-3">
+          <div className="relative sm:w-auto">
             <button
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <span className="text-sm font-medium text-gray-700">
-                Filtrar por Categoría
+              <span className="text-xs sm:text-sm font-medium text-gray-700">
+                <span className="hidden sm:inline">Filtrar por </span>Categoría
                 {selectedCategories.length > 0 && (
                   <span className="ml-2 bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">
                     {selectedCategories.length}
@@ -229,7 +229,7 @@ export default function SimpleSamplesList() {
             </button>
 
             {showCategoryDropdown && (
-              <div className="absolute top-full mt-2 left-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 min-w-[300px] max-h-[400px] overflow-y-auto">
+              <div className="absolute top-full mt-2 left-0 right-0 sm:right-auto bg-white border border-gray-300 rounded-lg shadow-lg z-10 sm:min-w-[300px] max-h-[400px] overflow-y-auto">
                 <div className="p-2">
                   {availableCategories.length > 0 ? (
                     availableCategories.map((category) => (
@@ -265,24 +265,27 @@ export default function SimpleSamplesList() {
           </div>
 
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
-              placeholder="Buscar por código, nombre, categoría o país..."
+              placeholder="Buscar..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
 
-          <div className="bg-primary-50 px-4 py-2 rounded-lg">
-            <div className="text-sm text-primary-600 font-medium">Total: {samples.length}</div>
+          <div className="bg-primary-50 px-3 sm:px-4 py-2 rounded-lg whitespace-nowrap">
+            <div className="text-xs sm:text-sm text-primary-600 font-medium">
+              <span className="hidden sm:inline">Total: </span>{samples.length}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Tabla para pantallas grandes */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -406,6 +409,78 @@ export default function SimpleSamplesList() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Vista de tarjetas para móvil */}
+        <div className="md:hidden">
+          {filteredSamples.map((sample) => (
+            <div
+              key={sample.id}
+              className={`border-b border-gray-200 p-4 ${
+                sample.manual ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-2">
+                  {sample.manual && <Hand className="w-4 h-4 text-red-600" />}
+                  <span className={`text-lg font-bold ${
+                    sample.manual ? 'text-red-700' : 'text-gray-900'
+                  }`}>#{sample.codigo}</span>
+                  {sample.manual && (
+                    <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold border border-red-300">
+                      MANUAL
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleEditSample(sample)}
+                  className="text-primary-600 hover:text-primary-700 p-2"
+                  title="Editar"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <h3 className={`font-medium text-sm mb-2 ${
+                sample.manual ? 'text-red-700' : 'text-gray-900'
+              }`}>{sample.nombre}</h3>
+              
+              <div className="space-y-1 text-xs text-gray-600">
+                {sample.categoria && (
+                  <div className="flex justify-between">
+                    <span>Categoría:</span>
+                    <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.categoria}
+                    </span>
+                  </div>
+                )}
+                {sample.pais && (
+                  <div className="flex justify-between">
+                    <span>País:</span>
+                    <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.pais}
+                    </span>
+                  </div>
+                )}
+                {(sample.azucar !== null && sample.azucar !== undefined) && (
+                  <div className="flex justify-between">
+                    <span>Azúcar:</span>
+                    <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.azucar}
+                    </span>
+                  </div>
+                )}
+                {(sample.grado !== null && sample.grado !== undefined) && (
+                  <div className="flex justify-between">
+                    <span>Grado:</span>
+                    <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.grado}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         {filteredSamples.length === 0 && (

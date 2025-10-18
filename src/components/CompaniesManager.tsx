@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
-import { Search, Eye, Mail, MapPin, Phone, Building2, User, Calendar, FileText, X, Edit2, Save } from 'lucide-react';
+import { Search, Eye, Mail, MapPin, X, Edit2, Save } from 'lucide-react';
 
 export default function CompaniesManager() {
   const [companies, setCompanies] = useState<CompanyWithSamples[]>([]);
@@ -146,8 +146,8 @@ export default function CompaniesManager() {
 
   return (
     <div>
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <div className="bg-primary-50 p-4 rounded-lg">
             <div className="text-sm text-primary-600 font-medium">Total Empresas</div>
             <div className="text-2xl font-bold text-primary-700">{companies.length}</div>
@@ -201,7 +201,8 @@ export default function CompaniesManager() {
       </div>
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Tabla para pantallas grandes */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full min-w-[800px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -304,6 +305,72 @@ export default function CompaniesManager() {
           </table>
         </div>
 
+        {/* Vista de tarjetas para móviles */}
+        <div className="lg:hidden">
+          {filteredCompanies.map((company) => (
+            <div key={company.id} className="border-b border-gray-200 p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 text-sm">{company.name}</h3>
+                  {company.contact_person && (
+                    <p className="text-xs text-gray-600 mt-1">{company.contact_person}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 ml-2">
+                  {company.pedido && (
+                    <span className="inline-flex items-center justify-center px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
+                      #{company.pedido}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center justify-center w-6 h-6 bg-primary-100 text-primary-700 rounded-full text-xs font-bold">
+                    {company.totalinscripciones || company.samples?.length || 0}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2 mb-3">
+                <div className="flex items-center text-xs text-gray-600">
+                  <Mail className="w-3 h-3 mr-2" />
+                  <span className="truncate">{company.email}</span>
+                </div>
+                {company.pais && (
+                  <div className="flex items-center text-xs text-gray-600">
+                    <MapPin className="w-3 h-3 mr-2" />
+                    <span>{company.pais}</span>
+                  </div>
+                )}
+                <div className="text-xs text-gray-500">
+                  {new Date(company.created_at).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div>{getStatusBadge(company.status)}</div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditCompany(company)}
+                    className="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar empresa"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleViewCompany(company)}
+                    className="inline-flex items-center justify-center p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    title="Ver detalles"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {filteredCompanies.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             No se encontraron empresas
@@ -312,12 +379,12 @@ export default function CompaniesManager() {
       </div>
 
       {selectedCompany && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
           <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Muestras de {selectedCompany.name}</h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Muestras de {selectedCompany.name}</h2>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   {selectedCompany.samples?.length || 0} {selectedCompany.samples?.length === 1 ? 'muestra registrada' : 'muestras registradas'}
                 </p>
               </div>
@@ -325,14 +392,16 @@ export default function CompaniesManager() {
                 onClick={() => setSelectedCompany(null)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-3 sm:p-6">
               {selectedCompany.samples && selectedCompany.samples.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                <>
+                  {/* Tabla para pantallas grandes */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full">
                     <thead className="bg-gray-50 border-b-2 border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -359,7 +428,7 @@ export default function CompaniesManager() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {selectedCompany.samples.map((sample, index) => (
+                      {selectedCompany.samples.map((sample) => (
                         <tr key={sample.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-4 whitespace-nowrap">
                             <span className="text-lg font-bold text-primary-600">#{sample.codigo}</span>
@@ -410,10 +479,79 @@ export default function CompaniesManager() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                  </div>
+
+                  {/* Vista de tarjetas para móvil */}
+                  <div className="sm:hidden space-y-4">
+                    {selectedCompany.samples.map((sample) => (
+                      <div key={sample.id} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-gray-900 text-sm">{sample.nombre}</h4>
+                          <span className="text-lg font-bold text-primary-600">#{sample.codigo}</span>
+                        </div>
+                        
+                        <div className="space-y-1 text-xs text-gray-600">
+                          {sample.categoria && (
+                            <div className="flex justify-between">
+                              <span>Categoría:</span>
+                              <span className="font-medium">{sample.categoria}</span>
+                            </div>
+                          )}
+                          {sample.pais && (
+                            <div className="flex justify-between">
+                              <span>País:</span>
+                              <span className="font-medium">{sample.pais}</span>
+                            </div>
+                          )}
+                          {sample.año && (
+                            <div className="flex justify-between">
+                              <span>Año:</span>
+                              <span className="font-medium">{sample.año}</span>
+                            </div>
+                          )}
+                          {sample.origen && (
+                            <div className="flex justify-between">
+                              <span>Origen:</span>
+                              <span className="font-medium">{sample.origen}</span>
+                            </div>
+                          )}
+                          {sample.igp && (
+                            <div className="flex justify-between">
+                              <span>IGP:</span>
+                              <span className="font-medium">{sample.igp}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-3 flex justify-between items-center">
+                          <div className="text-xs">
+                            {(sample.tipouva || sample.tipoaceituna || sample.destilado) && (
+                              <div className="text-gray-500">
+                                {sample.tipouva && <span>Uva: {sample.tipouva}</span>}
+                                {sample.tipoaceituna && <span>Aceituna: {sample.tipoaceituna}</span>}
+                                {sample.destilado && <span>Destilado: {sample.destilado}</span>}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            {sample.pagada ? (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                                Pagada
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                                No Pagada
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500 text-lg">No hay muestras registradas para esta empresa</p>
+                  <p className="text-gray-500 text-sm sm:text-lg">No hay muestras registradas para esta empresa</p>
                 </div>
               )}
             </div>

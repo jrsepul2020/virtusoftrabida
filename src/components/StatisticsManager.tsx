@@ -56,11 +56,11 @@ export default function StatisticsManager() {
     color: string;
   }) => {
     return (
-      <div className={`${color} border-2 rounded-lg w-44 h-24 p-2 shadow-sm flex flex-col items-center justify-center`}>
-        <div className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-1 text-center leading-tight">
+      <div className={`${color} border-2 rounded-lg w-full sm:w-44 h-20 sm:h-24 p-2 shadow-sm flex flex-col items-center justify-center`}>
+        <div className="text-[9px] sm:text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-1 text-center leading-tight">
           {label}
         </div>
-        <div className="text-2xl font-bold text-gray-900">
+        <div className="text-xl sm:text-2xl font-bold text-gray-900">
           {count}
         </div>
       </div>
@@ -84,13 +84,13 @@ export default function StatisticsManager() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4">
-      <h2 className="text-xl font-bold text-gray-800 mb-3">
+    <div className="bg-white rounded-xl shadow-md p-3 sm:p-4">
+      <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">
         Estadísticas International Virtus 2026
       </h2>
 
       {/* Muestras y Empresas */}
-      <div className="flex gap-5 mb-3">
+      <div className="grid grid-cols-2 sm:flex gap-3 sm:gap-5 mb-3">
         <StatCard
           label="MUESTRAS"
           count={stats.total_muestras}
@@ -104,7 +104,7 @@ export default function StatisticsManager() {
       </div>
 
       {/* Categorías principales */}
-      <div className="flex gap-5 mb-3">
+      <div className="grid grid-cols-2 sm:flex gap-3 sm:gap-5 mb-3">
         <StatCard
           label="VINOS TRANQUILOS"
           count={stats.vinos_tranquilos}
@@ -129,7 +129,7 @@ export default function StatisticsManager() {
 
       {/* Vinos tranquilos */}
       <h3 className="text-sm font-bold text-gray-800 mb-1">Vinos tranquilos</h3>
-      <div className="flex gap-5 mb-3 flex-wrap">
+      <div className="grid grid-cols-2 sm:flex gap-3 sm:gap-5 mb-3 sm:flex-wrap">
         <StatCard
           label="VINOS TINTOS"
           count={stats.vino_tinto}
@@ -154,7 +154,7 @@ export default function StatisticsManager() {
 
       {/* Espumosos */}
       <h3 className="text-sm font-bold text-gray-800 mb-1">Espumosos</h3>
-      <div className="flex gap-5 mb-3">
+      <div className="grid grid-cols-1 sm:flex gap-3 sm:gap-5 mb-3">
         <StatCard
           label="ESPUMOSOS"
           count={stats.espumoso_categoria}
@@ -164,7 +164,7 @@ export default function StatisticsManager() {
 
       {/* Generosos Espirituosos */}
       <h3 className="text-sm font-bold text-gray-800 mb-1">Generosos Espirituosos</h3>
-      <div className="flex gap-5 mb-3 flex-wrap">
+      <div className="grid grid-cols-2 sm:flex gap-3 sm:gap-5 mb-3 sm:flex-wrap">
         <StatCard
           label="GENEROSOS SECOS"
           count={stats.generoso_seco}
@@ -189,7 +189,7 @@ export default function StatisticsManager() {
 
       {/* Aceites */}
       <h3 className="text-sm font-bold text-gray-800 mb-1">Aceites</h3>
-      <div className="flex gap-5 flex-wrap">
+      <div className="grid grid-cols-1 sm:flex gap-3 sm:gap-5 sm:flex-wrap">
         <StatCard
           label="ACEITE VIRGEN EXTRA"
           count={stats.aceite_virgen_extra}
