@@ -201,7 +201,7 @@ export default function PaymentSelection({
             currency: 'EUR'
           }}>
             <PayPalButtons
-              createOrder={(data, actions) => {
+              createOrder={(_data, actions) => {
                 return actions.order.create({
                   intent: 'CAPTURE',
                   purchase_units: [
@@ -215,7 +215,7 @@ export default function PaymentSelection({
                   ],
                 });
               }}
-              onApprove={async (data, actions) => {
+              onApprove={async (_data, actions) => {
                 if (actions.order) {
                   const details = await actions.order.capture();
                   console.log('Payment successful:', details);

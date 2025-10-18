@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from './lib/supabase';
 import SubscriptionForm from './components/SubscriptionForm';
 import AdminDashboard from './components/AdminDashboard';
-import UserDashboard from './components/UserDashboard';
 import LoginForm from './components/LoginForm';
-import UserLoginForm from './components/UserLoginForm';
 import MainLayout from './components/MainLayout';
+import CatadorLoginForm from './components/CatadorLoginForm';
+import CatasDashboard from './components/CatasDashboard';
 import CataForm from './components/CataForm';
 import { EmpresaScreen } from './components/EmpresaScreen';
 import { MuestrasScreen } from './components/MuestrasScreen';
@@ -14,11 +14,15 @@ import PaymentSelection from './components/PaymentSelection';
 import Modal from './components/Modal';
 import { CompanyData, SampleData, PaymentMethod } from './components/types';
 
-type View = 'home' | 'userLogin' | 'adminLogin' | 'user' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago';
+type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa' | 'catadorLogin' | 'catas';
 
 function App() {
   const [view, setView] = useState<View>('home');
   const [loading, setLoading] = useState(true);
+  
+  // Estados para autenticación
+  const [catadorLoggedIn, setCatadorLoggedIn] = useState<any>(null);
+  const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
 
   // Estados para el formulario por pasos
   const [company, setCompany] = useState<CompanyData>({
@@ -298,17 +302,8 @@ function App() {
         return;
       }
 
-      const { data: company } = await supabase
-        .from('empresas')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (company) {
-        setView('user');
-      } else {
-        setView('admin');
-      }
+      // Solo permitir acceso de administrador
+      setView('admin');
     } catch (error) {
       console.error('Error checking user type:', error);
       setView('home');
@@ -328,6 +323,28 @@ function App() {
   useEffect(() => {
     checkAuth();
 
+    // Verificar estado de admin en localStorage
+    const adminSession = localStorage.getItem('adminLoggedIn');
+    if (adminSession === 'true') {
+      setAdminLoggedIn(true);
+    }
+
+    // Verificar estado de catador en localStorage
+    const catadorSession = localStorage.getItem('catadorSession');
+    if (catadorSession) {
+      try {
+        const session = JSON.parse(catadorSession);
+        const now = Date.now();
+        if (session.expiry && now < session.expiry) {
+          setCatadorLoggedIn(session);
+        } else {
+          localStorage.removeItem('catadorSession');
+        }
+      } catch (error) {
+        localStorage.removeItem('catadorSession');
+      }
+    }
+
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       (async () => {
         if (session) {
@@ -343,7 +360,16 @@ function App() {
     };
   }, [checkAuth, checkUserType]);
 
+  // Función de logout global
   const handleLogout = async () => {
+    if (adminLoggedIn) {
+      localStorage.removeItem('adminLoggedIn');
+      setAdminLoggedIn(false);
+    }
+    if (catadorLoggedIn) {
+      localStorage.removeItem('catadorSession');
+      setCatadorLoggedIn(null);
+    }
     await supabase.auth.signOut();
     setView('home');
   };
@@ -359,7 +385,12 @@ function App() {
 
   if (loading) {
     return (
-      <MainLayout setView={setView}>
+      <MainLayout 
+        setView={setView}
+        catadorLoggedIn={catadorLoggedIn}
+        adminLoggedIn={adminLoggedIn}
+        onLogout={handleLogout}
+      >
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
           <div className="text-xl text-gray-600">Cargando...</div>
         </div>
@@ -368,26 +399,67 @@ function App() {
   }
 
   return (
-    <MainLayout setView={setView}>
+    <MainLayout 
+      setView={setView}
+      catadorLoggedIn={catadorLoggedIn}
+      adminLoggedIn={adminLoggedIn}
+      onLogout={handleLogout}
+    >
       {view === 'adminLogin' && (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            <LoginForm onLogin={() => setView('admin')} onBack={() => setView('home')} />
-          </div>
-        </div>
-      )}
-
-      {view === 'userLogin' && (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-          <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            <UserLoginForm onLogin={() => setView('user')} onBack={() => setView('home')} />
+            <LoginForm onLogin={() => {
+              setAdminLoggedIn(true);
+              setView('admin');
+            }} onBack={() => setView('home')} />
           </div>
         </div>
       )}
 
       {view === 'admin' && <AdminDashboard onLogout={handleLogout} />}
 
-      {view === 'user' && <UserDashboard onLogout={handleLogout} />}
+      {view === 'catadorLogin' && (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+            <CatadorLoginForm 
+              onLogin={(catador) => {
+                setCatadorLoggedIn(catador);
+                setView('catas');
+              }} 
+              onBack={() => setView('home')} 
+            />
+          </div>
+        </div>
+      )}
+
+      {view === 'catas' && catadorLoggedIn && (
+        <CatasDashboard 
+          catador={catadorLoggedIn} 
+          onLogout={handleLogout}
+        />
+      )}
+
+      {view === 'reglamento' && (
+        <div className="min-h-screen bg-gray-100 p-4">
+          <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">Reglamento</h1>
+            <div className="prose max-w-none">
+              <p className="text-gray-600 mb-4">Aquí se mostrará el reglamento de la cata.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {view === 'normativa' && (
+        <div className="min-h-screen bg-gray-100 p-4">
+          <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">Normativa</h1>
+            <div className="prose max-w-none">
+              <p className="text-gray-600 mb-4">Aquí se mostrará la normativa de la cata.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {view === 'subscribe' && (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
