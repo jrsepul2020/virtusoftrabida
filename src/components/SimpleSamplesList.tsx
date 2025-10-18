@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Edit, X, ChevronDown, Hand } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Edit, X, ChevronDown, Hand, Eye } from 'lucide-react';
 
 type SortField = 'codigo' | 'nombre' | 'categoria' | 'pais' | 'azucar' | 'grado';
 type SortDirection = 'asc' | 'desc';
@@ -13,6 +13,7 @@ export default function SimpleSamplesList() {
   const [sortField, setSortField] = useState<SortField>('codigo');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [editingSample, setEditingSample] = useState<Sample | null>(null);
+  const [viewingSample, setViewingSample] = useState<Sample | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -352,7 +353,8 @@ export default function SimpleSamplesList() {
               {filteredSamples.map((sample, index) => (
                 <tr
                   key={sample.id}
-                  className={`${
+                  onClick={() => setViewingSample(sample)}
+                  className={`cursor-pointer ${
                     sample.manual
                       ? 'bg-red-50 hover:bg-red-100 border-l-4 border-red-500'
                       : index % 2 === 0
@@ -397,13 +399,28 @@ export default function SimpleSamplesList() {
                     </span>
                   </td>
                   <td className="px-2 py-1.5">
-                    <button
-                      onClick={() => handleEditSample(sample)}
-                      className="text-primary-600 hover:text-primary-700"
-                      title="Editar"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewingSample(sample);
+                        }}
+                        className="text-blue-600 hover:text-blue-700"
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditSample(sample);
+                        }}
+                        className="text-primary-600 hover:text-primary-700"
+                        title="Editar"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -416,8 +433,9 @@ export default function SimpleSamplesList() {
           {filteredSamples.map((sample) => (
             <div
               key={sample.id}
-              className={`border-b border-gray-200 p-4 ${
-                sample.manual ? 'bg-red-50 border-l-4 border-red-500' : 'bg-white'
+              onClick={() => setViewingSample(sample)}
+              className={`border-b border-gray-200 p-4 cursor-pointer ${
+                sample.manual ? 'bg-red-50 border-l-4 border-red-500 hover:bg-red-100' : 'bg-white hover:bg-gray-50'
               }`}
             >
               <div className="flex justify-between items-start mb-2">
@@ -432,13 +450,28 @@ export default function SimpleSamplesList() {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => handleEditSample(sample)}
-                  className="text-primary-600 hover:text-primary-700 p-2"
-                  title="Editar"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewingSample(sample);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 p-2"
+                    title="Ver detalles"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditSample(sample);
+                    }}
+                    className="text-primary-600 hover:text-primary-700 p-2"
+                    title="Editar"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               
               <h3 className={`font-medium text-sm mb-2 ${
@@ -651,6 +684,134 @@ export default function SimpleSamplesList() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalles */}
+      {viewingSample && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-xl font-bold text-gray-800">Detalles de la Muestra</h3>
+              <button
+                onClick={() => setViewingSample(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Información básica */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Información Básica</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Código</label>
+                  <p className="text-gray-900 font-mono text-lg">#{viewingSample.codigo}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Nombre</label>
+                  <p className="text-gray-900 font-medium">{viewingSample.nombre}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Empresa</label>
+                  <p className="text-gray-900">{viewingSample.empresa || 'No especificada'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Categoría</label>
+                  <p className="text-gray-900">{viewingSample.categoria || 'Sin categoría'}</p>
+                </div>
+
+                {viewingSample.manual && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tipo de Registro</label>
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold border border-red-300">
+                      <Hand className="w-4 h-4" />
+                      MANUAL
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Información técnica */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Información Técnica</h4>
+                
+                {viewingSample.pais && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">País</label>
+                    <p className="text-gray-900">{viewingSample.pais}</p>
+                  </div>
+                )}
+
+                {viewingSample.azucar !== null && viewingSample.azucar !== undefined && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Azúcar</label>
+                    <p className="text-gray-900">{viewingSample.azucar} g/L</p>
+                  </div>
+                )}
+
+                {viewingSample.grado !== null && viewingSample.grado !== undefined && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Grado Alcohólico</label>
+                    <p className="text-gray-900">{viewingSample.grado}°</p>
+                  </div>
+                )}
+
+                {viewingSample.origen && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Origen</label>
+                    <p className="text-gray-900">{viewingSample.origen}</p>
+                  </div>
+                )}
+
+                {viewingSample.año && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Año</label>
+                    <p className="text-gray-900">{viewingSample.año}</p>
+                  </div>
+                )}
+
+                {viewingSample.tipouva && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tipo de Uva</label>
+                    <p className="text-gray-900">{viewingSample.tipouva}</p>
+                  </div>
+                )}
+
+                {viewingSample.tipoaceituna && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tipo de Aceituna</label>
+                    <p className="text-gray-900">{viewingSample.tipoaceituna}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <div className="flex gap-3 mt-8 pt-6 border-t">
+              <button
+                onClick={() => {
+                  setViewingSample(null);
+                  handleEditSample(viewingSample);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                <Edit className="w-4 h-4" />
+                Editar Muestra
+              </button>
+              <button
+                onClick={() => setViewingSample(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, MapPin, Calendar, Droplet, Wine, Grape, Edit, Trash2, X, Hand } from 'lucide-react';
+import { Search, MapPin, Calendar, Droplet, Wine, Grape, Edit, Trash2, X, Hand, Eye } from 'lucide-react';
 
 export default function SamplesManager() {
   const [samples, setSamples] = useState<Sample[]>([]);
@@ -8,6 +8,7 @@ export default function SamplesManager() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingSample, setEditingSample] = useState<Sample | null>(null);
+  const [viewingSample, setViewingSample] = useState<Sample | null>(null);
   const [saving, setSaving] = useState(false);
   const [empresaPedido, setEmpresaPedido] = useState<number | null>(null);
 
@@ -203,7 +204,8 @@ export default function SamplesManager() {
         {filteredSamples.map((sample) => (
           <div
             key={sample.id}
-            className={`rounded-xl shadow-md hover:shadow-lg transition-shadow ${
+            onClick={() => setViewingSample(sample)}
+            className={`rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-pointer ${
               sample.manual ? 'bg-red-50 border-2 border-red-200' : 'bg-white'
             }`}
           >
@@ -240,7 +242,10 @@ export default function SamplesManager() {
                         {sample.categoria || 'Sin categoría'}
                       </span>
                       <button
-                        onClick={() => togglePaymentStatus(sample)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePaymentStatus(sample);
+                        }}
                         className="cursor-pointer"
                       >
                         {getPaymentBadge(sample.pagada || false)}
@@ -330,14 +335,30 @@ export default function SamplesManager() {
                     <span className="text-lg font-medium text-gray-700">{sample.empresa}</span>
                   )}
                   <button
-                    onClick={() => handleEditSample(sample)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewingSample(sample);
+                    }}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Ver detalles"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditSample(sample);
+                    }}
                     className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                     title="Editar"
                   >
                     <Edit className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => handleDeleteSample(sample)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSample(sample);
+                    }}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Eliminar"
                   >
@@ -663,6 +684,169 @@ export default function SamplesManager() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalles */}
+      {viewingSample && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-xl font-bold text-gray-800">Detalles de la Muestra</h3>
+              <button
+                onClick={() => setViewingSample(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Información básica */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Información Básica</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Código</label>
+                  <p className="text-gray-900 font-mono text-lg">#{viewingSample.codigo}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Nombre</label>
+                  <p className="text-gray-900 font-medium">{viewingSample.nombre}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Empresa</label>
+                  <p className="text-gray-900">{viewingSample.empresa || 'No especificada'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Categoría</label>
+                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(viewingSample.categoria || null)}`}>
+                    {viewingSample.categoria || 'Sin categoría'}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Estado de Pago</label>
+                  {getPaymentBadge(viewingSample.pagada || false)}
+                </div>
+
+                {viewingSample.manual && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tipo de Registro</label>
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold border border-red-300">
+                      <Hand className="w-4 h-4" />
+                      MANUAL
+                    </span>
+                  </div>
+                )}
+
+                {viewingSample.existencias !== undefined && viewingSample.existencias !== null && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Existencias</label>
+                    <p className="text-gray-900">{viewingSample.existencias} unidades</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Información técnica */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Información Técnica</h4>
+                
+                {viewingSample.pais && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">País</label>
+                    <p className="text-gray-900">{viewingSample.pais}</p>
+                  </div>
+                )}
+
+                {viewingSample.origen && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Origen</label>
+                    <p className="text-gray-900">{viewingSample.origen}</p>
+                  </div>
+                )}
+
+                {viewingSample.año && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Año</label>
+                    <p className="text-gray-900">{viewingSample.año}</p>
+                  </div>
+                )}
+
+                {viewingSample.igp && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">IGP</label>
+                    <p className="text-gray-900">{viewingSample.igp}</p>
+                  </div>
+                )}
+
+                {viewingSample.grado && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Grado Alcohólico</label>
+                    <p className="text-gray-900">{viewingSample.grado}°</p>
+                  </div>
+                )}
+
+                {viewingSample.azucar && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Azúcar</label>
+                    <p className="text-gray-900">{viewingSample.azucar} g/L</p>
+                  </div>
+                )}
+
+                {viewingSample.tipouva && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tipo de Uva</label>
+                    <p className="text-gray-900">{viewingSample.tipouva}</p>
+                  </div>
+                )}
+
+                {viewingSample.tipoaceituna && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tipo de Aceituna</label>
+                    <p className="text-gray-900">{viewingSample.tipoaceituna}</p>
+                  </div>
+                )}
+
+                {viewingSample.destilado && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Destilado</label>
+                    <p className="text-gray-900">{viewingSample.destilado}</p>
+                  </div>
+                )}
+
+                {viewingSample.tanda && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tanda</label>
+                    <p className="text-gray-900">Tanda {viewingSample.tanda}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <div className="flex gap-3 mt-8 pt-6 border-t">
+              <button
+                onClick={() => {
+                  setViewingSample(null);
+                  handleEditSample(viewingSample);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                <Edit className="w-4 h-4" />
+                Editar Muestra
+              </button>
+              <button
+                onClick={() => setViewingSample(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
