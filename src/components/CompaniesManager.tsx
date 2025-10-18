@@ -204,12 +204,12 @@ export default function CompaniesManager() {
         {/* Tabla para pantallas grandes */}
         <div className="hidden lg:block overflow-x-auto">
           <table className="w-full min-w-[800px]">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
-                <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Pedido
                 </th>
-                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Nombre
                 </th>
                 <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -422,15 +422,15 @@ export default function CompaniesManager() {
                   {/* Tabla para pantallas grandes */}
                   <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full">
-                    <thead className="bg-gray-50 border-b-2 border-gray-200">
+                    <thead className="bg-gray-800 border-b-2 border-gray-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                           Código
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                           Nombre
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                           Categoría
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

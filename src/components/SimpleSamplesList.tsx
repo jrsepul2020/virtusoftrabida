@@ -288,10 +288,10 @@ export default function SimpleSamplesList() {
         {/* Tabla para pantallas grandes */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
                   onClick={() => handleSort('codigo')}
                 >
                   <div className="flex items-center gap-1">
@@ -300,7 +300,7 @@ export default function SimpleSamplesList() {
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
                   onClick={() => handleSort('nombre')}
                 >
                   <div className="flex items-center gap-1">
@@ -309,7 +309,7 @@ export default function SimpleSamplesList() {
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
                   onClick={() => handleSort('categoria')}
                 >
                   <div className="flex items-center gap-1">
@@ -318,7 +318,7 @@ export default function SimpleSamplesList() {
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
                   onClick={() => handleSort('pais')}
                 >
                   <div className="flex items-center gap-1">
@@ -327,7 +327,7 @@ export default function SimpleSamplesList() {
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
                   onClick={() => handleSort('azucar')}
                 >
                   <div className="flex items-center gap-1">
@@ -336,7 +336,7 @@ export default function SimpleSamplesList() {
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
                   onClick={() => handleSort('grado')}
                 >
                   <div className="flex items-center gap-1">
@@ -344,7 +344,7 @@ export default function SimpleSamplesList() {
                     {getSortIcon('grado')}
                   </div>
                 </th>
-                <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>

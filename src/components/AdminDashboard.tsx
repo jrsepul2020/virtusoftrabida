@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, BarChart3, LogOut, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3 } from 'lucide-react';
+import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3 } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import SubscriptionForm from './SubscriptionForm';
@@ -10,13 +10,9 @@ import StatisticsManager from './StatisticsManager';
 import CatadoresManager from './CatadoresManager';
 import MesasManager from './MesasManager';
 
-type Props = {
-  onLogout: () => void;
-};
-
 type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'catadores' | 'mesas' | 'print' | 'form';
 
-export default function AdminDashboard({ onLogout }: Props) {
+export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -43,13 +39,6 @@ export default function AdminDashboard({ onLogout }: Props) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Panel de Administración</h1>
-          <button
-            onClick={onLogout}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-sm sm:text-base">Cerrar Sesión</span>
-          </button>
         </div>
 
         {/* Navigation */}
