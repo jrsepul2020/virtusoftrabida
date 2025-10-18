@@ -19,23 +19,18 @@ export default function PaymentSelection({
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const calculatePrice = (samples: number): number => {
-    if (samples >= 10) {
-      return Math.floor(samples / 10) * 9 * 150 + (samples % 10) * 150;
-    } else if (samples >= 5) {
-      return Math.floor(samples / 5) * 4 * 150 + (samples % 5) * 150;
-    }
-    return samples * 150;
+    // Cada 5 muestras, 1 gratis
+    const gratis = Math.floor(samples / 5);
+    const pagadas = samples - gratis;
+    return pagadas * 150;
   };
 
   const totalPrice = calculatePrice(totalSamples);
 
   const getDiscountInfo = () => {
-    if (totalSamples >= 10) {
-      const freeItems = Math.floor(totalSamples / 10);
-      return `${freeItems} muestra${freeItems > 1 ? 's' : ''} gratis por cada 10`;
-    } else if (totalSamples >= 5) {
+    if (totalSamples >= 5) {
       const freeItems = Math.floor(totalSamples / 5);
-      return `${freeItems} muestra${freeItems > 1 ? 's' : ''} gratis por cada 5`;
+      return `${freeItems} muestra${freeItems > 1 ? 's' : ''} gratis - cada 5 muestras, 1 gratis`;
     }
     return null;
   };

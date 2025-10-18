@@ -1,147 +1,101 @@
-import React, { useState } from "react";
-import { EmpresaScreen } from "./EmpresaScreen";
-import { MuestrasScreen } from "./MuestrasScreen";
-import { ConfirmacionScreen } from "./ConfirmacionScreen";
-import { CompanyData, SampleData, PaymentMethod } from "./types";
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
-// Helpers
-function calcularPrecio(muestras: number) {
-  const gratis = Math.floor(muestras / 5);
-  const pagadas = muestras - gratis;
-  return { pagadas, gratis, total: pagadas * 150 };
-}
+export default function SubscriptionForm() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [status, setStatus] = useState<string | null>(null);
 
-const initialSample: SampleData = {
-  nombre_muestra: "",
-  categoria: "",
-  origen: "",
-  igp: "",
-  pais: "",
-  azucar: "",
-  grado_alcoholico: "",
-  existencias: "",
-  anio: "",
-  tipo_uva: "",
-  tipo_aceituna: "",
-  destilado: "",
-};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('guardando');
 
-function SubscriptionForm() {
-  const [pantalla, setPantalla] = useState<1 | 2 | 3>(1);
-  const [company, setCompany] = useState<CompanyData>({
-    nif: "",
-    nombre_empresa: "",
-    persona_contacto: "",
-    telefono: "",
-    movil: "",
-    email: "",
-    direccion: "",
-    poblacion: "",
-    codigo_postal: "",
-    ciudad: "",
-    pais: "",
-    medio_conocio: "",
-    pagina_web: "",
-    observaciones: "",
-    num_muestras: 1,
-  });
-  const [samples, setSamples] = useState<SampleData[]>([{ ...initialSample }]);
-  const [payment, setPayment] = useState<PaymentMethod>("transferencia");
-  const [success, setSuccess] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-
-  // Handlers empresa
-  const handleCompanyChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    if (name === "num_muestras") {
-      const num = Math.max(1, parseInt(value) || 1);
-      setCompany((prev: CompanyData) => ({ ...prev, [name]: num }));
-      setSamples((prev: SampleData[]) => {
-        const arr = [...prev];
-        if (arr.length < num) {
-          return arr.concat(
-            Array(num - arr.length)
-              .fill(0)
-              .map(() => ({ ...initialSample }))
-          );
-        } else if (arr.length > num) {
-          return arr.slice(0, num);
-        }
-        return arr;
-      });
-    } else {
-      setCompany((prev: CompanyData) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  // Handlers muestra
-  const handleSampleChange = (
-    index: number,
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setSamples((prev: SampleData[]) => {
-      const arr = [...prev];
-      arr[index] = { ...arr[index], [name]: value };
-      return arr;
-    });
-  };
-
-  // Handler pago
-  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPayment(e.target.value as PaymentMethod);
-  };
-
-  // Handler submit - catch sin variable para eliminar warning
-  const handleSubmit = async () => {
-    setLoading(true);
-    setError("");
     try {
-      setSuccess(true);
-    } catch {
-      setError("Error al enviar el formulario.");
-    } finally {
-      setLoading(false);
+      // 1) Guarda la inscripción en Supabase
+      const { error: insertError } = await supabase
+        .from('inscripciones')
+        .insert([{ name, email, phone }]);
+
+      if (insertError) {
+        console.error('Error guardando:', insertError);
+        setStatus('error_guardar');
+        return;
+      }
+
+      // 2) Llama a la función serverless en Vercel para enviar los emails
+      const resp = await fetch('/api/send-inscription-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone }),
+      });
+
+      if (!resp.ok) {
+        // La inscripción ya está guardada, pero falló el envío de emails
+        const body = await resp.json().catch(() => ({ error: 'unknown' }));
+        console.error('Error enviando emails:', body);
+        setStatus('error_email');
+        // opcional: mostrar al usuario que la inscripción fue correcta aunque el correo no se envió
+        return;
+      }
+
+      setStatus('enviado');
+      setName('');
+      setEmail('');
+      setPhone('');
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
     }
   };
 
-  const precio = calcularPrecio(company.num_muestras);
-
-  if (pantalla === 1)
-    return (
-      <EmpresaScreen
-        company={company}
-        onChange={handleCompanyChange}
-        onNext={() => setPantalla(2)}
-        precio={precio}
-      />
-    );
-  if (pantalla === 2)
-    return (
-      <MuestrasScreen
-        samples={samples}
-        onChange={handleSampleChange}
-        onPrev={() => setPantalla(1)}
-        onNext={() => setPantalla(3)}
-      />
-    );
   return (
-    <ConfirmacionScreen
-      company={company}
-      samples={samples}
-      payment={payment}
-      onPaymentChange={handlePaymentChange}
-      precio={precio}
-      onPrev={() => setPantalla(2)}
-      onSubmit={handleSubmit}
-      success={success}
-      loading={loading}
-      error={error}
-    />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium">Nombre</label>
+        <input
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="Nombre"
+          required
+          className="w-full px-3 py-2 border rounded"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium">Correo</label>
+        <input
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="Correo"
+          type="email"
+          required
+          className="w-full px-3 py-2 border rounded"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium">Teléfono</label>
+        <input
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          placeholder="Teléfono (opcional)"
+          className="w-full px-3 py-2 border rounded"
+        />
+      </div>
+
+      <div>
+        <button
+          type="submit"
+          className="bg-[#8A754C] text-white font-semibold px-4 py-2 rounded"
+        >
+          Enviar inscripción
+        </button>
+      </div>
+
+      {status === 'guardando' && <div className="text-sm text-gray-600">Guardando...</div>}
+      {status === 'enviado' && <div className="text-sm text-green-600">Inscripción enviada. Revisa tu correo.</div>}
+      {status === 'error_email' && <div className="text-sm text-yellow-700">Inscripción guardada, pero no pudimos enviar el correo. Avísanos.</div>}
+      {status === 'error_guardar' && <div className="text-sm text-red-600">Error guardando la inscripción.</div>}
+      {status === 'error' && <div className="text-sm text-red-600">Error inesperado. Intenta de nuevo.</div>}
+    </form>
   );
 }
-
-export default SubscriptionForm;

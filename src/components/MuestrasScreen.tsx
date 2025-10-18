@@ -6,11 +6,13 @@ export function MuestrasScreen({
   onChange,
   onPrev,
   onNext,
+  validationErrors = {},
 }: {
   samples: SampleData[];
   onChange: (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onPrev: () => void;
   onNext: () => void;
+  validationErrors?: {[key: string]: boolean};
 }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-10 px-6 bg-primary-50">
@@ -25,12 +27,45 @@ export function MuestrasScreen({
             </div>
             <div className="mb-6">
               <label className="block text-primary-800 font-medium mb-1">Nombre de la Muestra *</label>
-              <input type="text" name="nombre_muestra" value={sample.nombre_muestra} onChange={e => onChange(idx, e)} className="w-full px-4 py-2 rounded-lg border border-primary-200" required />
+              <input 
+                type="text" 
+                name="nombre_muestra" 
+                value={sample.nombre_muestra} 
+                onChange={e => onChange(idx, e)} 
+                required 
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  validationErrors?.[`muestra_${idx}`] 
+                    ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                    : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+                } focus:ring-2 transition-colors`}
+              />
+              {validationErrors?.[`muestra_${idx}`] && (
+                <p className="text-red-500 text-sm mt-1">Este campo es obligatorio</p>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-primary-800 font-medium mb-1">Categoría</label>
-                <input type="text" name="categoria" value={sample.categoria} onChange={e => onChange(idx, e)} className="w-full px-4 py-2 rounded-lg border border-primary-200" />
+                <select 
+                  name="categoria" 
+                  value={sample.categoria} 
+                  onChange={e => onChange(idx, e)} 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors bg-white"
+                >
+                  <option value="">Seleccionar categoría...</option>
+                  <option value="VINO BLANCO">VINO BLANCO</option>
+                  <option value="VINO TINTO">VINO TINTO</option>
+                  <option value="VINO ROSADO">VINO ROSADO</option>
+                  <option value="VINO SIN ALCOHOL">VINO SIN ALCOHOL</option>
+                  <option value="GENEROSO SECO">GENEROSO SECO</option>
+                  <option value="GENEROSO DULCE">GENEROSO DULCE</option>
+                  <option value="AROMATIZADO">AROMATIZADO</option>
+                  <option value="ESPIRITUOSO ORIGEN VÍNICO">ESPIRITUOSO ORIGEN VÍNICO</option>
+                  <option value="ESPIRITUOSO NO VÍNICO">ESPIRITUOSO NO VÍNICO</option>
+                  <option value="ACEITE OLIVA VIRGEN EXTRA">ACEITE OLIVA VIRGEN EXTRA</option>
+                  <option value="ACEITE OLIVA VIRGEN EXTRA ORGÁNICO">ACEITE OLIVA VIRGEN EXTRA ORGÁNICO</option>
+                  <option value="ESPUMOSO">ESPUMOSO</option>
+                </select>
               </div>
               <div>
                 <label className="block text-primary-800 font-medium mb-1">Origen</label>
