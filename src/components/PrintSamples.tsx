@@ -145,33 +145,33 @@ export default function PrintSamples() {
 
   return (
     <div>
-      <div className="no-print bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Imprimir Listado de Muestras</h2>
+      <div className="no-print bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Imprimir Listado</h2>
           <button
             onClick={handlePrint}
             disabled={selectedSamples.size === 0}
-            className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Printer className="w-5 h-5" />
-            Imprimir ({selectedSamples.size})
+            <Printer className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base">Imprimir ({selectedSamples.size})</span>
           </button>
         </div>
 
         <div className="mb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
-              placeholder="Buscar por código, nombre, empresa, categoría o país..."
+              placeholder="Buscar..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
         </div>
 
-        <div className="mb-4 flex gap-4">
+        <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="relative">
             <button
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
@@ -184,7 +184,7 @@ export default function PrintSamples() {
             </button>
 
             {showCategoryDropdown && (
-              <div className="absolute z-10 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+              <div className="absolute z-10 mt-2 w-full sm:w-80 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                 <div className="p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-xs font-semibold text-gray-700 uppercase">Filtrar por categoría</span>
