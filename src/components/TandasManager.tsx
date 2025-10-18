@@ -202,7 +202,8 @@ export default function TandasManager() {
       </div>
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Tabla para pantallas grandes */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-800">
               <tr>
@@ -277,6 +278,60 @@ export default function TandasManager() {
             </tbody>
           </table>
         </div>
+
+        {/* Vista de tarjetas para móvil y tablet */}
+        <div className="lg:hidden">
+          {filteredSamples.map((sample, index) => (
+            <div
+              key={sample.id}
+              className={`border-b border-gray-200 p-4 ${
+                index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <div className="text-lg font-bold text-gray-900">#{sample.codigo}</div>
+                  <div className="text-sm font-medium text-gray-900 mt-1">{sample.nombre}</div>
+                  <div className="text-xs text-gray-600 mt-1">{sample.categoria || '-'}</div>
+                </div>
+                {sample.tanda && (
+                  <div className="px-3 py-1 bg-gray-800 text-white rounded-full text-sm font-bold">
+                    Tanda {sample.tanda}
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-gray-700 mb-2">Seleccionar Tanda:</div>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {tandaOptions.map((tanda) => (
+                    <button
+                      key={tanda}
+                      onClick={() => updateTanda(sample.id, sample.tanda === tanda ? null : tanda)}
+                      disabled={updatingId === sample.id}
+                      className={`w-10 h-10 rounded-full font-bold text-sm transition-all border-2 ${
+                        sample.tanda === tanda
+                          ? 'bg-gray-800 text-white border-gray-800 scale-110 shadow-lg'
+                          : 'bg-gray-100 text-gray-400 border-gray-300 hover:bg-gray-200 hover:border-gray-400'
+                      } ${
+                        updatingId === sample.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                      title={`Tanda ${tanda}`}
+                    >
+                      {tanda}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredSamples.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            No se encontraron muestras
+          </div>
+        )}
       </div>
 
       {showTandaViewer && (
