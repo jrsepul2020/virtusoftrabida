@@ -69,6 +69,25 @@ export default function CatadoresManager() {
     setFilteredCatadores(filtered);
   };
 
+  const handleFieldUpdate = async (id: string, field: string, value: any) => {
+    try {
+      const { error } = await supabase
+        .from('catadores')
+        .update({ [field]: value })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Actualizar el estado local
+      setCatadores(prev => prev.map(catador => 
+        catador.id === id ? { ...catador, [field]: value } : catador
+      ));
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      alert(`Error al actualizar ${field}`);
+    }
+  };
+
   const handleSave = async (catador: Catador) => {
     setSaving(true);
     try {
@@ -216,9 +235,6 @@ export default function CatadoresManager() {
                   Tablet
                 </th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -241,27 +257,55 @@ export default function CatadoresManager() {
                     </div>
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900">
-                    {catador.rol || '-'}
+                    <select
+                      value={catador.rol || ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'rol', e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Seleccionar</option>
+                      <option value="catador">Catador</option>
+                      <option value="presidente">Presidente</option>
+                    </select>
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900">
-                    {catador.mesa ? `Mesa ${catador.mesa}` : '-'}
+                    <select
+                      value={catador.mesa || ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'mesa', parseInt(e.target.value) || undefined)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Mesa</option>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900">
-                    {catador.puesto || '-'}
+                    <select
+                      value={catador.puesto || ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'puesto', parseInt(e.target.value) || undefined)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Puesto</option>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-3 py-2 text-sm text-gray-900">
-                    {catador.ntablet || '-'}
-                  </td>
-                  <td className="px-3 py-2 text-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      catador.estado === 'activo' || catador.estado === 'presente'
-                        ? 'bg-green-100 text-green-800' 
-                        : catador.estado === 'ausente'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {catador.estado || (catador.activo ? 'Activo' : 'Inactivo')}
-                    </span>
+                    <select
+                      value={catador.ntablet || ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'ntablet', e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Tablet</option>
+                      {Array.from({length: 25}, (_, i) => i + 1).map(num => (
+                        <option key={num} value={num.toString()}>{num}</option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-3 py-2 text-center">
                     <div className="flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -303,24 +347,63 @@ export default function CatadoresManager() {
               onClick={() => setViewingCatador(catador)}
             >
               <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-medium text-gray-900">{catador.nombre}</h3>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {catador.rol && <div>{catador.rol}</div>}
-                    {catador.mesa && <div>Mesa {catador.mesa}, Puesto {catador.puesto}</div>}
-                    {catador.ntablet && <div>Tablet: {catador.ntablet}</div>}
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900 mb-2">{catador.nombre}</h3>
+                  
+                  {/* Selectores en móvil */}
+                  <div className="grid grid-cols-2 gap-2 mb-2" onClick={(e) => e.stopPropagation()}>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Rol</label>
+                      <select
+                        value={catador.rol || ''}
+                        onChange={(e) => handleFieldUpdate(catador.id, 'rol', e.target.value)}
+                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Seleccionar</option>
+                        <option value="catador">Catador</option>
+                        <option value="presidente">Presidente</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Mesa</label>
+                      <select
+                        value={catador.mesa || ''}
+                        onChange={(e) => handleFieldUpdate(catador.id, 'mesa', parseInt(e.target.value) || undefined)}
+                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Mesa</option>
+                        {[1, 2, 3, 4, 5].map(num => (
+                          <option key={num} value={num}>{num}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Puesto</label>
+                      <select
+                        value={catador.puesto || ''}
+                        onChange={(e) => handleFieldUpdate(catador.id, 'puesto', parseInt(e.target.value) || undefined)}
+                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Puesto</option>
+                        {[1, 2, 3, 4, 5].map(num => (
+                          <option key={num} value={num}>{num}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tablet</label>
+                      <select
+                        value={catador.ntablet || ''}
+                        onChange={(e) => handleFieldUpdate(catador.id, 'ntablet', e.target.value)}
+                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Tablet</option>
+                        {Array.from({length: 25}, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num.toString()}>{num}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 ${
-                    catador.estado === 'presente'
-                      ? 'bg-green-100 text-green-800' 
-                      : catador.estado === 'ausente'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : catador.activo
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {catador.estado || (catador.activo ? 'Activo' : 'Inactivo')}
-                  </span>
                 </div>
                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                   <button
@@ -394,11 +477,8 @@ export default function CatadoresManager() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">Seleccionar rol</option>
-                    <option value="Catador Principal">Catador Principal</option>
-                    <option value="Catador Auxiliar">Catador Auxiliar</option>
-                    <option value="Presidente">Presidente</option>
-                    <option value="Secretario">Secretario</option>
-                    <option value="Observador">Observador</option>
+                    <option value="catador">Catador</option>
+                    <option value="presidente">Presidente</option>
                   </select>
                 </div>
               </div>
@@ -408,59 +488,49 @@ export default function CatadoresManager() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Mesa
                   </label>
-                  <input
-                    type="number"
+                  <select
                     value={newCatador.mesa || ''}
-                    onChange={(e) => setNewCatador({...newCatador, mesa: parseInt(e.target.value)})}
+                    onChange={(e) => setNewCatador({...newCatador, mesa: parseInt(e.target.value) || undefined})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    min="1"
-                    placeholder="Nº mesa"
-                  />
+                  >
+                    <option value="">Seleccionar mesa</option>
+                    {[1, 2, 3, 4, 5].map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Puesto
                   </label>
-                  <input
-                    type="number"
+                  <select
                     value={newCatador.puesto || ''}
-                    onChange={(e) => setNewCatador({...newCatador, puesto: parseInt(e.target.value)})}
+                    onChange={(e) => setNewCatador({...newCatador, puesto: parseInt(e.target.value) || undefined})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    min="1"
-                    max="8"
-                    placeholder="Puesto"
-                  />
+                  >
+                    <option value="">Seleccionar puesto</option>
+                    {[1, 2, 3, 4, 5].map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Nº Tablet
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newCatador.ntablet || ''}
                     onChange={(e) => setNewCatador({...newCatador, ntablet: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    placeholder="ID tablet"
-                  />
+                  >
+                    <option value="">Seleccionar tablet</option>
+                    {Array.from({length: 25}, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num.toString()}>{num}</option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado
-                </label>
-                <select
-                  value={newCatador.estado || 'activo'}
-                  onChange={(e) => setNewCatador({...newCatador, estado: e.target.value as 'activo' | 'inactivo' | 'presente' | 'ausente'})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                  <option value="presente">Presente</option>
-                  <option value="ausente">Ausente</option>
-                </select>
               </div>
               
               <div>
