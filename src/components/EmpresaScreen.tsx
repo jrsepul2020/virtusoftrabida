@@ -6,11 +6,13 @@ export function EmpresaScreen({
   onChange,
   onNext,
   precio,
+  validationErrors = {},
 }: {
   company: CompanyData;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onNext: () => void;
   precio: { pagadas: number; gratis: number; total: number };
+  validationErrors?: {[key: string]: boolean};
 }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center py-10 px-6 bg-primary-50">
@@ -22,8 +24,22 @@ export function EmpresaScreen({
             <input type="text" name="nif" value={company.nif} onChange={onChange} className="w-full px-4 py-2 rounded-lg border border-primary-200" />
           </div>
           <div className="col-span-6">
-            <label className="block text-primary-800 font-medium mb-1">Nombre de la Empresa</label>
-            <input type="text" name="nombre_empresa" value={company.nombre_empresa} onChange={onChange} className="w-full px-4 py-2 rounded-lg border border-primary-200" />
+            <label className="block text-primary-800 font-medium mb-1">Nombre de la Empresa *</label>
+            <input 
+              type="text" 
+              name="nombre_empresa" 
+              value={company.nombre_empresa} 
+              onChange={onChange} 
+              required 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.nombre_empresa 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
+            />
+            {validationErrors?.nombre_empresa && (
+              <p className="text-red-500 text-sm mt-1">Este campo es obligatorio</p>
+            )}
           </div>
           <div className="col-span-4">
             <label className="block text-primary-800 font-medium mb-1">Persona de Contacto</label>
@@ -40,8 +56,22 @@ export function EmpresaScreen({
             <input type="text" name="movil" value={company.movil} onChange={onChange} className="w-full px-4 py-2 rounded-lg border border-primary-200" />
           </div>
           <div className="col-span-6">
-            <label className="block text-primary-800 font-medium mb-1">Email</label>
-            <input type="email" name="email" value={company.email} onChange={onChange} className="w-full px-4 py-2 rounded-lg border border-primary-200" />
+            <label className="block text-primary-800 font-medium mb-1">Email *</label>
+            <input 
+              type="email" 
+              name="email" 
+              value={company.email} 
+              onChange={onChange} 
+              required 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.email 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
+            />
+            {validationErrors?.email && (
+              <p className="text-red-500 text-sm mt-1">Este campo es obligatorio</p>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-12 gap-4 mt-4">

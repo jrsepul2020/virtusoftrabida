@@ -1,3 +1,100 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Colores primarios personalizados */
+.bg-primary-50 { background-color: #faf7f0; }
+.bg-primary-100 { background-color: #f4ede0; }
+.bg-primary-200 { background-color: #e8dcc1; }
+.bg-primary-500 { background-color: #8A754C; }
+.bg-primary-600 { background-color: #7A6945; }
+.bg-primary-700 { background-color: #6B5D3E; }
+.bg-primary-800 { background-color: #4B3A2A; }
+
+.text-primary-600 { color: #7A6945; }
+.text-primary-700 { color: #6B5D3E; }
+.text-primary-800 { color: #4B3A2A; }
+
+.border-primary-100 { border-color: #f4ede0; }
+.border-primary-200 { border-color: #e8dcc1; }
+.border-primary-500 { border-color: #8A754C; }
+
+.hover\:bg-primary-700:hover { background-color: #6B5D3E; }
+.hover\:bg-primary-500:hover { background-color: #8A754C; }
+.hover\:border-primary-500:hover { border-color: #8A754C; }
+
+.focus\:border-primary-500:focus { border-color: #8A754C; }
+.focus\:border-red-500:focus { border-color: #ef4444; }
+.focus\:ring-primary-200:focus { --tw-ring-color: #e8dcc1; box-shadow: 0 0 0 3px rgba(232, 220, 193, 0.5); }
+.focus\:ring-red-200:focus { --tw-ring-color: #fecaca; box-shadow: 0 0 0 3px rgba(254, 202, 202, 0.5); }
+.focus\:ring-2:focus { --tw-ring-offset-width: 2px; }
+
+.bg-red-50 { background-color: #fef2f2; }
+.border-red-500 { border-color: #ef4444; }
+.text-red-500 { color: #ef4444; }
+
+.group:hover .group-hover\:bg-primary-500 { background-color: #8A754C; }
+.group:hover .group-hover\:text-white { color: white; }
+
+/* Estilos específicos para tablet horizontal (1000x600) */
+@media (min-width: 768px) and (max-width: 1200px) and (max-height: 700px) {
+  .cata-container {
+    padding: 0.5rem;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .cata-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    height: 100%;
+  }
+  
+  .cata-section {
+    min-height: 0;
+  }
+  
+  .cata-header {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .cata-content {
+    padding: 0.375rem;
+  }
+  
+  .cata-row {
+    margin-bottom: 0.375rem;
+  }
+  
+  .cata-label {
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .cata-button {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.7rem;
+    margin: 0.125rem;
+  }
+  
+  .cata-footer {
+    padding: 0.375rem 0.75rem;
+    margin-top: 0.375rem;
+  }
+  
+  .cata-footer button {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+/* Animaciones suaves */
+.scale-105 {
+  transform: scale(1.05);
+}
+
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
