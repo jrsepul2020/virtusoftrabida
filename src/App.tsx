@@ -416,7 +416,7 @@ function App() {
         </div>
       )}
 
-      {view === 'admin' && <AdminDashboard onLogout={handleLogout} />}
+      {view === 'admin' && <AdminDashboard />}
 
       {view === 'catadorLogin' && (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">

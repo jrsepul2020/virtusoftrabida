@@ -198,27 +198,27 @@ export default function CatadoresManager() {
         {/* Tabla para pantallas grandes */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Catador
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Rol
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Mesa
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Puesto
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Tablet
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
