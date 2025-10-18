@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3 } from 'lucide-react';
+import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3, Mail } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import SubscriptionForm from './SubscriptionForm';
@@ -9,8 +9,9 @@ import TandasManager from './TandasManager';
 import StatisticsManager from './StatisticsManager';
 import CatadoresManager from './CatadoresManager';
 import MesasManager from './MesasManager';
+import EmailTest from './EmailTest';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'catadores' | 'mesas' | 'print' | 'form';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'catadores' | 'mesas' | 'print' | 'form' | 'emailTest';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'print', label: 'Imprimir Listado', icon: Printer },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
+    { id: 'emailTest', label: 'Probar Emails', icon: Mail },
   ];
 
   const handleTabChange = (tab: Tab) => {
@@ -112,6 +114,7 @@ export default function AdminDashboard() {
           {activeTab === 'mesas' && <MesasManager />}
           {activeTab === 'print' && <PrintSamples />}
           {activeTab === 'form' && <SubscriptionForm />}
+          {activeTab === 'emailTest' && <EmailTest />}
         </div>
       </div>
     </div>
