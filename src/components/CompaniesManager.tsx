@@ -234,7 +234,11 @@ export default function CompaniesManager() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCompanies.map((company) => (
-                <tr key={company.id} className="hover:bg-gray-50 transition-colors">
+                <tr 
+                  key={company.id} 
+                  onClick={() => setSelectedCompany(company)}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer"
+                >
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
                     {company.pedido ? (
                       <span className="inline-flex items-center justify-center px-2 lg:px-3 py-1 bg-primary-100 text-primary-700 rounded-full font-semibold text-xs lg:text-sm">
@@ -284,14 +288,20 @@ export default function CompaniesManager() {
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
                     <div className="flex items-center justify-center gap-1 lg:gap-2">
                       <button
-                        onClick={() => handleEditCompany(company)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditCompany(company);
+                        }}
                         className="inline-flex items-center justify-center p-1.5 lg:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Editar empresa"
                       >
                         <Edit2 className="w-4 h-4 lg:w-5 lg:h-5" />
                       </button>
                       <button
-                        onClick={() => handleViewCompany(company)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewCompany(company);
+                        }}
                         className="inline-flex items-center justify-center p-1.5 lg:p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                         title="Ver detalles"
                       >
@@ -308,7 +318,11 @@ export default function CompaniesManager() {
         {/* Vista de tarjetas para móviles */}
         <div className="lg:hidden">
           {filteredCompanies.map((company) => (
-            <div key={company.id} className="border-b border-gray-200 p-4">
+            <div 
+              key={company.id} 
+              onClick={() => setSelectedCompany(company)}
+              className="border-b border-gray-200 p-4 cursor-pointer hover:bg-gray-50"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 text-sm">{company.name}</h3>
@@ -352,14 +366,20 @@ export default function CompaniesManager() {
                 <div>{getStatusBadge(company.status)}</div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleEditCompany(company)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditCompany(company);
+                    }}
                     className="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     title="Editar empresa"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleViewCompany(company)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewCompany(company);
+                    }}
                     className="inline-flex items-center justify-center p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                     title="Ver detalles"
                   >
