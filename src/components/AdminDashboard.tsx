@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, LogOut, PlusCircle, List, Printer, Layers, BarChart3, Users, Menu, X } from 'lucide-react';
+import { Building2, FlaskConical, BarChart3, LogOut, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3 } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import SubscriptionForm from './SubscriptionForm';
@@ -14,7 +14,7 @@ type Props = {
   onLogout: () => void;
 };
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'catadores' | 'print' | 'form';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'catadores' | 'mesas' | 'print' | 'form';
 
 export default function AdminDashboard({ onLogout }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
@@ -26,7 +26,8 @@ export default function AdminDashboard({ onLogout }: Props) {
     { id: 'samples', label: 'Muestras', icon: FlaskConical },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'tandas', label: 'Tandas', icon: Layers },
-    { id: 'catadores', label: 'Catadores y Mesas', icon: Users },
+    { id: 'catadores', label: 'Catadores', icon: Users },
+    { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'print', label: 'Imprimir Listado', icon: Printer },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
   ];
@@ -118,12 +119,8 @@ export default function AdminDashboard({ onLogout }: Props) {
           {activeTab === 'samples' && <SamplesManager />}
           {activeTab === 'simpleList' && <SimpleSamplesList />}
           {activeTab === 'tandas' && <TandasManager />}
-          {activeTab === 'catadores' && (
-            <div className="space-y-6">
-              <CatadoresManager />
-              <MesasManager />
-            </div>
-          )}
+          {activeTab === 'catadores' && <CatadoresManager />}
+          {activeTab === 'mesas' && <MesasManager />}
           {activeTab === 'print' && <PrintSamples />}
           {activeTab === 'form' && <SubscriptionForm />}
         </div>

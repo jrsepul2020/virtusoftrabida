@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Search, User, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
+import { Search, Edit2, Trash2, Plus, X, Eye } from 'lucide-react';
 
 type Catador = {
   id: string;
   nombre: string;
+  rol?: string;
+  mesa?: number;
+  puesto?: number;
+  ntablet?: string;
+  estado?: 'activo' | 'inactivo' | 'presente' | 'ausente';
   email?: string;
   telefono?: string;
   especialidad?: string;
@@ -18,6 +23,7 @@ export default function CatadoresManager() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCatador, setEditingCatador] = useState<Catador | null>(null);
+  const [viewingCatador, setViewingCatador] = useState<Catador | null>(null);
   const [newCatador, setNewCatador] = useState<Partial<Catador>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -70,6 +76,11 @@ export default function CatadoresManager() {
         .from('catadores')
         .update({
           nombre: catador.nombre,
+          rol: catador.rol,
+          mesa: catador.mesa,
+          puesto: catador.puesto,
+          ntablet: catador.ntablet,
+          estado: catador.estado,
           email: catador.email,
           telefono: catador.telefono,
           especialidad: catador.especialidad,
@@ -100,6 +111,11 @@ export default function CatadoresManager() {
         .from('catadores')
         .insert([{
           nombre: newCatador.nombre,
+          rol: newCatador.rol,
+          mesa: newCatador.mesa,
+          puesto: newCatador.puesto,
+          ntablet: newCatador.ntablet,
+          estado: newCatador.estado || 'activo',
           email: newCatador.email,
           telefono: newCatador.telefono,
           especialidad: newCatador.especialidad,
@@ -184,64 +200,88 @@ export default function CatadoresManager() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Catador
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contacto
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rol
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Especialidad
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Mesa
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Puesto
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tablet
+                </th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCatadores.map((catador) => (
-                <tr key={catador.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary-600" />
-                      </div>
-                      <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">{catador.nombre}</div>
+                <tr 
+                  key={catador.id} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setViewingCatador(catador)}
+                >
+                  <td className="px-3 py-2">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{catador.nombre}</div>
+                      <div className="text-xs text-gray-500">
+                        {catador.email && <div>{catador.email}</div>}
+                        {catador.telefono && <div>{catador.telefono}</div>}
+                        {catador.especialidad && <div>{catador.especialidad}</div>}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{catador.email}</div>
-                    <div className="text-sm text-gray-500">{catador.telefono}</div>
+                  <td className="px-3 py-2 text-sm text-gray-900">
+                    {catador.rol || '-'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {catador.especialidad || '-'}
+                  <td className="px-3 py-2 text-sm text-gray-900">
+                    {catador.mesa ? `Mesa ${catador.mesa}` : '-'}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-3 py-2 text-sm text-gray-900">
+                    {catador.puesto || '-'}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-gray-900">
+                    {catador.ntablet || '-'}
+                  </td>
+                  <td className="px-3 py-2 text-center">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      catador.activo 
+                      catador.estado === 'activo' || catador.estado === 'presente'
                         ? 'bg-green-100 text-green-800' 
+                        : catador.estado === 'ausente'
+                        ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {catador.activo ? 'Activo' : 'Inactivo'}
+                      {catador.estado || (catador.activo ? 'Activo' : 'Inactivo')}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center gap-2">
+                  <td className="px-3 py-2 text-center">
+                    <div className="flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => setViewingCatador(catador)}
+                        className="text-blue-600 hover:text-blue-700 p-1"
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => setEditingCatador({...catador})}
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-green-600 hover:text-green-700 p-1"
                         title="Editar"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(catador.id, catador.nombre)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 p-1"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -257,27 +297,42 @@ export default function CatadoresManager() {
         {/* Vista de tarjetas para móvil */}
         <div className="md:hidden">
           {filteredCatadores.map((catador) => (
-            <div key={catador.id} className="border-b border-gray-200 p-4">
+            <div 
+              key={catador.id} 
+              className="border-b border-gray-200 p-4 cursor-pointer hover:bg-gray-50"
+              onClick={() => setViewingCatador(catador)}
+            >
               <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
-                    <User className="w-4 h-4 text-primary-600" />
+                <div>
+                  <h3 className="font-medium text-gray-900">{catador.nombre}</h3>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {catador.rol && <div>{catador.rol}</div>}
+                    {catador.mesa && <div>Mesa {catador.mesa}, Puesto {catador.puesto}</div>}
+                    {catador.ntablet && <div>Tablet: {catador.ntablet}</div>}
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{catador.nombre}</h3>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                      catador.activo 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {catador.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 ${
+                    catador.estado === 'presente'
+                      ? 'bg-green-100 text-green-800' 
+                      : catador.estado === 'ausente'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : catador.activo
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {catador.estado || (catador.activo ? 'Activo' : 'Inactivo')}
+                  </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => setViewingCatador(catador)}
+                    className="text-blue-600 hover:text-blue-700 p-1"
+                    title="Ver detalles"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => setEditingCatador({...catador})}
-                    className="text-blue-600 hover:text-blue-700 p-1"
+                    className="text-green-600 hover:text-green-700 p-1"
                     title="Editar"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -292,22 +347,10 @@ export default function CatadoresManager() {
                 </div>
               </div>
               
-              <div className="space-y-1 text-sm">
-                {catador.email && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">Email:</span> {catador.email}
-                  </div>
-                )}
-                {catador.telefono && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">Teléfono:</span> {catador.telefono}
-                  </div>
-                )}
-                {catador.especialidad && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">Especialidad:</span> {catador.especialidad}
-                  </div>
-                )}
+              <div className="text-xs text-gray-500">
+                {catador.email && <div>{catador.email}</div>}
+                {catador.telefono && <div>{catador.telefono}</div>}
+                {catador.especialidad && <div>{catador.especialidad}</div>}
               </div>
             </div>
           ))}
@@ -327,17 +370,97 @@ export default function CatadoresManager() {
             <h3 className="text-lg font-bold text-gray-800 mb-4">Añadir Nuevo Catador</h3>
             
             <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre *
+                  </label>
+                  <input
+                    type="text"
+                    value={newCatador.nombre || ''}
+                    onChange={(e) => setNewCatador({...newCatador, nombre: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rol
+                  </label>
+                  <select
+                    value={newCatador.rol || ''}
+                    onChange={(e) => setNewCatador({...newCatador, rol: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="">Seleccionar rol</option>
+                    <option value="Catador Principal">Catador Principal</option>
+                    <option value="Catador Auxiliar">Catador Auxiliar</option>
+                    <option value="Presidente">Presidente</option>
+                    <option value="Secretario">Secretario</option>
+                    <option value="Observador">Observador</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mesa
+                  </label>
+                  <input
+                    type="number"
+                    value={newCatador.mesa || ''}
+                    onChange={(e) => setNewCatador({...newCatador, mesa: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    min="1"
+                    placeholder="Nº mesa"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Puesto
+                  </label>
+                  <input
+                    type="number"
+                    value={newCatador.puesto || ''}
+                    onChange={(e) => setNewCatador({...newCatador, puesto: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    min="1"
+                    max="8"
+                    placeholder="Puesto"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nº Tablet
+                  </label>
+                  <input
+                    type="text"
+                    value={newCatador.ntablet || ''}
+                    onChange={(e) => setNewCatador({...newCatador, ntablet: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="ID tablet"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre *
+                  Estado
                 </label>
-                <input
-                  type="text"
-                  value={newCatador.nombre || ''}
-                  onChange={(e) => setNewCatador({...newCatador, nombre: e.target.value})}
+                <select
+                  value={newCatador.estado || 'activo'}
+                  onChange={(e) => setNewCatador({...newCatador, estado: e.target.value as 'activo' | 'inactivo' | 'presente' | 'ausente'})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  required
-                />
+                >
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                  <option value="presente">Presente</option>
+                  <option value="ausente">Ausente</option>
+                </select>
               </div>
               
               <div>
@@ -352,28 +475,30 @@ export default function CatadoresManager() {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="text"
-                  value={newCatador.telefono || ''}
-                  onChange={(e) => setNewCatador({...newCatador, telefono: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Especialidad
-                </label>
-                <input
-                  type="text"
-                  value={newCatador.especialidad || ''}
-                  onChange={(e) => setNewCatador({...newCatador, especialidad: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teléfono
+                  </label>
+                  <input
+                    type="text"
+                    value={newCatador.telefono || ''}
+                    onChange={(e) => setNewCatador({...newCatador, telefono: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Especialidad
+                  </label>
+                  <input
+                    type="text"
+                    value={newCatador.especialidad || ''}
+                    onChange={(e) => setNewCatador({...newCatador, especialidad: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
               </div>
               
               <div>
@@ -493,6 +618,144 @@ export default function CatadoresManager() {
                 className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalles */}
+      {viewingCatador && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-xl font-bold text-gray-800">Detalles del Catador</h3>
+              <button
+                onClick={() => setViewingCatador(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Información personal */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Información Personal</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Nombre</label>
+                  <p className="text-gray-900 font-medium">{viewingCatador.nombre}</p>
+                </div>
+                
+                {viewingCatador.email && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Email</label>
+                    <p className="text-gray-900">{viewingCatador.email}</p>
+                  </div>
+                )}
+                
+                {viewingCatador.telefono && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Teléfono</label>
+                    <p className="text-gray-900">{viewingCatador.telefono}</p>
+                  </div>
+                )}
+                
+                {viewingCatador.especialidad && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Especialidad</label>
+                    <p className="text-gray-900">{viewingCatador.especialidad}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Estado General</label>
+                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                    viewingCatador.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {viewingCatador.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Información de asignación */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Asignación</h4>
+                
+                {viewingCatador.rol && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Rol</label>
+                    <p className="text-gray-900 font-medium">{viewingCatador.rol}</p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Mesa</label>
+                    <p className="text-gray-900">{viewingCatador.mesa ? `Mesa ${viewingCatador.mesa}` : 'No asignada'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Puesto</label>
+                    <p className="text-gray-900">{viewingCatador.puesto || 'No asignado'}</p>
+                  </div>
+                </div>
+                
+                {viewingCatador.ntablet && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Tablet Asignada</label>
+                    <p className="text-gray-900 font-mono">{viewingCatador.ntablet}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-500">Estado de Asistencia</label>
+                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                    viewingCatador.estado === 'presente'
+                      ? 'bg-green-100 text-green-800' 
+                      : viewingCatador.estado === 'ausente'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : viewingCatador.estado === 'activo'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {viewingCatador.estado || 'Sin estado'}
+                  </span>
+                </div>
+                
+                {viewingCatador.created_at && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Fecha de Registro</label>
+                    <p className="text-gray-900">{new Date(viewingCatador.created_at).toLocaleDateString('es-ES', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <div className="flex gap-3 mt-8 pt-6 border-t">
+              <button
+                onClick={() => {
+                  setViewingCatador(null);
+                  setEditingCatador({...viewingCatador});
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                <Edit2 className="w-4 h-4" />
+                Editar Catador
+              </button>
+              <button
+                onClick={() => setViewingCatador(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cerrar
               </button>
             </div>
           </div>

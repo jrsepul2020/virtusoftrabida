@@ -1,19 +1,47 @@
 import { useState, Dispatch, SetStateAction } from "react";
+import { LogOut } from "lucide-react";
 
-type View = 'home' | 'userLogin' | 'adminLogin' | 'user' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago';
+type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa' | 'catadorLogin' | 'catas';
 
 export default function Header({
   setView,
+  catadorLoggedIn,
+  adminLoggedIn,
+  onLogout,
 }: {
   setView: Dispatch<SetStateAction<View>>;
+  catadorLoggedIn?: any;
+  adminLoggedIn?: boolean;
+  onLogout?: () => void;
 }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showAdminDropdown, setShowAdminDropdown] = useState(false);
+
+  // Usar los props para determinar el estado de autenticación
+  const isAdminLoggedIn = adminLoggedIn || false;
+  const isCatadorLoggedIn = !!catadorLoggedIn;
+  const currentUser = catadorLoggedIn ? (catadorLoggedIn.nombre || catadorLoggedIn.email) : '';
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      // Fallback al método anterior si no se pasa onLogout
+      if (isAdminLoggedIn) {
+        localStorage.removeItem('adminLoggedIn');
+      }
+      if (isCatadorLoggedIn) {
+        localStorage.removeItem('catadorSession');
+      }
+      setView('home');
+    }
+  };
 
   const menuItems = [
     { name: "Inicio", onClick: () => setView('home') },
     { name: "Inscripción", onClick: () => setView('empresa') },
     { name: "Cata", onClick: () => setView('cata') },
+    { name: "Reglamento", onClick: () => setView('reglamento') },
+    { name: "Normativa", onClick: () => setView('normativa') },
   ];
 
   return (
@@ -45,39 +73,50 @@ export default function Header({
             ))}
           </nav>
 
-          {/* Admin Section */}
+          {/* Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            <div className="relative">
-              <button
-                onClick={() => setShowAdminDropdown(!showAdminDropdown)}
-                className="text-gray-700 hover:text-[#8A754C] px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Acceso
-              </button>
-              
-              {showAdminDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+            {!isAdminLoggedIn && !isCatadorLoggedIn ? (
+              // Mostrar botones de login cuando nadie está logueado
+              <>
+                <div className="relative">
                   <button
-                    onClick={() => {
-                      setView('userLogin');
-                      setShowAdminDropdown(false);
-                    }}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    onClick={() => setView('catadorLogin')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
                   >
-                    Acceso Usuario
-                  </button>
-                  <button
-                    onClick={() => {
-                      setView('adminLogin');
-                      setShowAdminDropdown(false);
-                    }}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                  >
-                    Acceso Admin
+                    Catadores
                   </button>
                 </div>
-              )}
-            </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setView('adminLogin')}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+                  >
+                    Login Admin
+                  </button>
+                </div>
+              </>
+            ) : (
+              // Mostrar información del usuario y botón de logout
+              <div className="flex items-center space-x-3">
+                {isCatadorLoggedIn && (
+                  <span className="text-sm font-medium text-gray-700">
+                    👤 {currentUser}
+                  </span>
+                )}
+                {isAdminLoggedIn && (
+                  <span className="text-sm font-medium text-gray-700">
+                    🔧 Administrador
+                  </span>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2"
+                >
+                  <LogOut size={16} />
+                  <span>Cerrar Sesión</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -128,25 +167,54 @@ export default function Header({
                   {item.name}
                 </button>
               ))}
-              <div className="border-t border-gray-200 pt-2">
-                <button
-                  onClick={() => {
-                    setView('userLogin');
-                    setShowMobileMenu(false);
-                  }}
-                  className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
-                >
-                  Acceso Usuario
-                </button>
-                <button
-                  onClick={() => {
-                    setView('adminLogin');
-                    setShowMobileMenu(false);
-                  }}
-                  className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
-                >
-                  Acceso Admin
-                </button>
+              <div className="border-t border-gray-200 pt-2 space-y-1">
+                {!isAdminLoggedIn && !isCatadorLoggedIn ? (
+                  // Mostrar botones de login en móvil
+                  <>
+                    <button
+                      onClick={() => {
+                        setView('catadorLogin');
+                        setShowMobileMenu(false);
+                      }}
+                      className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
+                    >
+                      Catadores
+                    </button>
+                    <button
+                      onClick={() => {
+                        setView('adminLogin');
+                        setShowMobileMenu(false);
+                      }}
+                      className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
+                    >
+                      Login Admin
+                    </button>
+                  </>
+                ) : (
+                  // Mostrar información y logout en móvil
+                  <div className="space-y-2">
+                    {isCatadorLoggedIn && (
+                      <div className="px-3 py-2 text-sm font-medium text-gray-600">
+                        👤 {currentUser}
+                      </div>
+                    )}
+                    {isAdminLoggedIn && (
+                      <div className="px-3 py-2 text-sm font-medium text-gray-600">
+                        🔧 Administrador
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setShowMobileMenu(false);
+                      }}
+                      className="text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-base font-medium transition-colors w-full flex items-center space-x-2"
+                    >
+                      <LogOut size={16} />
+                      <span>Cerrar Sesión</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
