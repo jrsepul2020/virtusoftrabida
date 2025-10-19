@@ -12,6 +12,7 @@ import { MuestrasScreen } from './components/MuestrasScreen';
 import { ConfirmacionScreen } from './components/ConfirmacionScreen';
 import PaymentSelection from './components/PaymentSelection';
 import Modal from './components/Modal';
+import HeroLanding from './components/HeroLanding';
 import { CompanyData, SampleData, PaymentMethod } from './components/types';
 
 type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa' | 'catadorLogin' | 'catas';
@@ -404,6 +405,7 @@ function App() {
       catadorLoggedIn={catadorLoggedIn}
       adminLoggedIn={adminLoggedIn}
       onLogout={handleLogout}
+      currentView={view}
     >
       {view === 'adminLogin' && (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -527,32 +529,7 @@ function App() {
       </Modal>
 
       {view === 'home' && (
-        <div
-          className="min-h-screen flex flex-col items-center justify-between text-white relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, #ffffff 0%, #8A754C 100%)',
-          }}
-        >
-          <main className="flex flex-col items-center text-center mt-36 px-6">
-            <img
-              src="/logo-bandera-1.png"
-              alt="Logo International Virtus"
-              className="h-20 mb-4 drop-shadow-lg"
-            />
-            <h1 className="text-4xl md:text-6xl font-bold tracking-wide mb-2 text-[#4B3A2A] drop-shadow-lg opacity-0 animate-fade-in animate-delay-500">
-              International Virtus
-            </h1>
-            <h2 className="text-2xl md:text-4xl font-medium tracking-widest text-[#4B3A2A]/90 mb-8 opacity-0 animate-fade-in animate-delay-700">
-              LA RÁBIDA 2026
-            </h2>
-            <button
-              onClick={() => setView('empresa')}
-              className="bg-[#8A754C] text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:bg-[#7A6945] transition transform scale-90 opacity-0 animate-pop-in animate-delay-900"
-            >
-              Inscribirse
-            </button>
-          </main>
-        </div>
+        <HeroLanding onInscribirse={() => setView('empresa')} />
       )}
     </MainLayout>
   );
