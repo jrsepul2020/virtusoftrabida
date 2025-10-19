@@ -8,11 +8,13 @@ export default function Header({
   catadorLoggedIn,
   adminLoggedIn,
   onLogout,
+  currentView,
 }: {
   setView: Dispatch<SetStateAction<View>>;
   catadorLoggedIn?: any;
   adminLoggedIn?: boolean;
   onLogout?: () => void;
+  currentView?: View;
 }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -44,8 +46,10 @@ export default function Header({
     { name: "Normativa", onClick: () => setView('normativa') },
   ];
 
+  const isHomePage = currentView === 'home';
+  
   return (
-    <header className="bg-white shadow-md relative z-50">
+    <header className={`${isHomePage ? 'bg-transparent absolute top-0 left-0 right-0' : 'bg-white shadow-md'} relative z-50 transition-all duration-300`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -55,9 +59,7 @@ export default function Header({
               alt="International Virtus"
               className="h-10 w-auto"
             />
-            <span className="ml-2 text-xl font-bold text-[#4B3A2A]">
-              International Virtus
-            </span>
+
           </div>
 
           {/* Navigation Desktop */}
@@ -66,7 +68,7 @@ export default function Header({
               <button
                 key={item.name}
                 onClick={item.onClick}
-                className="text-gray-700 hover:text-[#8A754C] px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className={`${isHomePage ? 'text-[#7A694E] hover:text-[#3C542E] font-semibold' : 'text-gray-700 hover:text-[#8A754C]'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
               >
                 {item.name}
               </button>

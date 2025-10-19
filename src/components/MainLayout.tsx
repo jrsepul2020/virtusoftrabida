@@ -10,9 +10,10 @@ type Props = {
   catadorLoggedIn?: any;
   adminLoggedIn?: boolean;
   onLogout?: () => void;
+  currentView?: View;
 };
 
-export default function MainLayout({ children, setView, catadorLoggedIn, adminLoggedIn, onLogout }: Props) {
+export default function MainLayout({ children, setView, catadorLoggedIn, adminLoggedIn, onLogout, currentView }: Props) {
   return (
     <div className="flex flex-col min-h-screen">
       {setView && (
@@ -21,6 +22,7 @@ export default function MainLayout({ children, setView, catadorLoggedIn, adminLo
           catadorLoggedIn={catadorLoggedIn}
           adminLoggedIn={adminLoggedIn}
           onLogout={onLogout}
+          currentView={currentView}
         />
       )}
       <main className="flex-1">{children}</main>
