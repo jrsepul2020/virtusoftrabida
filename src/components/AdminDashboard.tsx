@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3, Mail } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
-import SubscriptionForm from './SubscriptionForm';
+import AdminInscriptionForm from './AdminInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
 import PrintSamples from './PrintSamples';
 import TandasManager from './TandasManager';
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
             {activeTab === 'tandas' && <TandasManager />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'print' && <PrintSamples />}
-            {activeTab === 'form' && <SubscriptionForm />}
+            {activeTab === 'form' && <AdminInscriptionForm />}
             {activeTab === 'emailTest' && <EmailTest />}
           </div>
         </div>
