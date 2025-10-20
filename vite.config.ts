@@ -8,4 +8,31 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    // Optimize for PWA
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js'],
+          ui: ['lucide-react']
+        }
+      }
+    },
+    // Enable source maps for better debugging
+    sourcemap: true,
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000
+  },
+  // PWA and offline support
+  server: {
+    // Enable HTTPS in development for testing PWA features
+    // https: true,
+    host: true,
+    port: 3000
+  },
+  preview: {
+    host: true,
+    port: 3000
+  }
 });
