@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* PWA Animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Utility classes for PWA */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Colores primarios personalizados */
 .bg-primary-50 { background-color: #faf7f0; }
 .bg-primary-100 { background-color: #f4ede0; }

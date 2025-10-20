@@ -11,6 +11,7 @@ import { ConfirmacionScreen } from './components/ConfirmacionScreen';
 import PaymentSelection from './components/PaymentSelection';
 import Modal from './components/Modal';
 import HeroLanding from './components/HeroLanding';
+import PWAInstallBanner from './components/PWAInstallBanner';
 import { CompanyData, SampleData, PaymentMethod } from './components/types';
 
 type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa';
@@ -476,6 +477,9 @@ function App() {
       {view === 'home' && (
         <HeroLanding onInscribirse={() => setView('empresa')} />
       )}
+      
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
     </MainLayout>
   );
 }
