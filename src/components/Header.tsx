@@ -1,17 +1,15 @@
 import { useState, Dispatch, SetStateAction } from "react";
 import { LogOut } from "lucide-react";
 
-type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa' | 'catadorLogin' | 'catas';
+type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa';
 
 export default function Header({
   setView,
-  catadorLoggedIn,
   adminLoggedIn,
   onLogout,
   currentView,
 }: {
   setView: Dispatch<SetStateAction<View>>;
-  catadorLoggedIn?: any;
   adminLoggedIn?: boolean;
   onLogout?: () => void;
   currentView?: View;
@@ -20,8 +18,6 @@ export default function Header({
 
   // Usar los props para determinar el estado de autenticación
   const isAdminLoggedIn = adminLoggedIn || false;
-  const isCatadorLoggedIn = !!catadorLoggedIn;
-  const currentUser = catadorLoggedIn ? (catadorLoggedIn.nombre || catadorLoggedIn.email) : '';
 
   const handleLogout = () => {
     if (onLogout) {
@@ -30,9 +26,6 @@ export default function Header({
       // Fallback al método anterior si no se pasa onLogout
       if (isAdminLoggedIn) {
         localStorage.removeItem('adminLoggedIn');
-      }
-      if (isCatadorLoggedIn) {
-        localStorage.removeItem('catadorSession');
       }
       setView('home');
     }
@@ -77,39 +70,22 @@ export default function Header({
 
           {/* Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {!isAdminLoggedIn && !isCatadorLoggedIn ? (
-              // Mostrar botones de login cuando nadie está logueado
-              <>
-                <div className="relative">
-                  <button
-                    onClick={() => setView('catadorLogin')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-                  >
-                    Catadores
-                  </button>
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={() => setView('adminLogin')}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
-                  >
-                    Login Admin
-                  </button>
-                </div>
-              </>
+            {!isAdminLoggedIn ? (
+              // Mostrar botón de login admin cuando nadie está logueado
+              <div className="relative">
+                <button
+                  onClick={() => setView('adminLogin')}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Login Admin
+                </button>
+              </div>
             ) : (
               // Mostrar información del usuario y botón de logout
               <div className="flex items-center space-x-3">
-                {isCatadorLoggedIn && (
-                  <span className="text-sm font-medium text-gray-700">
-                    👤 {currentUser}
-                  </span>
-                )}
-                {isAdminLoggedIn && (
-                  <span className="text-sm font-medium text-gray-700">
-                    🔧 Administrador
-                  </span>
-                )}
+                <span className="text-sm font-medium text-gray-700">
+                  🔧 Administrador
+                </span>
                 <button
                   onClick={handleLogout}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2"
@@ -170,41 +146,23 @@ export default function Header({
                 </button>
               ))}
               <div className="border-t border-gray-200 pt-2 space-y-1">
-                {!isAdminLoggedIn && !isCatadorLoggedIn ? (
-                  // Mostrar botones de login en móvil
-                  <>
-                    <button
-                      onClick={() => {
-                        setView('catadorLogin');
-                        setShowMobileMenu(false);
-                      }}
-                      className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
-                    >
-                      Catadores
-                    </button>
-                    <button
-                      onClick={() => {
-                        setView('adminLogin');
-                        setShowMobileMenu(false);
-                      }}
-                      className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
-                    >
-                      Login Admin
-                    </button>
-                  </>
+                {!isAdminLoggedIn ? (
+                  // Mostrar botón de login admin en móvil
+                  <button
+                    onClick={() => {
+                      setView('adminLogin');
+                      setShowMobileMenu(false);
+                    }}
+                    className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
+                  >
+                    Login Admin
+                  </button>
                 ) : (
                   // Mostrar información y logout en móvil
                   <div className="space-y-2">
-                    {isCatadorLoggedIn && (
-                      <div className="px-3 py-2 text-sm font-medium text-gray-600">
-                        👤 {currentUser}
-                      </div>
-                    )}
-                    {isAdminLoggedIn && (
-                      <div className="px-3 py-2 text-sm font-medium text-gray-600">
-                        🔧 Administrador
-                      </div>
-                    )}
+                    <div className="px-3 py-2 text-sm font-medium text-gray-600">
+                      🔧 Administrador
+                    </div>
                     <button
                       onClick={() => {
                         handleLogout();

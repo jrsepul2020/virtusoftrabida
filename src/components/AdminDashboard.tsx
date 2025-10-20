@@ -7,11 +7,10 @@ import SimpleSamplesList from './SimpleSamplesList';
 import PrintSamples from './PrintSamples';
 import TandasManager from './TandasManager';
 import StatisticsManager from './StatisticsManager';
-import CatadoresManager from './CatadoresManager';
 import MesasManager from './MesasManager';
 import EmailTest from './EmailTest';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'catadores' | 'mesas' | 'print' | 'form' | 'emailTest';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'mesas' | 'print' | 'form' | 'emailTest';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
@@ -23,7 +22,6 @@ export default function AdminDashboard() {
     { id: 'samples', label: 'Muestras', icon: FlaskConical },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'tandas', label: 'Tandas', icon: Layers },
-    { id: 'catadores', label: 'Catadores', icon: Users },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'print', label: 'Imprimir Listado', icon: Printer },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
@@ -166,7 +164,6 @@ export default function AdminDashboard() {
             {activeTab === 'samples' && <SamplesManager />}
             {activeTab === 'simpleList' && <SimpleSamplesList />}
             {activeTab === 'tandas' && <TandasManager />}
-            {activeTab === 'catadores' && <CatadoresManager />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <SubscriptionForm />}

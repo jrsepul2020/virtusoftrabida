@@ -4,8 +4,6 @@ import SubscriptionForm from './components/SubscriptionForm';
 import AdminDashboard from './components/AdminDashboard';
 import LoginForm from './components/LoginForm';
 import MainLayout from './components/MainLayout';
-import CatadorLoginForm from './components/CatadorLoginForm';
-import CatasDashboard from './components/CatasDashboard';
 import CataForm from './components/CataForm';
 import { EmpresaScreen } from './components/EmpresaScreen';
 import { MuestrasScreen } from './components/MuestrasScreen';
@@ -15,14 +13,13 @@ import Modal from './components/Modal';
 import HeroLanding from './components/HeroLanding';
 import { CompanyData, SampleData, PaymentMethod } from './components/types';
 
-type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa' | 'catadorLogin' | 'catas';
+type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa';
 
 function App() {
   const [view, setView] = useState<View>('home');
   const [loading, setLoading] = useState(true);
   
   // Estados para autenticación
-  const [catadorLoggedIn, setCatadorLoggedIn] = useState<any>(null);
   const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
 
   // Estados para el formulario por pasos
@@ -330,22 +327,6 @@ function App() {
       setAdminLoggedIn(true);
     }
 
-    // Verificar estado de catador en localStorage
-    const catadorSession = localStorage.getItem('catadorSession');
-    if (catadorSession) {
-      try {
-        const session = JSON.parse(catadorSession);
-        const now = Date.now();
-        if (session.expiry && now < session.expiry) {
-          setCatadorLoggedIn(session);
-        } else {
-          localStorage.removeItem('catadorSession');
-        }
-      } catch (error) {
-        localStorage.removeItem('catadorSession');
-      }
-    }
-
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       (async () => {
         if (session) {
@@ -367,20 +348,7 @@ function App() {
       localStorage.removeItem('adminLoggedIn');
       setAdminLoggedIn(false);
     }
-    if (catadorLoggedIn) {
-      localStorage.removeItem('catadorSession');
-      setCatadorLoggedIn(null);
-    }
     await supabase.auth.signOut();
-    setView('home');
-  };
-
-  const handleCataNext = async (results: Record<string, any>, total: number) => {
-    try {
-      await supabase.from('catas').insert([{ data: results, total }]);
-    } catch (err) {
-      console.error('Error saving cata:', err);
-    }
     setView('home');
   };
 
@@ -388,7 +356,6 @@ function App() {
     return (
       <MainLayout 
         setView={setView}
-        catadorLoggedIn={catadorLoggedIn}
         adminLoggedIn={adminLoggedIn}
         onLogout={handleLogout}
       >
@@ -402,7 +369,6 @@ function App() {
   return (
     <MainLayout 
       setView={setView}
-      catadorLoggedIn={catadorLoggedIn}
       adminLoggedIn={adminLoggedIn}
       onLogout={handleLogout}
       currentView={view}
@@ -419,27 +385,6 @@ function App() {
       )}
 
       {view === 'admin' && <AdminDashboard />}
-
-      {view === 'catadorLogin' && (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-          <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            <CatadorLoginForm 
-              onLogin={(catador) => {
-                setCatadorLoggedIn(catador);
-                setView('catas');
-              }} 
-              onBack={() => setView('home')} 
-            />
-          </div>
-        </div>
-      )}
-
-      {view === 'catas' && catadorLoggedIn && (
-        <CatasDashboard 
-          catador={catadorLoggedIn} 
-          onLogout={handleLogout}
-        />
-      )}
 
       {view === 'reglamento' && (
         <div className="min-h-screen bg-gray-100 p-4">
@@ -472,7 +417,7 @@ function App() {
         </div>
       )}
 
-      {view === 'cata' && <CataForm onNext={handleCataNext} />}
+      {view === 'cata' && <CataForm />}
 
       {/* Formulario por pasos */}
       {view === 'empresa' && (

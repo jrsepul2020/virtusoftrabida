@@ -49,27 +49,30 @@ export default function UserLoginForm({ onLogin, onBack }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-md">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           Volver
         </button>
 
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex items-center justify-center gap-3 mb-6 sm:mb-8">
           <Building2 className="w-10 h-10 text-primary-600" />
-          <h2 className="text-2xl font-bold text-gray-800">Acceso Empresas</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Acceso Empresas</h2>
         </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"></div>
+              {error}
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
@@ -79,7 +82,7 @@ export default function UserLoginForm({ onLogin, onBack }: Props) {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-base"
               placeholder="correo@empresa.com"
             />
           </div>
@@ -93,7 +96,7 @@ export default function UserLoginForm({ onLogin, onBack }: Props) {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-base"
               placeholder="••••••••"
             />
           </div>
@@ -101,7 +104,7 @@ export default function UserLoginForm({ onLogin, onBack }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="w-full bg-primary-600 text-white py-3 sm:py-4 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
