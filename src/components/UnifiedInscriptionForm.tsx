@@ -4,40 +4,28 @@ import { MuestrasScreen } from './MuestrasScreen';
 import { ConfirmacionScreen } from './ConfirmacionScreen';
 import { CompanyData, SampleData, PaymentMethod } from './types';
 import { supabase } from '../lib/supabase';
-import { User, CheckCircle, AlertTriangle } from 'lucide-react';
+import { User, CheckCircle } from 'lucide-react';
 
-type AdminFormStep = 'empresa' | 'muestras' | 'confirmacion';
+type FormStep = 'empresa' | 'muestras' | 'confirmacion';
 
-export default function AdminInscriptionForm() {
-  const [currentStep, setCurrentStep] = useState<AdminFormStep>('empresa');
+interface UnifiedInscriptionFormProps {
+  isAdmin?: boolean; // Si es true, muestra opciones de admin
+  onSuccess?: () => void; // Callback opcional cuando se completa
+}
+
+export default function UnifiedInscriptionForm({ 
+  isAdmin = false, 
+  onSuccess 
+}: UnifiedInscriptionFormProps) {
+  const [currentStep, setCurrentStep] = useState<FormStep>('empresa');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   
-  // Estado para marcar si es inscripción manual
-  const [isManualInscription, setIsManualInscription] = useState(true);
-  
-  // Función para generar código único para muestras manuales
-  const generateUniqueCode = async (): Promise<number> => {
-    // Obtener códigos existentes
-    const { data: existingCodes } = await supabase
-      .from('muestras')
-      .select('codigo_muestra')
-      .not('codigo_muestra', 'is', null);
-    
-    const usedCodes = new Set(existingCodes?.map(item => item.codigo_muestra) || []);
-    
-    // Buscar primer código disponible del 1 al 999
-    for (let code = 1; code <= 999; code++) {
-      if (!usedCodes.has(code)) {
-        return code;
-      }
-    }
-    
-    throw new Error('No hay códigos disponibles (1-999)');
-  };
+  // Estado para marcar si es inscripción manual (solo para admin)
+  const [isManualInscription, setIsManualInscription] = useState(isAdmin);
 
-  // Estados para el formulario por pasos (igual que en App.tsx)
+  // Estados para el formulario por pasos
   const [company, setCompany] = useState<CompanyData>({
     nif: '',
     nombre_empresa: '',
@@ -73,7 +61,27 @@ export default function AdminInscriptionForm() {
 
   const [payment, setPayment] = useState<PaymentMethod>('transferencia');
 
-  // Funciones de cálculo de precio (igual que en App.tsx)
+  // Función para generar código único para muestras manuales
+  const generateUniqueCode = async (): Promise<number> => {
+    // Obtener códigos existentes
+    const { data: existingCodes } = await supabase
+      .from('muestras')
+      .select('codigo_muestra')
+      .not('codigo_muestra', 'is', null);
+    
+    const usedCodes = new Set(existingCodes?.map(item => item.codigo_muestra) || []);
+    
+    // Buscar primer código disponible del 1 al 999
+    for (let code = 1; code <= 999; code++) {
+      if (!usedCodes.has(code)) {
+        return code;
+      }
+    }
+    
+    throw new Error('No hay códigos disponibles (1-999)');
+  };
+
+  // Funciones de cálculo de precio
   const calculatePrice = (numMuestras: number) => {
     const gratis = Math.min(numMuestras, 2);
     const pagadas = Math.max(numMuestras - 2, 0);
@@ -154,7 +162,7 @@ export default function AdminInscriptionForm() {
         .from('empresas')
         .insert([{
           ...company,
-          manual: isManualInscription, // Campo adicional para marcar inscripción manual
+          manual: isAdmin && isManualInscription, // Solo marcar como manual si es admin y está activado
         }])
         .select()
         .single();
@@ -167,15 +175,15 @@ export default function AdminInscriptionForm() {
       for (const sample of samples) {
         let codigoMuestra = null;
         
-        // Si es inscripción manual, generar código único
-        if (isManualInscription) {
+        // Si es inscripción manual de admin, generar código único
+        if (isAdmin && isManualInscription) {
           codigoMuestra = await generateUniqueCode();
         }
         
         samplesWithEmpresaId.push({
           ...sample,
           empresa_id: empresaData.id,
-          manual: isManualInscription,
+          manual: isAdmin && isManualInscription,
           codigo_muestra: codigoMuestra, // Código único para muestras manuales
         });
       }
@@ -186,11 +194,40 @@ export default function AdminInscriptionForm() {
 
       if (samplesError) throw samplesError;
 
+      // Si no es admin, enviar email de confirmación
+      if (!isAdmin) {
+        try {
+          const response = await fetch('/api/send-inscription-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              empresa: company,
+              muestras: samples,
+              precio: calculatePrice(company.num_muestras),
+              metodoPago: payment,
+            }),
+          });
+
+          if (!response.ok) {
+            console.warn('Error enviando email de confirmación');
+          }
+        } catch (emailError) {
+          console.warn('Error enviando email:', emailError);
+        }
+      }
+
       setSuccess(true);
       
-      // Si es manual, mostrar los códigos generados
-      if (isManualInscription) {
+      // Si es admin y manual, mostrar los códigos generados
+      if (isAdmin && isManualInscription) {
         console.log('Códigos de muestra asignados:', samplesWithEmpresaId.map(s => s.codigo_muestra));
+      }
+      
+      // Llamar callback si existe
+      if (onSuccess) {
+        onSuccess();
       }
       
       // Limpiar formulario después de un tiempo
@@ -229,7 +266,9 @@ export default function AdminInscriptionForm() {
           destilado: '',
         }]);
         setPayment('transferencia');
-        setIsManualInscription(true);
+        if (isAdmin) {
+          setIsManualInscription(true);
+        }
       }, 3000);
 
     } catch (err: any) {
@@ -242,59 +281,61 @@ export default function AdminInscriptionForm() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header con indicador de inscripción manual */}
-      <div className={`border rounded-xl p-4 mb-6 ${isManualInscription ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-              isManualInscription ? 'bg-orange-100' : 'bg-blue-100'
-            }`}>
-              <User className={`w-5 h-5 ${isManualInscription ? 'text-orange-600' : 'text-blue-600'}`} />
+      {/* Header con indicador de inscripción manual (solo para admin) */}
+      {isAdmin && (
+        <div className={`border rounded-xl p-4 mb-6 ${isManualInscription ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                isManualInscription ? 'bg-orange-100' : 'bg-blue-100'
+              }`}>
+                <User className={`w-5 h-5 ${isManualInscription ? 'text-orange-600' : 'text-blue-600'}`} />
+              </div>
+              <div>
+                <h3 className={`font-semibold ${isManualInscription ? 'text-orange-800' : 'text-blue-800'}`}>
+                  {isManualInscription ? '🏷️ Inscripción Manual' : '💻 Inscripción Automática'}
+                </h3>
+                <p className={`text-sm ${isManualInscription ? 'text-orange-600' : 'text-blue-600'}`}>
+                  {isManualInscription 
+                    ? 'Se generarán códigos únicos (1-999) para cada muestra'
+                    : 'Inscripción estándar sin códigos especiales'
+                  }
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className={`font-semibold ${isManualInscription ? 'text-orange-800' : 'text-blue-800'}`}>
-                {isManualInscription ? '🏷️ Inscripción Manual' : '💻 Inscripción Automática'}
-              </h3>
-              <p className={`text-sm ${isManualInscription ? 'text-orange-600' : 'text-blue-600'}`}>
-                {isManualInscription 
-                  ? 'Se generarán códigos únicos (1-999) para cada muestra'
-                  : 'Inscripción estándar sin códigos especiales'
-                }
-              </p>
+            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border">
+              <input
+                type="checkbox"
+                id="manual-inscription"
+                checked={isManualInscription}
+                onChange={(e) => setIsManualInscription(e.target.checked)}
+                className="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              />
+              <label htmlFor="manual-inscription" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
+                Muestra Manual
+              </label>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border">
-            <input
-              type="checkbox"
-              id="manual-inscription"
-              checked={isManualInscription}
-              onChange={(e) => setIsManualInscription(e.target.checked)}
-              className="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-            />
-            <label htmlFor="manual-inscription" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
-              Muestra Manual
-            </label>
-          </div>
+          
+          {isManualInscription && (
+            <div className="mt-3 p-3 bg-orange-100 rounded-lg border border-orange-200">
+              <div className="flex items-start gap-2">
+                <div className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center mt-0.5">
+                  <span className="text-orange-600 text-xs font-bold">!</span>
+                </div>
+                <div className="text-sm text-orange-700">
+                  <p className="font-medium">Características de la inscripción manual:</p>
+                  <ul className="mt-1 space-y-1 text-xs">
+                    <li>• Se asignará un código único del 1 al 999 a cada muestra</li>
+                    <li>• La inscripción se marcará como "manual" en la base de datos</li>
+                    <li>• Ideal para inscripciones presenciales o telefónicas</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        
-        {isManualInscription && (
-          <div className="mt-3 p-3 bg-orange-100 rounded-lg border border-orange-200">
-            <div className="flex items-start gap-2">
-              <div className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center mt-0.5">
-                <span className="text-orange-600 text-xs font-bold">!</span>
-              </div>
-              <div className="text-sm text-orange-700">
-                <p className="font-medium">Características de la inscripción manual:</p>
-                <ul className="mt-1 space-y-1 text-xs">
-                  <li>• Se asignará un código único del 1 al 999 a cada muestra</li>
-                  <li>• La inscripción se marcará como "manual" en la base de datos</li>
-                  <li>• Ideal para inscripciones presenciales o telefónicas</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Indicador de progreso */}
       <div className="mb-8">
@@ -366,10 +407,13 @@ export default function AdminInscriptionForm() {
           <div className="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-800 mb-2">
-              ¡Inscripción Manual Completada!
+              {isAdmin ? '¡Inscripción Manual Completada!' : '¡Inscripción Completada!'}
             </h3>
             <p className="text-gray-600 mb-4">
-              La empresa y sus muestras han sido registradas correctamente como inscripción manual.
+              {isAdmin && isManualInscription
+                ? 'La empresa y sus muestras han sido registradas correctamente con códigos únicos.'
+                : 'La inscripción se ha procesado correctamente. Recibirás un email de confirmación.'
+              }
             </p>
             <p className="text-sm text-blue-600">
               Regresando al formulario en unos segundos...

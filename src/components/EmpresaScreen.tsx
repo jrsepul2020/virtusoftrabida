@@ -9,7 +9,7 @@ export function EmpresaScreen({
   validationErrors = {},
 }: {
   company: CompanyData;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onNext: () => void;
   precio: { pagadas: number; gratis: number; total: number };
   validationErrors?: {[key: string]: boolean};
@@ -200,14 +200,16 @@ export function EmpresaScreen({
           </div>
           <div>
             <label className="block text-primary-800 font-medium mb-1">Nº de muestras</label>
-            <input 
-              type="number" 
+            <select 
               name="num_muestras" 
-              min={1} 
               value={company.num_muestras} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
-            />
+              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors bg-white" 
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(num => (
+                <option key={num} value={num}>{num} muestra{num > 1 ? 's' : ''}</option>
+              ))}
+            </select>
           </div>
         </div>
         
