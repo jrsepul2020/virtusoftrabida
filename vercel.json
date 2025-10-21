@@ -1,11 +1,6 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "functions": {
-    "api/send-inscription-email.ts": {
-      "runtime": "@vercel/node"
-    }
-  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
