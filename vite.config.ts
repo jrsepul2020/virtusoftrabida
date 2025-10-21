@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: '/',
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
@@ -22,12 +22,12 @@ export default defineConfig({
     // Enable source maps for better debugging
     sourcemap: true,
     // Optimize chunk size
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    // Clear output directory
+    emptyOutDir: true
   },
-  // PWA and offline support
+  // Development server configuration
   server: {
-    // Enable HTTPS in development for testing PWA features
-    // https: true,
     host: true,
     port: 3000
   },
