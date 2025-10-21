@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
-import { Search, Eye, Mail, MapPin, X, Edit2, Save } from 'lucide-react';
+import { Search, Eye, Mail, MapPin, X, Edit2, Save, Trash2 } from 'lucide-react';
 
 export default function CompaniesManager() {
   const [companies, setCompanies] = useState<CompanyWithSamples[]>([]);
@@ -11,6 +11,8 @@ export default function CompaniesManager() {
   const [selectedCompany, setSelectedCompany] = useState<CompanyWithSamples | null>(null);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<CompanyWithSamples | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -133,6 +135,52 @@ export default function CompaniesManager() {
       alert('Error al guardar los cambios');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteCompany = async (company: CompanyWithSamples) => {
+    setShowDeleteConfirm(company);
+  };
+
+  const confirmDeleteCompany = async () => {
+    if (!showDeleteConfirm) return;
+
+    setDeleting(true);
+    try {
+      // Primero eliminar todas las muestras asociadas
+      const { error: samplesError } = await supabase
+        .from('muestras')
+        .delete()
+        .eq('ididempresa', showDeleteConfirm.id);
+
+      if (samplesError) {
+        console.error('Error deleting samples:', samplesError);
+        throw new Error('Error al eliminar las muestras de la empresa');
+      }
+
+      // Luego eliminar la empresa
+      const { error: companyError } = await supabase
+        .from('empresas')
+        .delete()
+        .eq('id', showDeleteConfirm.id);
+
+      if (companyError) {
+        console.error('Error deleting company:', companyError);
+        throw new Error('Error al eliminar la empresa');
+      }
+
+      // Actualizar la lista
+      await fetchCompanies();
+      setShowDeleteConfirm(null);
+      
+      // Mostrar notificación de éxito
+      alert(`Empresa "${showDeleteConfirm.name}" y sus ${showDeleteConfirm.samples?.length || 0} muestras han sido eliminadas correctamente.`);
+      
+    } catch (error: any) {
+      console.error('Error in delete operation:', error);
+      alert(error.message || 'Error al eliminar la empresa');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -307,6 +355,16 @@ export default function CompaniesManager() {
                       >
                         <Eye className="w-4 h-4 lg:w-5 lg:h-5" />
                       </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCompany(company);
+                        }}
+                        className="inline-flex items-center justify-center p-1.5 lg:p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar empresa y sus muestras"
+                      >
+                        <Trash2 className="w-4 h-4 lg:w-5 lg:h-5" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -384,6 +442,16 @@ export default function CompaniesManager() {
                     title="Ver detalles"
                   >
                     <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteCompany(company);
+                    }}
+                    className="inline-flex items-center justify-center p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar empresa y muestras"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -823,6 +891,55 @@ export default function CompaniesManager() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Eliminar Empresa</h3>
+                <p className="text-sm text-gray-600">Esta acción no se puede deshacer</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 mb-2">
+                ¿Estás seguro de que quieres eliminar la empresa <strong>"{showDeleteConfirm.name}"</strong>?
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-800 text-sm font-medium mb-1">⚠️ Esto eliminará permanentemente:</p>
+                <ul className="text-red-700 text-sm space-y-1">
+                  <li>• Los datos de la empresa</li>
+                  <li>• <strong>{showDeleteConfirm.samples?.length || 0} muestra(s)</strong> asociada(s)</li>
+                  <li>• Todo el historial relacionado</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                disabled={deleting}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteCompany}
+                disabled={deleting}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {deleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
