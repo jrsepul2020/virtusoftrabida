@@ -1,4 +1,4 @@
-const CACHE_NAME = 'virtus-cata-v1';
+const CACHE_NAME = 'virtus-cata-v1.2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
