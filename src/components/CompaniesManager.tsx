@@ -41,7 +41,19 @@ export default function CompaniesManager() {
             .order('codigo', { ascending: true });
 
           return {
-            ...company,
+            id: company.id,
+            name: company.name,
+            nif: company.nif,
+            address: company.address,
+            postal: company.postal,
+            city: company.city,
+            country: company.country,
+            telefono: company.telefono,
+            email: company.email,
+            totalinscripciones: company.totalinscripciones,
+            user_id: company.user_id,
+            created_at: company.created_at,
+            updated_at: company.updated_at,
             samples: samples || [],
           };
         })
