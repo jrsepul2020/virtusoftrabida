@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 
-type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa';
+type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion';
 
 type Props = {
   children: React.ReactNode;

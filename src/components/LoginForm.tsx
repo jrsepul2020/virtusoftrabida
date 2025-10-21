@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Lock, Mail, X, Shield } from 'lucide-react';
 
 type Props = {
-  onLogin: () => void;
+  onLogin: (success: boolean) => void;
   onBack: () => void;
 };
 
@@ -25,7 +25,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
       });
 
       if (error) throw error;
-      onLogin();
+      onLogin(true);
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
     } finally {

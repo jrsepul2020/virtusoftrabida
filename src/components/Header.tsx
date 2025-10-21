@@ -1,7 +1,7 @@
 import { useState, Dispatch, SetStateAction } from "react";
 import { LogOut } from "lucide-react";
 
-type View = 'home' | 'adminLogin' | 'admin' | 'subscribe' | 'cata' | 'empresa' | 'muestras' | 'confirmacion' | 'pago' | 'reglamento' | 'normativa';
+type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion';
 
 export default function Header({
   setView,
@@ -33,10 +33,7 @@ export default function Header({
 
   const menuItems = [
     { name: "Inicio", onClick: () => setView('home') },
-    { name: "Inscripción", onClick: () => setView('empresa') },
-    { name: "Cata", onClick: () => setView('cata') },
-    { name: "Reglamento", onClick: () => setView('reglamento') },
-    { name: "Normativa", onClick: () => setView('normativa') },
+    { name: "Inscripción", onClick: () => setView('inscripcion') },
   ];
 
   const isHomePage = currentView === 'home';
