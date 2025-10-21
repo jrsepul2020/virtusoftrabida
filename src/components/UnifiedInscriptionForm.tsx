@@ -83,9 +83,10 @@ export default function UnifiedInscriptionForm({
 
   // Funciones de cálculo de precio
   const calculatePrice = (numMuestras: number) => {
-    const gratis = Math.min(numMuestras, 2);
-    const pagadas = Math.max(numMuestras - 2, 0);
-    const total = pagadas * 20;
+    // Cada 5 muestras, 1 gratis
+    const gratis = Math.floor(numMuestras / 5);
+    const pagadas = numMuestras - gratis;
+    const total = pagadas * 150;
     return { pagadas, gratis, total };
   };
 
@@ -161,7 +162,21 @@ export default function UnifiedInscriptionForm({
       const { data: empresaData, error: empresaError } = await supabase
         .from('empresas')
         .insert([{
-          ...company,
+          nif: company.nif,
+          name: company.nombre_empresa,
+          contact_person: company.persona_contacto,
+          phone: company.telefono,
+          movil: company.movil,
+          email: company.email,
+          address: company.direccion, // Mapear direccion a address
+          poblacion: company.poblacion,
+          codigo_postal: company.codigo_postal,
+          ciudad: company.ciudad,
+          pais: company.pais,
+          conocimiento: company.medio_conocio,
+          pagina_web: company.pagina_web,
+          observaciones: company.observaciones,
+          totalinscripciones: company.num_muestras,
           manual: isAdmin && isManualInscription, // Solo marcar como manual si es admin y está activado
         }])
         .select()
