@@ -4,7 +4,8 @@ import { MuestrasScreen } from './MuestrasScreen';
 import { ConfirmacionScreen } from './ConfirmacionScreen';
 import { CompanyData, SampleData, PaymentMethod } from './types';
 import { supabase } from '../lib/supabase';
-import { User, CheckCircle } from 'lucide-react';
+import { User } from 'lucide-react';
+import Modal from './Modal';
 
 type FormStep = 'empresa' | 'muestras' | 'confirmacion';
 
@@ -21,6 +22,20 @@ export default function UnifiedInscriptionForm({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  
+  // Estados para el modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<'error' | 'success' | 'info'>('info');
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  
+  // Función para mostrar modal
+  const showModal = (type: 'error' | 'success' | 'info', title: string, message: string) => {
+    setModalType(type);
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalOpen(true);
+  };
   
   // Estado para marcar si es inscripción manual (solo para admin)
   const [isManualInscription, setIsManualInscription] = useState(isAdmin);
@@ -60,6 +75,26 @@ export default function UnifiedInscriptionForm({
   }]);
 
   const [payment, setPayment] = useState<PaymentMethod>('transferencia');
+
+  // Función para generar número de pedido único
+  const generateOrderNumber = async (): Promise<number> => {
+    try {
+      // Obtener el número de pedido más alto actual
+      const { data: maxOrderData } = await supabase
+        .from('empresas')
+        .select('pedido')
+        .not('pedido', 'is', null)
+        .order('pedido', { ascending: false })
+        .limit(1);
+
+      const currentMax = maxOrderData?.[0]?.pedido || 0;
+      return currentMax + 1;
+    } catch (error) {
+      console.error('Error generating order number:', error);
+      // Fallback: usar timestamp
+      return Date.now();
+    }
+  };
 
   // Función para generar código único para muestras manuales
   const generateUniqueCode = async (): Promise<number> => {
@@ -158,31 +193,55 @@ export default function UnifiedInscriptionForm({
     setError('');
 
     try {
-      // Insertar empresa
-      const { data: empresaData, error: empresaError } = await supabase
+      // Verificar si el email ya existe (opcional)
+      const { data: existingCompany } = await supabase
         .from('empresas')
-        .insert([{
-          nif: company.nif,
-          name: company.nombre_empresa,
-          contact_person: company.persona_contacto,
-          phone: company.telefono,
-          movil: company.movil,
-          email: company.email,
-          address: company.direccion, // Mapear direccion a address
-          poblacion: company.poblacion,
-          codigo_postal: company.codigo_postal,
-          ciudad: company.ciudad,
-          pais: company.pais,
-          conocimiento: company.medio_conocio,
-          pagina_web: company.pagina_web,
-          observaciones: company.observaciones,
-          totalinscripciones: company.num_muestras,
-          manual: isAdmin && isManualInscription, // Solo marcar como manual si es admin y está activado
-        }])
+        .select('email')
+        .eq('email', company.email)
+        .maybeSingle();
+
+      if (existingCompany) {
+        showModal('error', 'Email ya registrado', 'Ya existe una empresa registrada con este email. Por favor, usa un email diferente.');
+        return;
+      }
+
+      // Generar número de pedido automáticamente
+      const orderNumber = await generateOrderNumber();
+
+      // Mapear los datos del formulario a los nombres de columnas de la BD
+      const empresaData = {
+        nif: company.nif,
+        name: company.nombre_empresa,  // nombre_empresa -> name
+        contact_person: company.persona_contacto,  // persona_contacto -> contact_person
+        phone: company.telefono,  // telefono -> phone
+        movil: company.movil,
+        email: company.email,
+        address: company.direccion,  // direccion -> address
+        poblacion: company.poblacion,
+        codigo_postal: company.codigo_postal,
+        ciudad: company.ciudad,
+        pais: company.pais,
+        conocimiento: company.medio_conocio,  // medio_conocio -> conocimiento
+        pagina_web: company.pagina_web,
+        observaciones: company.observaciones,
+        pedido: orderNumber,  // Número de pedido generado automáticamente
+        totalinscripciones: company.num_muestras,  // Número de muestras como total de inscripciones
+        status: 'pending',  // Estado por defecto
+        created_at: new Date().toISOString(),
+      };
+
+      console.log('Datos que se van a insertar en empresas:', empresaData);
+
+      const { data: empresa, error: empresaError } = await supabase
+        .from('empresas')
+        .insert([empresaData])
         .select()
         .single();
 
-      if (empresaError) throw empresaError;
+      if (empresaError) {
+        console.error('Error al insertar empresa:', empresaError);
+        throw empresaError;
+      }
 
       // Preparar muestras con códigos únicos si es manual
       const samplesWithEmpresaId = [];
@@ -196,10 +255,21 @@ export default function UnifiedInscriptionForm({
         }
         
         samplesWithEmpresaId.push({
-          ...sample,
-          empresa_id: empresaData.id,
+          nombre: sample.nombre_muestra,  // nombre_muestra -> nombre
+          categoria: sample.categoria,
+          origen: sample.origen,
+          igp: sample.igp,
+          pais: sample.pais,
+          azucar: sample.azucar ? parseFloat(sample.azucar) : null,
+          grado: sample.grado_alcoholico ? parseFloat(sample.grado_alcoholico) : null,  // grado_alcoholico -> grado
+          existencias: sample.existencias ? parseInt(sample.existencias) : 0,
+          año: sample.anio ? parseInt(sample.anio) : null,  // anio -> año
+          tipouva: sample.tipo_uva,  // tipo_uva -> tipouva
+          tipoaceituna: sample.tipo_aceituna,  // tipo_aceituna -> tipoaceituna
+          destilado: sample.destilado,
+          ididempresa: empresa.id,  // empresa_id -> ididempresa
           manual: isAdmin && isManualInscription,
-          codigo_muestra: codigoMuestra, // Código único para muestras manuales
+          codigo: codigoMuestra, // Código único para muestras manuales (si aplica)
         });
       }
 
@@ -211,33 +281,47 @@ export default function UnifiedInscriptionForm({
 
       // Si no es admin, enviar email de confirmación
       if (!isAdmin) {
+        console.log('Enviando email de confirmación...');
         try {
+          const emailData = {
+            empresa: company,
+            muestras: samples,
+            precio: calculatePrice(company.num_muestras),
+            metodoPago: payment,
+          };
+          
+          console.log('Datos del email:', emailData);
+          
           const response = await fetch('/api/send-inscription-email', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              empresa: company,
-              muestras: samples,
-              precio: calculatePrice(company.num_muestras),
-              metodoPago: payment,
-            }),
+            body: JSON.stringify(emailData),
           });
 
+          console.log('Respuesta del servidor de email:', response.status, response.statusText);
+
           if (!response.ok) {
-            console.warn('Error enviando email de confirmación');
+            const errorText = await response.text();
+            console.error('Error enviando email de confirmación:', errorText);
+          } else {
+            const result = await response.json();
+            console.log('Email enviado correctamente:', result);
           }
         } catch (emailError) {
-          console.warn('Error enviando email:', emailError);
+          console.error('Error enviando email:', emailError);
         }
+      } else {
+        console.log('No se envía email porque es inscripción de admin');
       }
 
       setSuccess(true);
+      showModal('success', '¡Inscripción completada!', 'Tu inscripción ha sido enviada correctamente. Recibirás un email de confirmación en breve.');
       
       // Si es admin y manual, mostrar los códigos generados
       if (isAdmin && isManualInscription) {
-        console.log('Códigos de muestra asignados:', samplesWithEmpresaId.map(s => s.codigo_muestra));
+        console.log('Códigos de muestra asignados:', samplesWithEmpresaId.map(s => s.codigo));
       }
       
       // Llamar callback si existe
@@ -288,7 +372,16 @@ export default function UnifiedInscriptionForm({
 
     } catch (err: any) {
       console.error('Error en inscripción:', err);
-      setError(err.message || 'Error al procesar la inscripción');
+      
+      // Manejar errores específicos con modal
+      if (err.message?.includes('duplicate key value violates unique constraint "companies_email_key"') || 
+          err.message?.includes('empresas_email_key')) {
+        showModal('error', 'Email duplicado', 'Ya existe una empresa registrada con este email. Por favor, usa un email diferente o contacta con el administrador si ya te registraste anteriormente.');
+      } else if (err.message?.includes('duplicate key value violates unique constraint')) {
+        showModal('error', 'Datos duplicados', 'Ya existe un registro con estos datos. Por favor, verifica la información.');
+      } else {
+        showModal('error', 'Error de inscripción', err.message || 'Error al procesar la inscripción. Por favor, inténtalo de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -296,7 +389,7 @@ export default function UnifiedInscriptionForm({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-2">
         {/* Header con indicador de inscripción manual (solo para admin) */}
         {isAdmin && (
           <div className={`border rounded-xl p-4 mb-4 ${isManualInscription ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
@@ -354,31 +447,31 @@ export default function UnifiedInscriptionForm({
       )}
 
       {/* Indicador de progreso */}
-      <div className="mb-8">
-        <div className="flex items-center justify-center space-x-8">
+      <div className="mb-2">
+        <div className="flex items-center justify-center space-x-6">
           <div className={`flex items-center ${currentStep === 'empresa' ? 'text-primary-600' : 'text-gray-400'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
               currentStep === 'empresa' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               1
             </div>
-            <span className="ml-2 text-sm font-medium">Empresa</span>
+            <span className="ml-1 text-xs font-medium">Empresa</span>
           </div>
           <div className={`flex items-center ${currentStep === 'muestras' ? 'text-primary-600' : 'text-gray-400'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
               currentStep === 'muestras' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               2
             </div>
-            <span className="ml-2 text-sm font-medium">Muestras</span>
+            <span className="ml-1 text-xs font-medium">Muestras</span>
           </div>
           <div className={`flex items-center ${currentStep === 'confirmacion' ? 'text-primary-600' : 'text-gray-400'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
               currentStep === 'confirmacion' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               3
             </div>
-            <span className="ml-2 text-sm font-medium">Confirmación</span>
+            <span className="ml-1 text-xs font-medium">Confirmación</span>
           </div>
         </div>
       </div>
@@ -417,26 +510,59 @@ export default function UnifiedInscriptionForm({
         />
       )}
 
-      {/* Mensaje de éxito */}
-      {success && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              {isAdmin ? '¡Inscripción Manual Completada!' : '¡Inscripción Completada!'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {isAdmin && isManualInscription
-                ? 'La empresa y sus muestras han sido registradas correctamente con códigos únicos.'
-                : 'La inscripción se ha procesado correctamente. Recibirás un email de confirmación.'
+      {/* Modal para errores y mensajes */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalTitle}
+        message={modalMessage}
+        type={modalType}
+        onConfirm={() => {
+          setModalOpen(false);
+          if (modalType === 'success') {
+            // Si es éxito, resetear el formulario después de cerrar
+            setTimeout(() => {
+              setSuccess(false);
+              setCurrentStep('empresa');
+              setCompany({
+                nif: '',
+                nombre_empresa: '',
+                persona_contacto: '',
+                telefono: '',
+                movil: '',
+                email: '',
+                direccion: '',
+                poblacion: '',
+                codigo_postal: '',
+                ciudad: '',
+                pais: '',
+                medio_conocio: '',
+                pagina_web: '',
+                observaciones: '',
+                num_muestras: 1,
+              });
+              setSamples([{
+                nombre_muestra: '',
+                categoria: '',
+                origen: '',
+                igp: '',
+                pais: '',
+                azucar: '',
+                grado_alcoholico: '',
+                existencias: '',
+                anio: '',
+                tipo_uva: '',
+                tipo_aceituna: '',
+                destilado: '',
+              }]);
+              setPayment('transferencia');
+              if (isAdmin) {
+                setIsManualInscription(true);
               }
-            </p>
-            <p className="text-sm text-blue-600">
-              Regresando al formulario en unos segundos...
-            </p>
-          </div>
-        </div>
-      )}
+            }, 1000);
+          }
+        }}
+      />
       </div>
     </div>
   );

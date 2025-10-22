@@ -15,19 +15,18 @@ export function MuestrasScreen({
   validationErrors?: {[key: string]: boolean};
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-4 sm:py-6 px-4 sm:px-6">
-      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100 mt-4">
-        <h2 className="text-xl sm:text-2xl text-primary-800 font-bold mb-4 text-center">
-          Datos de las Muestras ({samples.length})
-        </h2>
+    <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100">
+      <h2 className="text-xl sm:text-2xl text-primary-800 font-bold mb-4 text-center">
+        Datos de las Muestras ({samples.length})
+      </h2>
         {samples.map((sample, idx) => (
-          <div key={idx} className="mb-6 sm:mb-8 bg-primary-100 rounded-xl p-4 sm:p-8 shadow-inner">
-            <div className="font-semibold mb-4 text-primary-700 text-lg text-center">
+          <div key={idx} className="mb-4 bg-orange-50 rounded-xl p-4 sm:p-6 border border-orange-100">
+            <div className="font-semibold mb-3 text-primary-700 text-base text-center">
               Muestra #{idx + 1}
             </div>
             
             {/* Nombre de la muestra */}
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-primary-800 font-medium mb-1">Nombre de la Muestra *</label>
               <input 
                 type="text" 
@@ -35,11 +34,11 @@ export function MuestrasScreen({
                 value={sample.nombre_muestra} 
                 onChange={e => onChange(idx, e)} 
                 required 
-                className={`w-full px-4 py-3 rounded-lg border ${
+                className={`w-full px-4 py-2 rounded-lg border ${
                   validationErrors?.[`muestra_${idx}`] 
                     ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
                     : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
-                } focus:ring-2 transition-colors text-base`}
+                } focus:ring-2 transition-colors`}
                 placeholder="Introduzca el nombre de la muestra"
               />
               {validationErrors?.[`muestra_${idx}`] && (
@@ -55,7 +54,7 @@ export function MuestrasScreen({
                   name="categoria" 
                   value={sample.categoria} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors bg-white text-base"
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors bg-white"
                 >
                   <option value="">Seleccionar categoría...</option>
                   <option value="VINO BLANCO">VINO BLANCO</option>
@@ -79,7 +78,7 @@ export function MuestrasScreen({
                   name="pais" 
                   value={sample.pais} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                   placeholder="País de origen"
                 />
               </div>
@@ -90,7 +89,7 @@ export function MuestrasScreen({
                   name="anio" 
                   value={sample.anio} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                   placeholder="2024"
                   min="1900"
                   max={new Date().getFullYear()}
@@ -107,7 +106,7 @@ export function MuestrasScreen({
                   name="origen" 
                   value={sample.origen} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                   placeholder="Región de origen"
                 />
               </div>
@@ -118,7 +117,7 @@ export function MuestrasScreen({
                   name="igp" 
                   value={sample.igp} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                   placeholder="Indicación Geográfica Protegida"
                 />
               </div>
@@ -133,7 +132,7 @@ export function MuestrasScreen({
                   name="azucar" 
                   value={sample.azucar} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                   placeholder="g/l"
                 />
               </div>
@@ -144,7 +143,7 @@ export function MuestrasScreen({
                   name="grado_alcoholico" 
                   value={sample.grado_alcoholico} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                   placeholder="% vol."
                 />
               </div>
@@ -159,7 +158,7 @@ export function MuestrasScreen({
                   name="existencias" 
                   value={sample.existencias} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                   placeholder="Número de botellas"
                   min="0"
                 />
@@ -176,7 +175,7 @@ export function MuestrasScreen({
                     name="tipo_uva" 
                     value={sample.tipo_uva} 
                     onChange={e => onChange(idx, e)} 
-                    className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                    className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                     placeholder="Variedad de uva"
                   />
                 </div>
@@ -192,7 +191,7 @@ export function MuestrasScreen({
                     name="tipo_aceituna" 
                     value={sample.tipo_aceituna} 
                     onChange={e => onChange(idx, e)} 
-                    className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                    className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                     placeholder="Variedad de aceituna"
                   />
                 </div>
@@ -208,7 +207,7 @@ export function MuestrasScreen({
                     name="destilado" 
                     value={sample.destilado} 
                     onChange={e => onChange(idx, e)} 
-                    className="w-full px-4 py-3 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors text-base" 
+                    className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
                     placeholder="Tipo de destilado"
                   />
                 </div>
@@ -218,23 +217,22 @@ export function MuestrasScreen({
         ))}
         
         {/* Botones de navegación */}
-        <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4">
           <button 
             type="button" 
             onClick={onPrev} 
-            className="w-full sm:w-auto bg-gray-300 text-gray-700 px-8 py-3 rounded-lg font-medium hover:bg-gray-400 transition-colors"
+            className="w-full sm:w-auto bg-gray-300 text-gray-700 px-8 py-2 rounded-lg font-medium hover:bg-gray-400 transition-colors"
           >
-            Atrás
+            Anterior
           </button>
           <button 
             type="button" 
             onClick={onNext} 
-            className="w-full sm:w-auto bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+            className="w-full sm:w-auto bg-primary-600 text-white px-8 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
           >
             Siguiente
           </button>
         </div>
-      </div>
     </div>
   );
 }
