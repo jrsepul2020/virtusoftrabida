@@ -1,7 +1,7 @@
 import { useState, Dispatch, SetStateAction } from "react";
 import { LogOut } from "lucide-react";
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion';
+type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'cata';
 
 export default function Header({
   setView,
@@ -34,6 +34,7 @@ export default function Header({
   const menuItems = [
     { name: "Inicio", onClick: () => setView('home') },
     { name: "Inscripción", onClick: () => setView('inscripcion') },
+    { name: "Cata", onClick: () => setView('cata') },
   ];
 
   const isHomePage = currentView === 'home';
