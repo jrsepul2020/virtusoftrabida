@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
-import { Search, Eye, Mail, MapPin, X, Edit2, Save, Trash2 } from 'lucide-react';
+import { Search, Eye, Mail, MapPin, X, Edit2, Save, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+
+type SortField = 'name' | 'email' | 'created_at' | 'pais' | 'totalinscripciones' | 'pedido';
+type SortDirection = 'asc' | 'desc';
 
 export default function CompaniesManager() {
   const [companies, setCompanies] = useState<CompanyWithSamples[]>([]);
@@ -13,14 +16,64 @@ export default function CompaniesManager() {
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<CompanyWithSamples | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [statusConfigs, setStatusConfigs] = useState<any[]>([]);
+  const [changingStatus, setChangingStatus] = useState<{ companyId: number; currentStatus: string } | null>(null);
 
   useEffect(() => {
     fetchCompanies();
+    loadStatusConfigs();
   }, []);
+
+  const loadStatusConfigs = async () => {
+    try {
+      const { data: configs } = await supabase
+        .from('status_configs')
+        .select('*')
+        .order('is_default', { ascending: false });
+
+      if (configs && configs.length > 0) {
+        setStatusConfigs(configs);
+      } else {
+        // Estados por defecto si no hay configuración personalizada
+        setStatusConfigs([
+          { value: 'pending', label: 'Pendiente', bg_color: 'bg-yellow-100', text_color: 'text-yellow-800' },
+          { value: 'approved', label: 'Aprobada', bg_color: 'bg-green-100', text_color: 'text-green-800' },
+          { value: 'rejected', label: 'Rechazada', bg_color: 'bg-red-100', text_color: 'text-red-800' },
+        ]);
+      }
+    } catch (error) {
+      console.log('Status configs not available, using defaults');
+      setStatusConfigs([
+        { value: 'pending', label: 'Pendiente', bg_color: 'bg-yellow-100', text_color: 'text-yellow-800' },
+        { value: 'approved', label: 'Aprobada', bg_color: 'bg-green-100', text_color: 'text-green-800' },
+        { value: 'rejected', label: 'Rechazada', bg_color: 'bg-red-100', text_color: 'text-red-800' },
+      ]);
+    }
+  };
 
   useEffect(() => {
     filterCompanies();
-  }, [searchTerm, statusFilter, companies]);
+  }, [searchTerm, statusFilter, companies, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ChevronUp className="w-4 h-4 text-gray-400 opacity-50" />;
+    }
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="w-4 h-4 text-white" /> : 
+      <ChevronDown className="w-4 h-4 text-white" />;
+  };
 
   const fetchCompanies = async () => {
     setLoading(true);
@@ -85,21 +138,90 @@ export default function CompaniesManager() {
       filtered = filtered.filter((company) => company.status === statusFilter);
     }
 
+    // Aplicar ordenamiento
+    filtered.sort((a, b) => {
+      let aValue: any = '';
+      let bValue: any = '';
+
+      switch (sortField) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'email':
+          aValue = a.email.toLowerCase();
+          bValue = b.email.toLowerCase();
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case 'pais':
+          aValue = (a.pais || '').toLowerCase();
+          bValue = (b.pais || '').toLowerCase();
+          break;
+        case 'totalinscripciones':
+          aValue = a.totalinscripciones || 0;
+          bValue = b.totalinscripciones || 0;
+          break;
+        case 'pedido':
+          aValue = a.pedido || 0;
+          bValue = b.pedido || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
     setFilteredCompanies(filtered);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendiente' },
-      approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Aprobada' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rechazada' },
+  const getStatusBadge = (status: string, companyId?: number, isClickable: boolean = false) => {
+    const statusConfig = statusConfigs.find(config => config.value === status) || {
+      bg_color: 'bg-gray-100',
+      text_color: 'text-gray-800',
+      label: status || 'Sin estado'
     };
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label}
+      <span 
+        className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig.bg_color} ${statusConfig.text_color} ${
+          isClickable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+        }`}
+        onClick={isClickable && companyId ? (e) => {
+          e.stopPropagation();
+          setChangingStatus({ companyId, currentStatus: status });
+        } : undefined}
+        title={isClickable ? 'Haz clic para cambiar estado' : undefined}
+      >
+        {statusConfig.label}
       </span>
     );
+  };
+
+  const handleStatusChange = async (companyId: number, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('empresas')
+        .update({ status: newStatus })
+        .eq('id', companyId);
+
+      if (error) throw error;
+
+      // Actualizar la lista local
+      setCompanies(companies.map(company => 
+        company.id === companyId ? { ...company, status: newStatus } : company
+      ));
+      
+      setChangingStatus(null);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Error al cambiar el estado');
+    }
   };
 
   const handleViewCompany = (company: CompanyWithSamples) => {
@@ -224,10 +346,10 @@ export default function CompaniesManager() {
               {companies.filter((c) => c.status === 'approved').length}
             </div>
           </div>
-          <div className="bg-red-50 p-4 rounded-lg">
-            <div className="text-sm text-red-600 font-medium">Rechazadas</div>
-            <div className="text-2xl font-bold text-red-700">
-              {companies.filter((c) => c.status === 'rejected').length}
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="text-sm text-blue-600 font-medium">Total Muestras</div>
+            <div className="text-2xl font-bold text-blue-700">
+              {companies.reduce((total, company) => total + (company.totalinscripciones || company.samples?.length || 0), 0)}
             </div>
           </div>
         </div>
@@ -249,9 +371,11 @@ export default function CompaniesManager() {
             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="all">Todos los estados</option>
-            <option value="pending">Pendientes</option>
-            <option value="approved">Aprobadas</option>
-            <option value="rejected">Rechazadas</option>
+            {statusConfigs.map((config) => (
+              <option key={config.value} value={config.value}>
+                {config.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -266,26 +390,62 @@ export default function CompaniesManager() {
           <table className="w-full min-w-[800px]">
             <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
-                <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Pedido
+                <th 
+                  onClick={() => handleSort('pedido')}
+                  className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Pedido
+                    {getSortIcon('pedido')}
+                  </div>
                 </th>
-                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Nombre
+                <th 
+                  onClick={() => handleSort('name')}
+                  className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center gap-1">
+                    Nombre
+                    {getSortIcon('name')}
+                  </div>
                 </th>
-                <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Inscr.
+                <th 
+                  onClick={() => handleSort('totalinscripciones')}
+                  className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    Nº Muestras
+                    {getSortIcon('totalinscripciones')}
+                  </div>
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Email
+                <th 
+                  onClick={() => handleSort('email')}
+                  className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center gap-1">
+                    Email
+                    {getSortIcon('email')}
+                  </div>
                 </th>
                 <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Fecha
+                <th 
+                  onClick={() => handleSort('created_at')}
+                  className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center gap-1">
+                    Fecha
+                    {getSortIcon('created_at')}
+                  </div>
                 </th>
-                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  País
+                <th 
+                  onClick={() => handleSort('pais')}
+                  className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center gap-1">
+                    País
+                    {getSortIcon('pais')}
+                  </div>
                 </th>
                 <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Acciones
@@ -300,19 +460,26 @@ export default function CompaniesManager() {
                   className="hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
-                    {company.pedido ? (
-                      <span className="inline-flex items-center justify-center px-2 lg:px-3 py-1 bg-primary-100 text-primary-700 rounded-full font-semibold text-xs lg:text-sm">
-                        {company.pedido}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 text-sm">-</span>
-                    )}
+                    <div>
+                      {company.pedido ? (
+                        <span className="inline-flex items-center justify-center px-2 lg:px-3 py-1 bg-primary-100 text-primary-700 rounded-full font-semibold text-xs lg:text-sm">
+                          {company.pedido}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 lg:px-6 py-3 lg:py-4">
-                    <div className="font-medium text-gray-900 text-sm lg:text-base">{company.name}</div>
-                    {company.contact_person && (
-                      <div className="text-xs lg:text-sm text-gray-500 truncate max-w-[150px]">{company.contact_person}</div>
-                    )}
+                    <div>
+                      <div className="font-medium text-gray-900 text-sm lg:text-base">{company.name}</div>
+                      <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+                        {company.contact_person && <div>Contacto: {company.contact_person}</div>}
+                        {company.nif && <div>NIF: {company.nif}</div>}
+                        {company.telefono && <div>Tel: {company.telefono}</div>}
+                        {company.address && <div className="truncate max-w-[200px]">Dir: {company.address}</div>}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
                     <span className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-primary-100 text-primary-700 rounded-full font-bold text-xs lg:text-base">
@@ -320,29 +487,48 @@ export default function CompaniesManager() {
                     </span>
                   </td>
                   <td className="px-3 py-3 lg:py-4">
-                    <a
-                      href={`mailto:${company.email}`}
-                      className="text-primary-600 hover:text-primary-700 hover:underline flex items-center gap-1 text-xs lg:text-sm"
-                      title={company.email}
-                    >
-                      <Mail className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-                      <span className="truncate max-w-[120px] lg:max-w-[160px]">{company.email}</span>
-                    </a>
+                    <div>
+                      <a
+                        href={`mailto:${company.email}`}
+                        className="text-primary-600 hover:text-primary-700 hover:underline flex items-center gap-1 text-xs lg:text-sm"
+                        title={company.email}
+                      >
+                        <Mail className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+                        <span className="truncate max-w-[120px] lg:max-w-[160px]">{company.email}</span>
+                      </a>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {company.movil && <div>Móvil: {company.movil}</div>}
+                        {company.pagina_web && <div className="truncate max-w-[150px]">Web: {company.pagina_web}</div>}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
-                    {getStatusBadge(company.status)}
+                    {getStatusBadge(company.status, company.id, true)}
                   </td>
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-500">
-                    {new Date(company.created_at).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
+                    <div>
+                      {new Date(company.created_at).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(company.created_at).toLocaleTimeString('es-ES', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-3 lg:px-6 py-3 lg:py-4">
-                    <div className="flex items-center gap-2 text-gray-700 text-xs lg:text-sm">
-                      <MapPin className="w-3 h-3 lg:w-4 lg:h-4 text-gray-400" />
-                      <span className="truncate max-w-[80px] lg:max-w-none">{company.pais || '-'}</span>
+                    <div>
+                      <div className="text-gray-700 text-xs lg:text-sm">
+                        <span className="truncate max-w-[80px] lg:max-w-none">{company.country || company.pais || '-'}</span>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+                        {company.city && <div>{company.city}</div>}
+                        {company.postal && <div>CP: {company.postal}</div>}
+                      </div>
                     </div>
                   </td>
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
@@ -396,9 +582,11 @@ export default function CompaniesManager() {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 text-sm">{company.name}</h3>
-                  {company.contact_person && (
-                    <p className="text-xs text-gray-600 mt-1">{company.contact_person}</p>
-                  )}
+                  <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+                    {company.contact_person && <div>Contacto: {company.contact_person}</div>}
+                    {company.nif && <div>NIF: {company.nif}</div>}
+                    {company.telefono && <div>Tel: {company.telefono}</div>}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 ml-2">
                   {company.pedido && (
@@ -417,23 +605,30 @@ export default function CompaniesManager() {
                   <Mail className="w-3 h-3 mr-2" />
                   <span className="truncate">{company.email}</span>
                 </div>
-                {company.pais && (
-                  <div className="flex items-center text-xs text-gray-600">
-                    <MapPin className="w-3 h-3 mr-2" />
-                    <span>{company.pais}</span>
+                {(company.country || company.pais) && (
+                  <div className="text-xs text-gray-600">
+                    <span>{company.country || company.pais}</span>
+                    {company.city && <span> - {company.city}</span>}
                   </div>
                 )}
-                <div className="text-xs text-gray-500">
-                  {new Date(company.created_at).toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
+                <div className="text-xs text-gray-400 space-y-0.5">
+                  {company.movil && <div>Móvil: {company.movil}</div>}
+                  {company.address && <div className="truncate">Dir: {company.address}</div>}
+                  <div>
+                    {new Date(company.created_at).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })} - {new Date(company.created_at).toLocaleTimeString('es-ES', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
                 </div>
               </div>
 
               <div className="flex justify-between items-center">
-                <div>{getStatusBadge(company.status)}</div>
+                <div>{getStatusBadge(company.status, company.id, true)}</div>
                 <div className="flex gap-2">
                   <button
                     onClick={(e) => {
@@ -853,9 +1048,11 @@ export default function CompaniesManager() {
                     onChange={(e) => setEditingCompany({ ...editingCompany, status: e.target.value as 'pending' | 'approved' | 'rejected' })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
-                    <option value="pending">Pendiente</option>
-                    <option value="approved">Aprobada</option>
-                    <option value="rejected">Rechazada</option>
+                    {statusConfigs.map((config) => (
+                      <option key={config.value} value={config.value}>
+                        {config.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -903,6 +1100,49 @@ export default function CompaniesManager() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para cambiar estado */}
+      {changingStatus && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Cambiar Estado</h3>
+            
+            <p className="text-gray-600 mb-4">
+              Selecciona el nuevo estado para esta empresa:
+            </p>
+
+            <div className="space-y-2 mb-6">
+              {statusConfigs.map((config) => (
+                <button
+                  key={config.value}
+                  onClick={() => handleStatusChange(changingStatus.companyId, config.value)}
+                  className={`w-full p-3 rounded-lg border-2 transition-colors text-left ${
+                    changingStatus.currentStatus === config.value
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900">{config.label}</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg_color} ${config.text_color}`}>
+                      {config.label}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setChangingStatus(null)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}

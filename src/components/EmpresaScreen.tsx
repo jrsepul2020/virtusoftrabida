@@ -15,9 +15,8 @@ export function EmpresaScreen({
   validationErrors?: {[key: string]: boolean};
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-4 sm:py-6 px-4 sm:px-6">
-      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100 mt-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-primary-800 mb-4 text-center">Datos de la Empresa / Bodega</h2>
+    <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100">
+      <h2 className="text-xl sm:text-2xl font-bold text-primary-800 mb-4 text-center">Datos de la Empresa / Bodega</h2>
         
         {/* Primera fila - NIF, Nombre Empresa, Persona Contacto */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
@@ -213,12 +212,14 @@ export function EmpresaScreen({
         </div>
         
         {/* Resumen de precio */}
-        <div className="text-center sm:text-right text-primary-700 font-semibold mt-4 p-4 bg-primary-50 rounded-lg">
-          <div className="text-sm sm:text-base">
-            {company.num_muestras} muestra/s ({precio.pagadas} pagada/s, {precio.gratis} gratis)
-          </div>
-          <div className="text-xl sm:text-2xl font-bold text-primary-800 mt-1">
-            Total: {precio.total}€
+        <div className="text-center sm:text-right text-primary-700 font-semibold mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              {company.num_muestras} muestra{company.num_muestras !== 1 ? 's' : ''}
+            </div>
+            <div className="text-lg font-bold text-primary-800">
+              Total: {precio.total}€
+            </div>
           </div>
         </div>
         
@@ -232,7 +233,6 @@ export function EmpresaScreen({
             Siguiente
           </button>
         </div>
-      </div>
     </div>
   );
 }
