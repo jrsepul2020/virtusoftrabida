@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
-import { Search, Eye, Mail, MapPin, X, Edit2, Save, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
 type SortField = 'name' | 'email' | 'created_at' | 'pais' | 'totalinscripciones' | 'pedido';
 type SortDirection = 'asc' | 'desc';
@@ -19,7 +19,7 @@ export default function CompaniesManager() {
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [statusConfigs, setStatusConfigs] = useState<any[]>([]);
-  const [changingStatus, setChangingStatus] = useState<{ companyId: number; currentStatus: string } | null>(null);
+  const [changingStatus, setChangingStatus] = useState<{ companyId: string; currentStatus: string } | null>(null);
 
   useEffect(() => {
     fetchCompanies();
@@ -103,10 +103,13 @@ export default function CompaniesManager() {
             country: company.country,
             telefono: company.telefono,
             email: company.email,
+            status: company.status || 'pending',
             totalinscripciones: company.totalinscripciones,
             user_id: company.user_id,
             created_at: company.created_at,
             updated_at: company.updated_at,
+            phone: company.phone,
+            contact_person: company.contact_person,
             samples: samples || [],
           };
         })
@@ -180,7 +183,7 @@ export default function CompaniesManager() {
     setFilteredCompanies(filtered);
   };
 
-  const getStatusBadge = (status: string, companyId?: number, isClickable: boolean = false) => {
+  const getStatusBadge = (status: string, companyId?: string, isClickable: boolean = false) => {
     const statusConfig = statusConfigs.find(config => config.value === status) || {
       bg_color: 'bg-gray-100',
       text_color: 'text-gray-800',
@@ -203,18 +206,21 @@ export default function CompaniesManager() {
     );
   };
 
-  const handleStatusChange = async (companyId: number, newStatus: string) => {
+  const handleStatusChange = async (companyId: string, newStatus: string) => {
     try {
+      // Asegurar que newStatus es del tipo correcto
+      const validStatus = newStatus as 'pending' | 'approved' | 'rejected';
+      
       const { error } = await supabase
         .from('empresas')
-        .update({ status: newStatus })
+        .update({ status: validStatus })
         .eq('id', companyId);
 
       if (error) throw error;
 
       // Actualizar la lista local
       setCompanies(companies.map(company => 
-        company.id === companyId ? { ...company, status: newStatus } : company
+        company.id === companyId ? { ...company, status: validStatus } : company
       ));
       
       setChangingStatus(null);
