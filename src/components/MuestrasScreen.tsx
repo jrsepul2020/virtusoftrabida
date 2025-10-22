@@ -15,9 +15,9 @@ export function MuestrasScreen({
   validationErrors?: {[key: string]: boolean};
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-6 sm:py-10 px-4 sm:px-6 bg-primary-50">
-      <div className="w-full max-w-4xl bg-white shadow-lg rounded-2xl p-6 sm:p-12 border border-primary-100">
-        <h2 className="text-xl sm:text-2xl text-primary-800 font-bold mb-6 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-4 sm:py-6 px-4 sm:px-6">
+      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100 mt-4">
+        <h2 className="text-xl sm:text-2xl text-primary-800 font-bold mb-4 text-center">
           Datos de las Muestras ({samples.length})
         </h2>
         {samples.map((sample, idx) => (

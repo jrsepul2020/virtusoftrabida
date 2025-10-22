@@ -26,8 +26,8 @@ export function ConfirmacionScreen({
   error: string;
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-4 sm:py-8 lg:py-10 px-4 sm:px-6 bg-primary-50">
-      <div className="w-full max-w-4xl bg-white shadow-lg rounded-2xl p-4 sm:p-8 lg:p-12 border border-primary-100">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-4 sm:py-6 px-4 sm:px-6">
+      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100 mt-4">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full mb-4 shadow-lg">
