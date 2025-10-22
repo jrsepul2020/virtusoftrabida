@@ -35,6 +35,7 @@ export default async function handler(req: any, res: any) {
   console.log('🔍 Debug variables de entorno:');
   console.log('BREVO_API_KEY existe:', !!BREVO_API_KEY);
   console.log('BREVO_API_KEY length:', BREVO_API_KEY ? BREVO_API_KEY.length : 0);
+  console.log('BREVO_API_KEY preview:', BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...${BREVO_API_KEY.substring(-4)}` : 'undefined');
   console.log('SENDER_EMAIL:', SENDER_EMAIL);
   console.log('SENDER_NAME:', SENDER_NAME);
   console.log('Variables disponibles:', Object.keys(process.env).filter(key => key.includes('BREVO') || key.includes('SENDER')));
@@ -174,6 +175,7 @@ export default async function handler(req: any, res: any) {
     if (!resBodega.ok) {
       const txt = await resBodega.text();
       console.error('Brevo bodega email error:', resBodega.status, txt);
+      console.error('Brevo headers:', Object.fromEntries(resBodega.headers.entries()));
     }
 
     // Enviar email al administrador
@@ -189,7 +191,13 @@ export default async function handler(req: any, res: any) {
     if (!resAdmin.ok) {
       const txt = await resAdmin.text();
       console.error('Brevo admin email error:', resAdmin.status, txt);
-      return res.status(502).json({ error: 'Failed to send admin email', details: txt });
+      console.error('Brevo headers:', Object.fromEntries(resAdmin.headers.entries()));
+      return res.status(502).json({ 
+        error: 'Failed to send admin email', 
+        details: txt,
+        status: resAdmin.status,
+        apiKeyPreview: BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined'
+      });
     }
 
     return res.status(200).json({ success: true, message: 'Emails enviados correctamente' });
