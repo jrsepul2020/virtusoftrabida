@@ -295,10 +295,11 @@ export default function UnifiedInscriptionForm({
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header con indicador de inscripción manual (solo para admin) */}
-      {isAdmin && (
-        <div className={`border rounded-xl p-4 mb-6 ${isManualInscription ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Header con indicador de inscripción manual (solo para admin) */}
+        {isAdmin && (
+          <div className={`border rounded-xl p-4 mb-4 ${isManualInscription ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -436,6 +437,7 @@ export default function UnifiedInscriptionForm({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

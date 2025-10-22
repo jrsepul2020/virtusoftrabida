@@ -15,9 +15,9 @@ export function EmpresaScreen({
   validationErrors?: {[key: string]: boolean};
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-6 sm:py-10 px-4 sm:px-6 bg-primary-50">
-      <div className="w-full max-w-4xl bg-white shadow-lg rounded-2xl p-6 sm:p-12 border border-primary-100">
-        <h2 className="text-xl sm:text-2xl font-bold text-primary-800 mb-6 text-center">Datos de la Empresa / Bodega</h2>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 py-4 sm:py-6 px-4 sm:px-6">
+      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100 mt-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-primary-800 mb-4 text-center">Datos de la Empresa / Bodega</h2>
         
         {/* Primera fila - NIF, Nombre Empresa, Persona Contacto */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
@@ -200,16 +200,15 @@ export function EmpresaScreen({
           </div>
           <div>
             <label className="block text-primary-800 font-medium mb-1">Nº de muestras</label>
-            <select 
+            <input 
+              type="number" 
               name="num_muestras" 
               value={company.num_muestras} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors bg-white" 
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(num => (
-                <option key={num} value={num}>{num} muestra{num > 1 ? 's' : ''}</option>
-              ))}
-            </select>
+              min="1"
+              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
+            />
+            <p className="text-xs text-gray-600 mt-1">Mínimo 1 muestra</p>
           </div>
         </div>
         
