@@ -5,8 +5,9 @@ import MainLayout from './components/MainLayout';
 import UnifiedInscriptionForm from './components/UnifiedInscriptionForm';
 import HeroLanding from './components/HeroLanding';
 import PWAInstallBanner from './components/PWAInstallBanner';
+import CataForm from './components/CataForm';
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion';
+type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'cata';
 
 function App() {
   const [view, setView] = useState<View>('home');
@@ -62,7 +63,10 @@ function App() {
 
       {/* Login de administrador */}
       {view === 'adminLogin' && (
-        <LoginForm onLogin={handleAdminLogin} />
+        <LoginForm 
+          onLogin={handleAdminLogin} 
+          onBack={() => setView('home')}
+        />
       )}
 
       {/* Panel de administrador */}
@@ -76,6 +80,11 @@ function App() {
           isAdmin={false}
           onSuccess={() => setView('home')}
         />
+      )}
+
+      {/* Formulario de cata */}
+      {view === 'cata' && (
+        <CataForm />
       )}
 
       {/* PWA Install Banner */}
