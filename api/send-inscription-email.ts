@@ -5,6 +5,7 @@
 // - BREVO_API_KEY
 // - SENDER_EMAIL
 // - SENDER_NAME
+// Force redeploy: 2025-10-22 17:30
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
