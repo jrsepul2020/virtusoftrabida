@@ -14,6 +14,7 @@ export type Company = {
   name: string;
   email: string;
   phone?: string;
+  telefono?: string;
   address?: string;
   contact_person?: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -22,9 +23,12 @@ export type Company = {
   updated_at: string;
   nif?: string;
   codigo_postal?: string;
+  postal?: string;
   poblacion?: string;
   ciudad?: string;
+  city?: string;
   pais?: string;
+  country?: string;
   observaciones?: string;
   movil?: string;
   conocimiento?: string;
