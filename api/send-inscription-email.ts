@@ -26,12 +26,30 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Missing empresa data' });
   }
 
+  // Debug: Verificar variables de entorno
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   const SENDER_EMAIL = process.env.SENDER_EMAIL || 'no-reply@virtuslarabida.com';
   const SENDER_NAME = process.env.SENDER_NAME || 'International Virtus La Rábida';
   const ADMIN_EMAIL = 'jrsepul2000@gmail.com'; // Email del administrador
 
-  if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY not configured' });
+  console.log('🔍 Debug variables de entorno:');
+  console.log('BREVO_API_KEY existe:', !!BREVO_API_KEY);
+  console.log('BREVO_API_KEY length:', BREVO_API_KEY ? BREVO_API_KEY.length : 0);
+  console.log('SENDER_EMAIL:', SENDER_EMAIL);
+  console.log('SENDER_NAME:', SENDER_NAME);
+  console.log('Variables disponibles:', Object.keys(process.env).filter(key => key.includes('BREVO') || key.includes('SENDER')));
+
+  if (!BREVO_API_KEY) {
+    return res.status(500).json({ 
+      error: 'BREVO_API_KEY not configured',
+      debug: {
+        hasBrevoKey: !!BREVO_API_KEY,
+        envKeys: Object.keys(process.env).filter(key => key.includes('BREVO') || key.includes('SENDER')),
+        senderEmail: SENDER_EMAIL,
+        senderName: SENDER_NAME
+      }
+    });
+  }
 
   const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 
