@@ -5,11 +5,10 @@ import MainLayout from './components/MainLayout';
 import UnifiedInscriptionForm from './components/UnifiedInscriptionForm';
 import HeroLanding from './components/HeroLanding';
 import PWAInstallBanner from './components/PWAInstallBanner';
-import CataForm from './components/CataForm';
 import Reglamento from './components/Reglamento';
 import Normativa from './components/Normativa';
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'cata' | 'reglamento' | 'normativa';
+type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'normativa';
 
 function App() {
   const [view, setView] = useState<View>('home');
@@ -82,11 +81,6 @@ function App() {
           isAdmin={false}
           onSuccess={() => setView('home')}
         />
-      )}
-
-      {/* Formulario de cata */}
-      {view === 'cata' && (
-        <CataForm />
       )}
 
       {/* Reglamento */}
