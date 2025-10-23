@@ -112,7 +112,7 @@ export default function TandaViewer({ onClose }: TandaViewerProps) {
                           País
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-                          Ciudad
+                          Origen
                         </th>
                       </tr>
                     </thead>
@@ -149,7 +149,7 @@ export default function TandaViewer({ onClose }: TandaViewerProps) {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className="text-sm text-gray-700">
-                              {sample.ciudad || '-'}
+                              {sample.origen || '-'}
                             </span>
                           </td>
                         </tr>

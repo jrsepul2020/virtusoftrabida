@@ -10,8 +10,9 @@ import StatisticsManager from './StatisticsManager';
 import MesasManager from './MesasManager';
 import EmailTest from './EmailTest';
 import SettingsManager from './SettingsManager';
+import CatadoresManager from './CatadoresManager';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'mesas' | 'print' | 'form' | 'emailTest' | 'settings';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'mesas' | 'catadores' | 'print' | 'form' | 'emailTest' | 'settings';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'tandas', label: 'Tandas', icon: Layers },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
+    { id: 'catadores', label: 'Catadores', icon: Users },
     { id: 'print', label: 'Imprimir Listado', icon: Printer },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
@@ -167,6 +169,7 @@ export default function AdminDashboard() {
             {activeTab === 'simpleList' && <SimpleSamplesList />}
             {activeTab === 'tandas' && <TandasManager />}
             {activeTab === 'mesas' && <MesasManager />}
+            {activeTab === 'catadores' && <CatadoresManager />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}

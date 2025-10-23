@@ -16,7 +16,7 @@ function App() {
   useEffect(() => {
     checkAuth();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+  const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       (async () => {
         if (session) {
           await checkUserType();
@@ -89,7 +89,7 @@ function App() {
   }
 
   if (view === 'admin') {
-    return <AdminDashboard onLogout={handleLogout} />;
+    return <AdminDashboard />;
   }
 
   if (view === 'user') {
