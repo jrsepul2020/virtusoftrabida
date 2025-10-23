@@ -69,3 +69,13 @@ export type Sample = {
 export type CompanyWithSamples = Company & {
   samples: Sample[];
 };
+
+export type Catador = {
+  id: string;
+  nombre: string;
+  email?: string;
+  telefono?: string;
+  especialidad?: string;
+  activo: boolean;
+  created_at: string;
+};
