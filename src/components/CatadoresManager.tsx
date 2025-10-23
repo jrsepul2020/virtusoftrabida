@@ -4,6 +4,7 @@ import { Search, Edit2, Trash2, Plus, X, Eye, Crown, ChevronUp, ChevronDown } fr
 
 type Catador = {
   id: string;
+  codigocatador?: string;
   nombre: string;
   rol?: string;
   mesa?: number;
@@ -17,7 +18,7 @@ type Catador = {
   created_at: string;
 };
 
-type SortField = 'nombre' | 'rol' | 'mesa' | 'puesto' | 'ntablet';
+type SortField = 'codigocatador' | 'nombre' | 'rol' | 'mesa' | 'puesto' | 'ntablet';
 type SortDirection = 'asc' | 'desc';
 
 export default function CatadoresManager() {
@@ -105,6 +106,7 @@ export default function CatadoresManager() {
       filtered = catadores.filter(
         (catador) =>
           catador.nombre.toLowerCase().includes(term) ||
+          catador.codigocatador?.toLowerCase().includes(term) ||
           catador.email?.toLowerCase().includes(term) ||
           catador.especialidad?.toLowerCase().includes(term)
       );
@@ -140,6 +142,7 @@ export default function CatadoresManager() {
       const { error } = await supabase
         .from('catadores')
         .update({
+          codigocatador: catador.codigocatador,
           nombre: catador.nombre,
           rol: catador.rol,
           mesa: catador.mesa,
@@ -175,6 +178,7 @@ export default function CatadoresManager() {
       const { error } = await supabase
         .from('catadores')
         .insert([{
+          codigocatador: newCatador.codigocatador,
           nombre: newCatador.nombre,
           rol: newCatador.rol,
           mesa: newCatador.mesa,
@@ -245,7 +249,7 @@ export default function CatadoresManager() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
-              placeholder="Buscar por nombre, email o especialidad..."
+              placeholder="Buscar por código, nombre, email o especialidad..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
@@ -258,7 +262,7 @@ export default function CatadoresManager() {
             {filteredCatadores.length} de {catadores.length} catadores
           </div>
           <div className="text-xs text-gray-500">
-            Ordenado por: <span className="font-medium text-gray-700">{sortField === 'nombre' ? 'Nombre' : sortField === 'rol' ? 'Rol' : sortField === 'mesa' ? 'Mesa' : sortField === 'puesto' ? 'Puesto' : 'Tablet'}</span> ({sortDirection === 'asc' ? '↑' : '↓'})
+            Ordenado por: <span className="font-medium text-gray-700">{sortField === 'codigocatador' ? 'Código' : sortField === 'nombre' ? 'Nombre' : sortField === 'rol' ? 'Rol' : sortField === 'mesa' ? 'Mesa' : sortField === 'puesto' ? 'Puesto' : 'Tablet'}</span> ({sortDirection === 'asc' ? '↑' : '↓'})
           </div>
         </div>
       </div>
@@ -270,6 +274,17 @@ export default function CatadoresManager() {
           <table className="w-full">
             <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
+                <th 
+                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  onClick={() => handleSort('codigocatador')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Código</span>
+                    {sortField === 'codigocatador' && (
+                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                    )}
+                  </div>
+                </th>
                 <th 
                   className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
                   onClick={() => handleSort('nombre')}
@@ -347,6 +362,11 @@ export default function CatadoresManager() {
                     `}
                     onClick={() => setViewingCatador(catador)}
                   >
+                    <td className="px-3 py-4">
+                      <div className="text-sm font-mono text-gray-600">
+                        {catador.codigocatador || '-'}
+                      </div>
+                    </td>
                     <td className="px-3 py-4">
                       <div className="flex items-center gap-3">
                         {isPresidente && (
@@ -594,11 +614,24 @@ export default function CatadoresManager() {
       {/* Modal para añadir catador */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+          <div className="bg-white rounded-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Añadir Nuevo Catador</h3>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Código Catador
+                  </label>
+                  <input
+                    type="text"
+                    value={newCatador.codigocatador || ''}
+                    onChange={(e) => setNewCatador({...newCatador, codigocatador: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Código único"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Nombre *
@@ -754,45 +787,62 @@ export default function CatadoresManager() {
       {/* Modal para editar catador */}
       {editingCatador && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Editar Catador</h3>
             
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre *
-                </label>
-                <input
-                  type="text"
-                  value={editingCatador.nombre}
-                  onChange={(e) => setEditingCatador({...editingCatador, nombre: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  required
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Código Catador
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCatador.codigocatador || ''}
+                    onChange={(e) => setEditingCatador({...editingCatador, codigocatador: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Código único"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre *
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCatador.nombre}
+                    onChange={(e) => setEditingCatador({...editingCatador, nombre: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={editingCatador.email || ''}
-                  onChange={(e) => setEditingCatador({...editingCatador, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={editingCatador.email || ''}
+                    onChange={(e) => setEditingCatador({...editingCatador, email: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="text"
-                  value={editingCatador.telefono || ''}
-                  onChange={(e) => setEditingCatador({...editingCatador, telefono: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teléfono
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCatador.telefono || ''}
+                    onChange={(e) => setEditingCatador({...editingCatador, telefono: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
               </div>
               
               <div>
