@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col w-64 bg-[#3C542E]">
           {/* Logo/Header */}
           <div className="flex items-center h-16 px-6 bg-[#2D3F20] shadow-sm">
-            <h2 className="text-lg font-semibold text-white">VIRTUS ADMIN</h2>
+            <h2 className="text-lg font-semibold text-white">VIRTUS ADMIN 2.0</h2>
           </div>
           
           {/* Navigation */}
@@ -94,7 +94,7 @@ export default function AdminDashboard() {
           <div className="fixed inset-y-0 left-0 w-64 bg-[#3C542E] shadow-xl">
             {/* Mobile Header */}
             <div className="flex items-center justify-between h-16 px-6 bg-[#2D3F20]">
-              <h2 className="text-lg font-semibold text-white">VIRTUS ADMIN</h2>
+              <h2 className="text-lg font-semibold text-white">VIRTUS ADMIN 2.0</h2>
               <button
                 onClick={() => setShowMobileMenu(false)}
                 className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
