@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
-import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer } from 'lucide-react';
 
 type SortField = 'name' | 'email' | 'created_at' | 'pais' | 'totalinscripciones' | 'pedido';
 type SortDirection = 'asc' | 'desc';
@@ -324,6 +324,264 @@ export default function CompaniesManager() {
     }
   };
 
+  const handlePrint = () => {
+    // Crear una ventana de impresión con todos los datos de las empresas
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Por favor, permite las ventanas emergentes para imprimir');
+      return;
+    }
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Listado de Empresas - VIRTUS</title>
+          <style>
+            @media print {
+              @page { margin: 1.5cm; }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 20px;
+              font-size: 11px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 3px solid #3C542E;
+              padding-bottom: 15px;
+            }
+            .header h1 {
+              color: #3C542E;
+              margin: 0 0 5px 0;
+              font-size: 24px;
+            }
+            .header p {
+              color: #666;
+              margin: 0;
+              font-size: 12px;
+            }
+            .stats {
+              display: flex;
+              justify-content: space-around;
+              margin-bottom: 20px;
+              background: #f5f5f5;
+              padding: 15px;
+              border-radius: 8px;
+            }
+            .stat-box {
+              text-align: center;
+            }
+            .stat-box .label {
+              font-size: 10px;
+              color: #666;
+              text-transform: uppercase;
+            }
+            .stat-box .value {
+              font-size: 20px;
+              font-weight: bold;
+              color: #3C542E;
+            }
+            .company {
+              border: 1px solid #ddd;
+              margin-bottom: 20px;
+              padding: 15px;
+              page-break-inside: avoid;
+              border-radius: 8px;
+              background: #fff;
+            }
+            .company-header {
+              background: #3C542E;
+              color: white;
+              padding: 10px;
+              margin: -15px -15px 15px -15px;
+              border-radius: 8px 8px 0 0;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .company-name {
+              font-size: 16px;
+              font-weight: bold;
+            }
+            .company-status {
+              padding: 4px 12px;
+              border-radius: 12px;
+              font-size: 10px;
+              font-weight: bold;
+            }
+            .status-pending { background: #fef3c7; color: #92400e; }
+            .status-approved { background: #d1fae5; color: #065f46; }
+            .status-rejected { background: #fee2e2; color: #991b1b; }
+            .info-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px;
+              margin-bottom: 10px;
+            }
+            .info-item {
+              padding: 5px 0;
+            }
+            .info-label {
+              font-weight: bold;
+              color: #666;
+              font-size: 10px;
+              text-transform: uppercase;
+              margin-bottom: 2px;
+            }
+            .info-value {
+              color: #000;
+              font-size: 11px;
+            }
+            .samples-section {
+              margin-top: 15px;
+              padding-top: 15px;
+              border-top: 1px solid #e5e7eb;
+            }
+            .samples-title {
+              font-weight: bold;
+              color: #3C542E;
+              margin-bottom: 8px;
+              font-size: 12px;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 10px;
+              border-top: 2px solid #ddd;
+              text-align: center;
+              font-size: 10px;
+              color: #666;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🏆 INTERNATIONAL VIRTUS LA RÁBIDA</h1>
+            <p>Listado Completo de Empresas Registradas</p>
+            <p>Fecha: ${new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+
+          <div class="stats">
+            <div class="stat-box">
+              <div class="label">Total Empresas</div>
+              <div class="value">${filteredCompanies.length}</div>
+            </div>
+            <div class="stat-box">
+              <div class="label">Pendientes</div>
+              <div class="value">${filteredCompanies.filter(c => c.status === 'pending').length}</div>
+            </div>
+            <div class="stat-box">
+              <div class="label">Aprobadas</div>
+              <div class="value">${filteredCompanies.filter(c => c.status === 'approved').length}</div>
+            </div>
+            <div class="stat-box">
+              <div class="label">Total Muestras</div>
+              <div class="value">${filteredCompanies.reduce((total, company) => total + (company.totalinscripciones || 0), 0)}</div>
+            </div>
+          </div>
+
+          ${filteredCompanies.map((company, index) => `
+            <div class="company">
+              <div class="company-header">
+                <span class="company-name">${index + 1}. ${company.name}</span>
+                <span class="company-status status-${company.status}">
+                  ${statusConfigs.find(s => s.value === company.status)?.label || company.status}
+                </span>
+              </div>
+              
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">NIF / CIF</div>
+                  <div class="info-value">${company.nif || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Nº Pedido</div>
+                  <div class="info-value">${company.pedido || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Email</div>
+                  <div class="info-value">${company.email}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Teléfono</div>
+                  <div class="info-value">${company.phone || company.telefono || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Móvil</div>
+                  <div class="info-value">${company.movil || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Persona de Contacto</div>
+                  <div class="info-value">${company.contact_person || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Dirección</div>
+                  <div class="info-value">${company.address || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Código Postal</div>
+                  <div class="info-value">${company.codigo_postal || company.postal || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Población</div>
+                  <div class="info-value">${company.poblacion || company.ciudad || company.city || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">País</div>
+                  <div class="info-value">${company.pais || company.country || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Página Web</div>
+                  <div class="info-value">${company.pagina_web || '-'}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Fecha de Registro</div>
+                  <div class="info-value">${new Date(company.created_at).toLocaleDateString('es-ES')}</div>
+                </div>
+              </div>
+
+              ${company.observaciones ? `
+                <div class="info-item" style="grid-column: span 2; margin-top: 10px;">
+                  <div class="info-label">Observaciones</div>
+                  <div class="info-value">${company.observaciones}</div>
+                </div>
+              ` : ''}
+
+              ${company.conocimiento ? `
+                <div class="info-item" style="grid-column: span 2; margin-top: 5px;">
+                  <div class="info-label">¿Cómo nos conoció?</div>
+                  <div class="info-value">${company.conocimiento}</div>
+                </div>
+              ` : ''}
+
+              <div class="samples-section">
+                <div class="samples-title">
+                  📊 Muestras Inscritas: ${company.totalinscripciones || company.samples?.length || 0}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+
+          <div class="footer">
+            <p>INTERNATIONAL VIRTUS LA RÁBIDA 2026 - Documento generado el ${new Date().toLocaleString('es-ES')}</p>
+            <p>Total de empresas en este listado: ${filteredCompanies.length}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Esperar a que se cargue el contenido antes de imprimir
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -383,6 +641,14 @@ export default function CompaniesManager() {
               </option>
             ))}
           </select>
+          <button
+            onClick={handlePrint}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-md"
+            title="Imprimir listado de empresas"
+          >
+            <Printer className="w-5 h-5" />
+            <span className="hidden md:inline">Imprimir</span>
+          </button>
         </div>
 
         <div className="mt-4 text-sm text-gray-600">
