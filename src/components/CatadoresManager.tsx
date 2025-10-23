@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Search, Edit2, Trash2, Plus, X, Eye, Crown, Star, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, Edit2, Trash2, Plus, X, Eye, Crown, ChevronUp, ChevronDown } from 'lucide-react';
 
 type Catador = {
   id: string;
@@ -44,14 +44,6 @@ export default function CatadoresManager() {
     };
     return colors[mesa as keyof typeof colors] || { bg: '', border: 'border-gray-300', text: 'text-gray-800', button: 'bg-gray-500' };
   };
-
-  // Función para estilos de presidente
-  const getPresidenteStyles = () => ({
-    bg: 'from-yellow-400/30 to-amber-400/30',
-    border: 'border-yellow-400',
-    text: 'text-yellow-900',
-    icon: 'text-yellow-600'
-  });
 
   useEffect(() => {
     fetchCatadores();
@@ -342,18 +334,15 @@ export default function CatadoresManager() {
               {filteredCatadores.map((catador) => {
                 const isPresidente = catador.rol === 'presidente';
                 const mesaColors = catador.mesa ? getMesaColors(catador.mesa) : null;
-                const presidenteStyles = isPresidente ? getPresidenteStyles() : null;
                 
                 return (
                   <tr 
                     key={catador.id} 
                     className={`
                       group transition-all duration-500 cursor-pointer transform hover:scale-[1.01]
-                      ${isPresidente 
-                        ? `bg-gradient-to-r ${presidenteStyles?.bg} border-l-4 ${presidenteStyles?.border} shadow-lg` 
-                        : mesaColors 
-                          ? `bg-gradient-to-r ${mesaColors.bg} border-l-4 ${mesaColors.border}` 
-                          : 'hover:bg-gray-50'
+                      ${mesaColors 
+                        ? `bg-gradient-to-r ${mesaColors.bg} border-l-4 ${mesaColors.border}` 
+                        : 'hover:bg-gray-50'
                       }
                     `}
                     onClick={() => setViewingCatador(catador)}
@@ -361,13 +350,12 @@ export default function CatadoresManager() {
                     <td className="px-3 py-4">
                       <div className="flex items-center gap-3">
                         {isPresidente && (
-                          <div className="flex items-center gap-1">
-                            <Crown className={`w-5 h-5 ${presidenteStyles?.icon} animate-pulse`} />
-                            <Star className={`w-4 h-4 ${presidenteStyles?.icon} animate-bounce`} />
+                          <div title="Presidente">
+                            <Crown className="w-5 h-5 text-yellow-600 animate-pulse" />
                           </div>
                         )}
                         <div>
-                          <div className={`text-sm font-bold ${isPresidente ? presidenteStyles?.text : 'text-gray-900'}`}>
+                          <div className="text-sm font-bold text-gray-900">
                             {catador.nombre}
                           </div>
                           <div className="text-xs text-gray-500 space-y-1">
@@ -383,13 +371,7 @@ export default function CatadoresManager() {
                         value={catador.rol || ''}
                         onChange={(e) => handleFieldUpdate(catador.id, 'rol', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
-                        className={`
-                          w-full text-sm rounded-lg px-3 py-2 font-medium transition-all duration-300
-                          ${isPresidente 
-                            ? 'bg-yellow-100 border-yellow-400 text-yellow-800 shadow-md' 
-                            : 'border-gray-300 hover:border-blue-400 focus:ring-2 focus:ring-blue-500'
-                          }
-                        `}
+                        className="w-full text-sm rounded-lg px-3 py-2 font-medium transition-all duration-300 border-gray-300 hover:border-blue-400 focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Seleccionar</option>
                         <option value="catador">🎯 Catador</option>
