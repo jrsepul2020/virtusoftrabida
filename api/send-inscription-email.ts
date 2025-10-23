@@ -39,6 +39,8 @@ export default async function handler(req: any, res: any) {
   console.log('BREVO_API_KEY preview:', BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...${BREVO_API_KEY.substring(-4)}` : 'undefined');
   console.log('SENDER_EMAIL:', SENDER_EMAIL);
   console.log('SENDER_NAME:', SENDER_NAME);
+  console.log('Environment:', process.env.NODE_ENV || 'unknown');
+  console.log('Vercel Region:', process.env.VERCEL_REGION || 'unknown');
   console.log('Variables disponibles:', Object.keys(process.env).filter(key => key.includes('BREVO') || key.includes('SENDER')));
 
   if (!BREVO_API_KEY) {
@@ -177,6 +179,10 @@ export default async function handler(req: any, res: any) {
       const txt = await resBodega.text();
       console.error('Brevo bodega email error:', resBodega.status, txt);
       console.error('Brevo headers:', Object.fromEntries(resBodega.headers.entries()));
+      console.error('Request headers sent:', {
+        'api-key': BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined',
+        'Content-Type': 'application/json'
+      });
     }
 
     // Enviar email al administrador
@@ -193,11 +199,17 @@ export default async function handler(req: any, res: any) {
       const txt = await resAdmin.text();
       console.error('Brevo admin email error:', resAdmin.status, txt);
       console.error('Brevo headers:', Object.fromEntries(resAdmin.headers.entries()));
+      console.error('Request headers sent:', {
+        'api-key': BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined',
+        'Content-Type': 'application/json'
+      });
       return res.status(502).json({ 
         error: 'Failed to send admin email', 
         details: txt,
         status: resAdmin.status,
-        apiKeyPreview: BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined'
+        apiKeyPreview: BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined',
+        environment: process.env.NODE_ENV || 'unknown',
+        vercelRegion: process.env.VERCEL_REGION || 'unknown'
       });
     }
 
