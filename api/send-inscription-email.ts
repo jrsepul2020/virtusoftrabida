@@ -167,7 +167,7 @@ export default async function handler(req: any, res: any) {
     const resBodega = await fetch(BREVO_URL, {
       method: 'POST',
       headers: {
-        Authorization: `api-key ${BREVO_API_KEY}`,
+        'api-key': BREVO_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(bodegaEmailBody),
@@ -183,7 +183,7 @@ export default async function handler(req: any, res: any) {
     const resAdmin = await fetch(BREVO_URL, {
       method: 'POST',
       headers: {
-        Authorization: `api-key ${BREVO_API_KEY}`,
+        'api-key': BREVO_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(adminEmailBody),
