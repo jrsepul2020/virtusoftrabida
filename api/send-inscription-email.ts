@@ -29,7 +29,7 @@ export default async function handler(req: any, res: any) {
 
   // Debug: Verificar variables de entorno
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
-  const SENDER_EMAIL = process.env.SENDER_EMAIL || 'no-reply@virtuslarabida.com';
+  const SENDER_EMAIL = process.env.SENDER_EMAIL || 'info@internationalvirtus.es';
   const SENDER_NAME = process.env.SENDER_NAME || 'International Virtus La Rábida';
   const ADMIN_EMAIL = 'jrsepul2000@gmail.com'; // Email del administrador
 
