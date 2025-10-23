@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Search, Edit2, Trash2, Plus, X, Eye, Crown, Star } from 'lucide-react';
+import { Search, Edit2, Trash2, Plus, X, Eye, Crown, Star, ChevronUp, ChevronDown } from 'lucide-react';
 
 type Catador = {
   id: string;
@@ -17,6 +17,9 @@ type Catador = {
   created_at: string;
 };
 
+type SortField = 'nombre' | 'rol' | 'mesa' | 'puesto' | 'ntablet';
+type SortDirection = 'asc' | 'desc';
+
 export default function CatadoresManager() {
   const [catadores, setCatadores] = useState<Catador[]>([]);
   const [filteredCatadores, setFilteredCatadores] = useState<Catador[]>([]);
@@ -27,6 +30,8 @@ export default function CatadoresManager() {
   const [newCatador, setNewCatador] = useState<Partial<Catador>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('mesa');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Función para obtener colores de mesa
   const getMesaColors = (mesa: number) => {
@@ -54,7 +59,7 @@ export default function CatadoresManager() {
 
   useEffect(() => {
     filterCatadores();
-  }, [searchTerm, catadores]);
+  }, [searchTerm, catadores, sortField, sortDirection]);
 
   const fetchCatadores = async () => {
     setLoading(true);
@@ -73,20 +78,49 @@ export default function CatadoresManager() {
     }
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortCatadores = (catadoresArray: Catador[]) => {
+    return [...catadoresArray].sort((a, b) => {
+      let aValue: any = a[sortField];
+      let bValue: any = b[sortField];
+
+      // Handle undefined values - put them at the end
+      if (aValue === undefined || aValue === null) return 1;
+      if (bValue === undefined || bValue === null) return -1;
+
+      // Convert to strings for comparison
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+
+      const comparison = aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  };
+
   const filterCatadores = () => {
-    if (!searchTerm) {
-      setFilteredCatadores(catadores);
-      return;
+    let filtered = catadores;
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = catadores.filter(
+        (catador) =>
+          catador.nombre.toLowerCase().includes(term) ||
+          catador.email?.toLowerCase().includes(term) ||
+          catador.especialidad?.toLowerCase().includes(term)
+      );
     }
 
-    const term = searchTerm.toLowerCase();
-    const filtered = catadores.filter(
-      (catador) =>
-        catador.nombre.toLowerCase().includes(term) ||
-        catador.email?.toLowerCase().includes(term) ||
-        catador.especialidad?.toLowerCase().includes(term)
-    );
-    setFilteredCatadores(filtered);
+    // Apply sorting
+    const sorted = sortCatadores(filtered);
+    setFilteredCatadores(sorted);
   };
 
   const handleFieldUpdate = async (id: string, field: string, value: any) => {
@@ -227,8 +261,13 @@ export default function CatadoresManager() {
           </div>
         </div>
 
-        <div className="text-sm text-gray-600">
-          {filteredCatadores.length} de {catadores.length} catadores
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div>
+            {filteredCatadores.length} de {catadores.length} catadores
+          </div>
+          <div className="text-xs text-gray-500">
+            Ordenado por: <span className="font-medium text-gray-700">{sortField === 'nombre' ? 'Nombre' : sortField === 'rol' ? 'Rol' : sortField === 'mesa' ? 'Mesa' : sortField === 'puesto' ? 'Puesto' : 'Tablet'}</span> ({sortDirection === 'asc' ? '↑' : '↓'})
+          </div>
         </div>
       </div>
 
@@ -239,20 +278,60 @@ export default function CatadoresManager() {
           <table className="w-full">
             <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Catador
+                <th 
+                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  onClick={() => handleSort('nombre')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Catador</span>
+                    {sortField === 'nombre' && (
+                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                    )}
+                  </div>
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Rol
+                <th 
+                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  onClick={() => handleSort('rol')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Rol</span>
+                    {sortField === 'rol' && (
+                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                    )}
+                  </div>
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Mesa
+                <th 
+                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  onClick={() => handleSort('mesa')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Mesa</span>
+                    {sortField === 'mesa' && (
+                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                    )}
+                  </div>
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Puesto
+                <th 
+                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  onClick={() => handleSort('puesto')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Puesto</span>
+                    {sortField === 'puesto' && (
+                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                    )}
+                  </div>
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Tablet
+                <th 
+                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  onClick={() => handleSort('ntablet')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Tablet</span>
+                    {sortField === 'ntablet' && (
+                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                    )}
+                  </div>
                 </th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Acciones
