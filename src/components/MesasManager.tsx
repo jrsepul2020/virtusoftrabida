@@ -143,13 +143,13 @@ export default function MesasManager() {
               fetchCatadoresActivos();
               fetchMesas();
             }}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
           >
             🔄 Actualizar
           </button>
           <button
             onClick={addNewMesa}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Nueva Mesa
@@ -278,7 +278,7 @@ export default function MesasManager() {
           <p className="text-gray-500 mb-4">Comienza agregando una nueva mesa.</p>
           <button
             onClick={addNewMesa}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             Crear Primera Mesa

@@ -72,7 +72,9 @@ function App() {
 
       {/* Panel de administrador */}
       {view === 'admin' && adminLoggedIn && (
-        <AdminDashboard />
+        <div className="flex flex-1 min-h-0">
+          <AdminDashboard onLogout={handleAdminLogout} />
+        </div>
       )}
 
       {/* Formulario de inscripción unificado */}
