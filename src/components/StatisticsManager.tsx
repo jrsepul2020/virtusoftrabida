@@ -56,7 +56,7 @@ export default function StatisticsManager() {
     color: string;
   }) => {
     return (
-      <div className={`${color} border-2 rounded-lg w-full sm:w-44 h-20 sm:h-24 p-2 shadow-sm flex flex-col items-center justify-center`}>
+      <div className={`${color} border-2 rounded-lg w-full sm:w-52 h-20 sm:h-24 p-2 shadow-sm flex flex-col items-center justify-center`}>
         <div className="text-[9px] sm:text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-1 text-center leading-tight">
           {label}
         </div>
@@ -85,10 +85,6 @@ export default function StatisticsManager() {
 
   return (
     <div className="bg-white rounded-xl shadow-md p-3 sm:p-4">
-      <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">
-        Estadísticas International Virtus 2026
-      </h2>
-
       {/* Muestras y Empresas */}
       <div className="grid grid-cols-2 sm:flex gap-3 sm:gap-5 mb-3">
         <StatCard
@@ -187,7 +183,7 @@ export default function StatisticsManager() {
         />
       </div>
 
-      {/* Aceites */}
+      {/* Aceites - en la misma fila */}
       <h3 className="text-sm font-bold text-gray-800 mb-1">Aceites</h3>
       <div className="grid grid-cols-1 sm:flex gap-3 sm:gap-5 sm:flex-wrap">
         <StatCard

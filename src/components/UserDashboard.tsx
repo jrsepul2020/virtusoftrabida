@@ -192,14 +192,14 @@ export default function UserDashboard({ onLogout }: Props) {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
                   <Save className="w-5 h-5" />
                   {saving ? 'Guardando...' : 'Guardar'}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
                 >
                   <X className="w-5 h-5" />
                   Cancelar

@@ -169,13 +169,13 @@ export default function MesasManager() {
           <button
             onClick={fetchMesas}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
           >
             {loading ? 'Cargando...' : 'Refrescar'}
           </button>
           <button
             onClick={addNewMesa}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Nueva Mesa
@@ -267,7 +267,7 @@ export default function MesasManager() {
                               className={`w-8 h-8 rounded-full text-xs font-bold border-2 transition-colors ${
                                 ocupado
                                   ? 'bg-red-500 text-white border-red-600 hover:bg-red-600'
-                                  : 'bg-green-500 text-white border-green-600 hover:bg-green-600'
+                                  : 'bg-red-500 text-white border-red-600 hover:bg-red-600'
                               }`}
                               title={`Puesto ${puestoNum}: ${ocupado ? 'Ocupado - Click para liberar' : 'Libre - Click para ocupar'}`}
                             >
@@ -304,7 +304,7 @@ export default function MesasManager() {
           <p className="text-gray-500 mb-4">Comienza agregando una nueva mesa.</p>
           <button
             onClick={addNewMesa}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             Crear Primera Mesa

@@ -1,194 +1,285 @@
-import { useMemo, useState } from "react";
+import { useState } from 'react';
 
-/**
- * Componente CataForm
- *
- * - Cada fila contiene varios botones con valores (por ejemplo 5,4,3,2,1 o 20,18,...).
- * - Al pulsar un botón se selecciona ese valor para la fila; el botón cambia de color.
- * - La puntuación total se calcula sumando los valores seleccionados.
- * - Botones: Reset (borra selecciones) y Siguiente Vino (llama al callback onNext con los resultados).
- *
- * Tailwind: el ejemplo usa clases de Tailwind. Si no lo usas, adapta las clases a CSS normal.
- */
-
-type RowConfig = {
-  id: string; // clave única para la fila
-  label: string;
-  values: number[]; // valores que muestra la fila (ordenados como quieras)
+type CriterioScore = {
+  [key: string]: number | null;
 };
 
-type CategoryConfig = {
-  id: string;
-  title: string;
-  rows: RowConfig[];
-};
+export default function CataForm() {
+  const [scores, setScores] = useState<CriterioScore>({
+    vistaLimpidez: null,
+    vistaColor: null,
+    olfatoLimpidez: null,
+    olfatoIntensidad: null,
+    olfatoCalidad: null,
+    saborLimpio: null,
+    saborIntensidad: null,
+    saborPersistencia: null,
+    saborCalidad: null,
+    juicioGlobal: null,
+  });
 
-type Results = Record<string, number | null>;
+  const handleScoreClick = (criterio: string, valor: number) => {
+    setScores(prev => ({
+      ...prev,
+      [criterio]: prev[criterio] === valor ? null : valor
+    }));
+  };
 
-export default function CataForm({
-  onNext,
-  initial,
-}: {
-  onNext?: (results: Results, total: number) => void; // callback cuando pulsas "Siguiente Vino"
-  initial?: Results; // valores iniciales opcionales
-}) {
-  // Define las categorías y filas (adáptalas a tu formulario real)
-  const categories: CategoryConfig[] = [
-    {
-      id: "vista",
-      title: "Vista",
-      rows: [
-        { id: "vista_limpidez", label: "Limpidez", values: [5, 4, 3, 2, 1] },
-        { id: "vista_color", label: "Color", values: [5, 4, 3, 2, 1] },
-      ],
-    },
-    {
-      id: "olfato",
-      title: "Olfato / Olor",
-      rows: [
-        { id: "olfato_limpidez", label: "Limpidez", values: [5, 4, 3, 2, 1] },
-        { id: "olfato_intensidad", label: "Intensidad", values: [5, 4, 3, 2, 1] },
-        { id: "olfato_calidad", label: "Calidad", values: [5, 4, 3, 2, 1] },
-      ],
-    },
-    {
-      id: "sabor",
-      title: "Sabor",
-      rows: [
-        { id: "sabor_limpio", label: "Limpio", values: [5, 4, 3, 2, 1] },
-        { id: "sabor_intensidad", label: "Intensidad", values: [5, 4, 3, 2, 1] },
-        { id: "sabor_persistencia", label: "Persistencia", values: [5, 4, 3, 2, 1] },
-        { id: "sabor_calidad", label: "Calidad", values: [5, 4, 3, 2, 1] },
-      ],
-    },
-    {
-      id: "global",
-      title: "Juicio Global",
-      rows: [
-        { id: "valoracion_global", label: "Valoración Global", values: [20, 18, 14, 10, 6] },
-      ],
-    },
-  ];
+  const ScoreButton = ({ value, isSelected, onClick }: { value: number; isSelected: boolean; onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className={`
+        w-11 h-9 rounded font-bold text-sm transition-all duration-150
+        ${isSelected 
+          ? 'bg-red-600 text-white shadow-md' 
+          : 'bg-black text-white hover:bg-gray-800'
+        }
+      `}
+    >
+      {value}
+    </button>
+  );
 
-  // inicializa estado con nulls
-  const initialState: Results = useMemo(() => {
-    const out: Results = {};
-    categories.forEach((cat) => cat.rows.forEach((r) => (out[r.id] = null)));
-    if (initial) {
-      Object.keys(initial).forEach((k) => {
-        if (k in out) out[k] = initial[k];
-      });
-    }
-    return out;
-  }, [initial, categories]);
+  const ScoreRow = ({ 
+    label, 
+    criterio, 
+    valores, 
+    showArrow 
+  }: { 
+    label: string; 
+    criterio: string; 
+    valores: number[]; 
+    showArrow?: boolean;
+  }) => (
+    <div className="flex items-center gap-1.5 py-0.5">
+      <div className="w-28 text-right font-medium text-gray-700 text-xs">{label}</div>
+      <div className="w-11 h-9 border-2 border-gray-300 rounded flex items-center justify-center bg-white">
+        <span className="text-base font-bold text-gray-800">{scores[criterio] ?? 0}</span>
+      </div>
+      {showArrow && (
+        <div className="flex items-center mx-0.5">
+          <svg width="40" height="10" viewBox="0 0 40 10" className="text-black">
+            <line x1="0" y1="5" x2="32" y2="5" stroke="currentColor" strokeWidth="2"/>
+            <polygon points="32,0 40,5 32,10" fill="currentColor"/>
+          </svg>
+        </div>
+      )}
+      <div className="flex gap-1">
+        {valores.map((valor) => (
+          <ScoreButton 
+            key={valor}
+            value={valor} 
+            isSelected={scores[criterio] === valor}
+            onClick={() => handleScoreClick(criterio, valor)}
+          />
+        ))}
+      </div>
+    </div>
+  );
 
-  const [results, setResults] = useState<Results>(initialState);
-
-  // <-- FIX: explícitamente pide que el reduce devuelva un number para evitar problemas de inferencia -->
-  const total = useMemo(() => {
-    return Object.values(results).reduce<number>((acc, v) => acc + (v ?? 0), 0);
-  }, [results]);
-
-  const handleSelect = (rowId: string, value: number) => {
-    setResults((prev: Results) => {
-      const current = prev[rowId];
-      // Si pulsas mismo valor, se deselecciona (opcional). Si no quieres esto elimina la condición.
-      const nextValue: number | null = current === value ? null : value;
-      return { ...prev, [rowId]: nextValue };
-    });
+  const calculateTotal = () => {
+    return Object.values(scores).reduce((sum: number, val) => sum + (val ?? 0), 0);
   };
 
   const handleReset = () => {
-    const cleared: Results = {};
-    Object.keys(results).forEach((k) => (cleared[k] = null));
-    setResults(cleared);
-  };
-
-  const handleNext = () => {
-    if (onNext) onNext(results, total);
-    // por defecto resetea para siguiente vino
-    handleReset();
+    setScores({
+      vistaLimpidez: null,
+      vistaColor: null,
+      olfatoLimpidez: null,
+      olfatoIntensidad: null,
+      olfatoCalidad: null,
+      saborLimpio: null,
+      saborIntensidad: null,
+      saborPersistencia: null,
+      saborCalidad: null,
+      juicioGlobal: null,
+    });
   };
 
   return (
-    <div className="cata-container w-full h-screen flex flex-col p-2 md:p-3 lg:p-4 max-w-none mx-auto bg-gray-50">
-      {/* Header compacto */}
-      <header className="cata-footer flex items-center justify-between mb-2 md:mb-3 bg-white rounded-lg px-3 py-2 shadow-sm">
-        <h2 className="text-base md:text-lg lg:text-xl font-semibold text-gray-800">Cata de Vinos</h2>
-        <div className="bg-rose-900 text-white rounded-full w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 flex items-center justify-center font-bold text-sm md:text-base">
-          {total}
+    <div className="h-[625px] bg-gradient-to-br from-gray-50 to-gray-100 p-3 overflow-hidden">
+      <div className="h-full max-w-7xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 px-4 py-2">
+          <h1 className="text-xl font-bold text-white text-center">
+            FICHA DE CATA
+          </h1>
         </div>
-      </header>
 
-      {/* Contenido principal optimizado para 1000x600 */}
-      <div className="flex-1 overflow-hidden min-h-0">
-        {/* Grid responsive: 2 columnas en tablet horizontal, 4 en desktop */}
-        <div className="cata-grid h-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 md:gap-3">
-          {categories.map((cat) => (
-            <section key={cat.id} className="cata-section bg-white border rounded-lg shadow-sm flex flex-col overflow-hidden">
-              <div className="cata-header px-2 py-1.5 md:px-3 md:py-2 border-b bg-gradient-to-r from-gray-50 to-gray-100 font-medium text-xs md:text-sm lg:text-base text-center text-gray-700">
-                {cat.title}
-              </div>
-              <div className="cata-content flex-1 p-1.5 md:p-2 lg:p-3 overflow-y-auto">
-                <div className="space-y-1.5 md:space-y-2">
-                  {cat.rows.map((row) => (
-                    <div key={row.id} className="cata-row space-y-1 md:space-y-1.5">
-                      <div className="cata-label text-xs md:text-sm font-medium text-center text-gray-600 leading-tight">
-                        {row.label}
-                      </div>
-                      <div className="flex gap-1 md:gap-1.5 justify-center flex-wrap">
-                        {row.values.map((v, idx) => {
-                          const selected = results[row.id] === v;
-                          return (
-                            <button
-                              key={`${row.id}-${idx}-${v}`}
-                              type="button"
-                              onClick={() => handleSelect(row.id, v)}
-                              aria-pressed={selected}
-                              className={
-                                "cata-button w-7 h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 rounded-md md:rounded-lg flex items-center justify-center text-xs md:text-sm font-semibold shadow-sm transition-all duration-200 " +
-                                (selected
-                                  ? "bg-rose-900 text-white scale-105 shadow-md"
-                                  : "bg-white text-rose-900 border border-rose-200 hover:bg-rose-50 hover:border-rose-300 hover:scale-105")
-                              }
-                            >
-                              {v}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main Form Area - Left 2/3 */}
+          <div className="flex-1 p-3 overflow-y-auto">
+            {/* VISTA Section */}
+            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-2 border border-yellow-300 mb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Vista</h2>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Limpidez" 
+                    criterio="vistaLimpidez" 
+                    valores={[5, 4, 3, 2, 1]}
+                    showArrow={true}
+                  />
                 </div>
               </div>
-            </section>
-          ))}
-        </div>
-      </div>
+              <div className="flex items-center gap-2">
+                <div className="w-28"></div>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Color" 
+                    criterio="vistaColor" 
+                    valores={[10, 8, 6, 4, 2]}
+                  />
+                </div>
+              </div>
+            </div>
 
-      {/* Footer compacto y fijo */}
-      <footer className="cata-footer mt-2 md:mt-3 flex items-center justify-between border-t pt-2 md:pt-3 bg-white rounded-lg px-3 py-2 shadow-sm">
-        <button
-          type="button"
-          onClick={handleNext}
-          className="bg-red-600 text-white px-3 py-1.5 md:px-4 md:py-2 lg:px-6 lg:py-3 rounded-full font-semibold shadow text-xs md:text-sm lg:text-base hover:bg-red-700 transition-colors"
-        >
-          Siguiente Vino
-        </button>
+            {/* OLFATO Section */}
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-2 border border-purple-300 mb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Olfato</h2>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Limpidez" 
+                    criterio="olfatoLimpidez" 
+                    valores={[6, 5, 4, 3, 2]}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-28"></div>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Intensidad" 
+                    criterio="olfatoIntensidad" 
+                    valores={[8, 7, 6, 4, 2]}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-28"></div>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Calidad" 
+                    criterio="olfatoCalidad" 
+                    valores={[16, 14, 12, 10, 8]}
+                  />
+                </div>
+              </div>
+            </div>
 
-        <div className="flex items-center gap-2 md:gap-3 lg:gap-6">
-          <button 
-            type="button" 
-            onClick={handleReset} 
-            className="text-red-600 underline text-xs md:text-sm lg:text-base hover:text-red-700 transition-colors"
-          >
-            Reset
-          </button>
-          <div className="text-xs md:text-sm text-gray-600">
-            Total: <span className="font-bold text-sm md:text-base lg:text-lg text-gray-800">{total}</span>
+            {/* SABOR Section */}
+            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-2 border border-yellow-300 mb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Sabor</h2>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Limpio" 
+                    criterio="saborLimpio" 
+                    valores={[6, 5, 4, 3, 2]}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-28"></div>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Intensidad" 
+                    criterio="saborIntensidad" 
+                    valores={[8, 7, 6, 4, 2]}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-28"></div>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Persistencia" 
+                    criterio="saborPersistencia" 
+                    valores={[8, 7, 6, 5, 4]}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-28"></div>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Calidad" 
+                    criterio="saborCalidad" 
+                    valores={[22, 19, 16, 13, 10]}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* JUICIO GLOBAL Section */}
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg p-2 border border-gray-400 mb-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Juicio Global</h2>
+                <div className="flex-1">
+                  <ScoreRow 
+                    label="Valoración" 
+                    criterio="juicioGlobal" 
+                    valores={[11, 10, 9, 8, 7]}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 mt-2">
+              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm">
+                Siguiente Vino
+              </button>
+              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm">
+                Desechar Vino
+              </button>
+              <button 
+                onClick={handleReset}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm"
+              >
+                Reset
+              </button>
+              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm">
+                ENVIAR
+              </button>
+            </div>
+          </div>
+
+          {/* Info Sidebar - Right 1/3 */}
+          <div className="w-56 bg-gradient-to-b from-gray-50 to-gray-100 border-l-4 border-purple-600 p-3 space-y-2">
+            {/* Código */}
+            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
+              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Código</div>
+              <div className="text-2xl font-bold text-purple-700">3975</div>
+            </div>
+
+            {/* Puntos */}
+            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-red-300">
+              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Puntos</div>
+              <div className="text-4xl font-bold text-red-600">{calculateTotal()}</div>
+            </div>
+
+            {/* Orden */}
+            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
+              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Orden</div>
+              <div className="text-2xl font-bold text-gray-800">1</div>
+            </div>
+
+            {/* Nº Catador */}
+            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
+              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Nº Catador</div>
+              <div className="text-2xl font-bold text-gray-800">115</div>
+            </div>
+
+            {/* Tanda */}
+            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-blue-300">
+              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Tanda</div>
+              <div className="text-2xl font-bold text-blue-700">Tanda13</div>
+            </div>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }

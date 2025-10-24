@@ -210,7 +210,7 @@ export default function SettingsManager() {
               <h3 className="text-lg font-medium text-gray-700">Estados de Empresa</h3>
               <button
                 onClick={() => setNewStatus({ label: '', value: '', bg_color: 'bg-gray-100', text_color: 'text-gray-800' })}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Nuevo Estado
@@ -315,7 +315,7 @@ export default function SettingsManager() {
               <button
                 onClick={handleCreateStatus}
                 disabled={saving || !newStatus.label || !newStatus.value}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Creando...' : 'Crear Estado'}
               </button>
@@ -399,7 +399,7 @@ export default function SettingsManager() {
               <button
                 onClick={() => handleSaveStatus(editingStatus)}
                 disabled={saving}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Guardando...' : 'Guardar'}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings } from 'lucide-react';
+import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, Wine, LogOut, FolderTree } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -11,10 +11,16 @@ import MesasManager from './MesasManager';
 import EmailTest from './EmailTest';
 import SettingsManager from './SettingsManager';
 import CatadoresManager from './CatadoresManager';
+import CataForm from './CataForm';
+import GestionTandas from './GestionTandas';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'tandas' | 'mesas' | 'catadores' | 'print' | 'form' | 'emailTest' | 'settings';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'cata' | 'print' | 'form' | 'emailTest' | 'settings';
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  onLogout?: () => void;
+}
+
+export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -23,9 +29,11 @@ export default function AdminDashboard() {
     { id: 'companies', label: 'Empresas', icon: Building2 },
     { id: 'samples', label: 'Muestras', icon: FlaskConical },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
-    { id: 'tandas', label: 'Tandas', icon: Layers },
+    { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
+    { id: 'gestionTandas', label: 'Gestión Tandas', icon: FolderTree },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'catadores', label: 'Catadores', icon: Users },
+    { id: 'cata', label: 'Ficha de Cata', icon: Wine },
     { id: 'print', label: 'Imprimir Listado', icon: Printer },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
@@ -38,12 +46,12 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="flex flex-1 bg-gray-100 min-h-screen">
       {/* Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className="flex flex-col w-64 bg-[#3C542E]">
+        <div className="flex flex-col w-64 bg-[#3C542E] min-h-screen lg:h-screen lg:sticky lg:top-0">
           {/* Logo/Header */}
-          <div className="flex items-center h-16 px-6 bg-[#2D3F20] shadow-sm">
+          <div className="flex items-center h-16 px-6 bg-[#2D3F20] shadow-sm flex-shrink-0">
             <h2 className="text-lg font-semibold text-white">VIRTUS ADMIN 2.0</h2>
           </div>
           
@@ -73,16 +81,25 @@ export default function AdminDashboard() {
           </nav>
           
           {/* Footer */}
-          <div className="p-4 border-t border-white/10">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">
-                <Users className="w-4 h-4 text-white/80" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">Administrador</p>
-                <p className="text-xs text-white/60 truncate">Sistema VIRTUS</p>
+          <div className="p-3 border-t border-white/10 flex-shrink-0">
+            <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm">J</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">José Ramón Sepúlveda</p>
+                  <p className="text-xs text-white/60 truncate">jrsepu2000@gmail.com</p>
+                </div>
               </div>
             </div>
+            <button 
+              onClick={onLogout}
+              className="w-full mt-2 flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
       </div>
@@ -91,7 +108,7 @@ export default function AdminDashboard() {
       {showMobileMenu && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowMobileMenu(false)}></div>
-          <div className="fixed inset-y-0 left-0 w-64 bg-[#3C542E] shadow-xl">
+          <div className="fixed inset-y-0 left-0 w-64 bg-[#3C542E] shadow-xl flex flex-col">
             {/* Mobile Header */}
             <div className="flex items-center justify-between h-16 px-6 bg-[#2D3F20]">
               <h2 className="text-lg font-semibold text-white">VIRTUS ADMIN 2.0</h2>
@@ -104,7 +121,7 @@ export default function AdminDashboard() {
             </div>
             
             {/* Mobile Navigation */}
-            <nav className="flex-1 px-3 py-6 space-y-1">
+            <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -127,14 +144,36 @@ export default function AdminDashboard() {
                 );
               })}
             </nav>
+
+            {/* Mobile Footer */}
+            <div className="p-3 border-t border-white/10">
+              <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-sm">J</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">José Ramón Sepúlveda</p>
+                    <p className="text-xs text-white/60 truncate">jrsepu2000@gmail.com</p>
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={onLogout}
+                className="w-full mt-2 flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Mobile header */}
-        <div className="lg:hidden bg-white shadow-sm border-b border-gray-200">
+        <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between px-4 py-4">
             <div className="flex items-center gap-3">
               <button
@@ -151,25 +190,27 @@ export default function AdminDashboard() {
         </div>
 
         {/* Desktop header */}
-        <div className="hidden lg:block bg-white shadow-sm border-b border-gray-200">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-800">
+        <div className="hidden lg:block bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+          <div className="px-6 py-3">
+            <h1 className="text-xl font-bold text-gray-800">
               {menuItems.find(item => item.id === activeTab)?.label}
             </h1>
-            <p className="text-sm text-gray-600 mt-1">Gestiona y supervisa el sistema VIRTUS</p>
+            <p className="text-xs text-gray-600">Gestiona y supervisa el sistema VIRTUS</p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto">
-          <div className="p-6">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-4">
             {activeTab === 'statistics' && <StatisticsManager />}
             {activeTab === 'companies' && <CompaniesManager />}
             {activeTab === 'samples' && <SamplesManager />}
             {activeTab === 'simpleList' && <SimpleSamplesList />}
-            {activeTab === 'tandas' && <TandasManager />}
+            {activeTab === 'crearTandas' && <TandasManager />}
+            {activeTab === 'gestionTandas' && <GestionTandas />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
+            {activeTab === 'cata' && <CataForm />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}

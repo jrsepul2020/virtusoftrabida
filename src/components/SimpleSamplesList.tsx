@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Edit, X, ChevronDown, Hand, Eye } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand } from 'lucide-react';
+import SampleEditModal from './SampleEditModal';
 
 type SortField = 'codigo' | 'nombre' | 'categoria' | 'pais' | 'azucar' | 'grado';
 type SortDirection = 'asc' | 'desc';
@@ -17,8 +18,6 @@ export default function SimpleSamplesList() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [empresaPedido, setEmpresaPedido] = useState<number | null>(null);
 
   useEffect(() => {
     fetchSamples();
@@ -130,75 +129,31 @@ export default function SimpleSamplesList() {
       <ArrowDown className="w-4 h-4" />;
   };
 
-  const handleEditSample = async (sample: Sample) => {
-    setEditingSample({ ...sample });
-
-    if (sample.empresa) {
-      try {
-        const { data, error } = await supabase
-          .from('empresas')
-          .select('pedido')
-          .eq('name', sample.empresa)
-          .maybeSingle();
-
-        if (error) throw error;
-        setEmpresaPedido(data?.pedido || null);
-      } catch (error) {
-        console.error('Error fetching empresa pedido:', error);
-        setEmpresaPedido(null);
-      }
-    } else {
-      setEmpresaPedido(null);
-    }
-  };
-
-  const handleSaveSample = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingSample) return;
-
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('muestras')
-        .update({
-          nombre: editingSample.nombre,
-          categoria: editingSample.categoria,
-          empresa: editingSample.empresa,
-          codigotexto: editingSample.codigotexto,
-          origen: editingSample.origen,
-          igp: editingSample.igp,
-          pais: editingSample.pais,
-          azucar: editingSample.azucar,
-          grado: editingSample.grado,
-          existencias: editingSample.existencias,
-          año: editingSample.año,
-          tipouva: editingSample.tipouva,
-          tipoaceituna: editingSample.tipoaceituna,
-          destilado: editingSample.destilado,
-          fecha: editingSample.fecha,
-          manual: editingSample.manual,
-          categoriaoiv: editingSample.categoriaoiv,
-          categoriadecata: editingSample.categoriadecata,
-        })
-        .eq('id', editingSample.id);
-
-      if (error) throw error;
-      setEditingSample(null);
-      await fetchSamples();
-    } catch (error) {
-      console.error('Error updating sample:', error);
-      alert('Error al guardar los cambios');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleCategoryToggle = (category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
         ? prev.filter((c) => c !== category)
         : [...prev, category]
     );
+  };
+
+  const handleDeleteSample = async (sample: Sample) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar la muestra "${sample.nombre}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('muestras')
+        .delete()
+        .eq('id', sample.id);
+
+      if (error) throw error;
+      await fetchSamples();
+    } catch (error) {
+      console.error('Error deleting sample:', error);
+      alert('Error al eliminar la muestra');
+    }
   };
 
   if (loading) {
@@ -353,7 +308,7 @@ export default function SimpleSamplesList() {
               {filteredSamples.map((sample, index) => (
                 <tr
                   key={sample.id}
-                  onClick={() => setViewingSample(sample)}
+                  onClick={() => setEditingSample(sample)}
                   className={`cursor-pointer ${
                     sample.manual
                       ? 'bg-red-50 hover:bg-red-100 border-l-4 border-red-500'
@@ -367,7 +322,7 @@ export default function SimpleSamplesList() {
                       {sample.manual && <Hand className="w-3 h-3 text-red-600" />}
                       <span className={`text-sm font-bold ${
                         sample.manual ? 'text-red-700' : 'text-gray-900'
-                      }`}>{sample.codigo}</span>
+                      }`}>{sample.codigotexto || sample.codigo}</span>
                     </div>
                   </td>
                   <td className="px-2 py-1.5">
@@ -399,28 +354,16 @@ export default function SimpleSamplesList() {
                     </span>
                   </td>
                   <td className="px-2 py-1.5">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setViewingSample(sample);
-                        }}
-                        className="text-blue-600 hover:text-blue-700"
-                        title="Ver detalles"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditSample(sample);
-                        }}
-                        className="text-primary-600 hover:text-primary-700"
-                        title="Editar"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSample(sample);
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -433,7 +376,7 @@ export default function SimpleSamplesList() {
           {filteredSamples.map((sample) => (
             <div
               key={sample.id}
-              onClick={() => setViewingSample(sample)}
+              onClick={() => setEditingSample(sample)}
               className={`border-b border-gray-200 p-4 cursor-pointer ${
                 sample.manual ? 'bg-red-50 border-l-4 border-red-500 hover:bg-red-100' : 'bg-white hover:bg-gray-50'
               }`}
@@ -443,35 +386,23 @@ export default function SimpleSamplesList() {
                   {sample.manual && <Hand className="w-4 h-4 text-red-600" />}
                   <span className={`text-lg font-bold ${
                     sample.manual ? 'text-red-700' : 'text-gray-900'
-                  }`}>#{sample.codigo}</span>
+                  }`}>#{sample.codigotexto || sample.codigo}</span>
                   {sample.manual && (
                     <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold border border-red-300">
                       MANUAL
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewingSample(sample);
-                    }}
-                    className="text-blue-600 hover:text-blue-700 p-2"
-                    title="Ver detalles"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditSample(sample);
-                    }}
-                    className="text-primary-600 hover:text-primary-700 p-2"
-                    title="Editar"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteSample(sample);
+                  }}
+                  className="text-red-600 hover:text-red-700 p-2"
+                  title="Eliminar"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
               
               <h3 className={`font-medium text-sm mb-2 ${
@@ -527,166 +458,11 @@ export default function SimpleSamplesList() {
         Mostrando {filteredSamples.length} de {samples.length} muestras
       </div>
 
-      {editingSample && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">Editar Muestra #{editingSample.codigo}</h2>
-              <button
-                onClick={() => setEditingSample(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveSample} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-800 mb-2 border-b pb-1">Información Básica</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código
-                  </label>
-                  <input
-                    type="text"
-                    value={editingSample.codigo}
-                    disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editingSample.nombre}
-                    onChange={(e) => setEditingSample({ ...editingSample, nombre: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Categoría
-                      </label>
-                      <select
-                        value={editingSample.categoria || ''}
-                        onChange={(e) => setEditingSample({ ...editingSample, categoria: e.target.value })}
-                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option value="">Seleccionar categoría</option>
-                        <option value="VINO BLANCO">VINO BLANCO</option>
-                        <option value="VINO TINTO">VINO TINTO</option>
-                        <option value="VINO ROSADO">VINO ROSADO</option>
-                        <option value="VINO SIN ALCOHOL">VINO SIN ALCOHOL</option>
-                        <option value="GENEROSO SECO">GENEROSO SECO</option>
-                        <option value="GENEROSO DULCE">GENEROSO DULCE</option>
-                        <option value="AROMATIZADO">AROMATIZADO</option>
-                        <option value="ESPIRITUOSO ORIGEN VÍNICO">ESPIRITUOSO ORIGEN VÍNICO</option>
-                        <option value="ESPIRITUOSO NO VÍNICO">ESPIRITUOSO NO VÍNICO</option>
-                        <option value="ACEITE OLIVA VIRGEN EXTRA">ACEITE OLIVA VIRGEN EXTRA</option>
-                        <option value="ACEITE OLIVA VIRGEN EXTRA ORGÁNICO">ACEITE OLIVA VIRGEN EXTRA ORGÁNICO</option>
-                        <option value="ESPUMOSO">ESPUMOSO</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Empresa
-                      </label>
-                      <input
-                        type="text"
-                        value={editingSample.empresa || ''}
-                        onChange={(e) => setEditingSample({ ...editingSample, empresa: e.target.value })}
-                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Pedido Empresa
-                      </label>
-                      <input
-                        type="text"
-                        value={empresaPedido !== null ? empresaPedido : '-'}
-                        disabled
-                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-base font-semibold text-gray-800 mb-2 border-b pb-1">Detalles del Producto</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    País
-                  </label>
-                  <input
-                    type="text"
-                    value={editingSample.pais || ''}
-                    onChange={(e) => setEditingSample({ ...editingSample, pais: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Azúcar (g/L)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editingSample.azucar !== null && editingSample.azucar !== undefined ? editingSample.azucar : ''}
-                    onChange={(e) => setEditingSample({ ...editingSample, azucar: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Grado
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editingSample.grado !== null && editingSample.grado !== undefined ? editingSample.grado : ''}
-                    onChange={(e) => setEditingSample({ ...editingSample, grado: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t border-gray-200 mt-4">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingSample(null)}
-                  disabled={saving}
-                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <SampleEditModal
+        sample={editingSample}
+        onClose={() => setEditingSample(null)}
+        onSave={fetchSamples}
+      />
 
       {/* Modal de detalles */}
       {viewingSample && (
@@ -709,7 +485,7 @@ export default function SimpleSamplesList() {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Código</label>
-                  <p className="text-gray-900 font-mono text-lg">#{viewingSample.codigo}</p>
+                  <p className="text-gray-900 font-mono text-lg">#{viewingSample.codigotexto || viewingSample.codigo}</p>
                 </div>
                 
                 <div>
@@ -796,18 +572,8 @@ export default function SimpleSamplesList() {
             {/* Acciones */}
             <div className="flex gap-3 mt-8 pt-6 border-t">
               <button
-                onClick={() => {
-                  setViewingSample(null);
-                  handleEditSample(viewingSample);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                <Edit className="w-4 h-4" />
-                Editar Muestra
-              </button>
-              <button
                 onClick={() => setViewingSample(null)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cerrar
               </button>
