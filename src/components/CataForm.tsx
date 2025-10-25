@@ -29,7 +29,7 @@ export default function CataForm() {
     <button
       onClick={onClick}
       className={`
-        w-11 h-9 rounded font-bold text-sm transition-all duration-150
+        w-9 h-7 rounded font-bold text-xs transition-all duration-150
         ${isSelected 
           ? 'bg-red-600 text-white shadow-md' 
           : 'bg-black text-white hover:bg-gray-800'
@@ -51,20 +51,20 @@ export default function CataForm() {
     valores: number[]; 
     showArrow?: boolean;
   }) => (
-    <div className="flex items-center gap-1.5 py-0.5">
-      <div className="w-28 text-right font-medium text-gray-700 text-xs">{label}</div>
-      <div className="w-11 h-9 border-2 border-gray-300 rounded flex items-center justify-center bg-white">
-        <span className="text-base font-bold text-gray-800">{scores[criterio] ?? 0}</span>
+    <div className="flex items-center gap-1 py-0.5">
+      <div className="w-20 text-right font-medium text-gray-700 text-[10px]">{label}</div>
+      <div className="w-9 h-7 border-2 border-gray-300 rounded flex items-center justify-center bg-white">
+        <span className="text-sm font-bold text-gray-800">{scores[criterio] ?? 0}</span>
       </div>
       {showArrow && (
         <div className="flex items-center mx-0.5">
-          <svg width="40" height="10" viewBox="0 0 40 10" className="text-black">
-            <line x1="0" y1="5" x2="32" y2="5" stroke="currentColor" strokeWidth="2"/>
-            <polygon points="32,0 40,5 32,10" fill="currentColor"/>
+          <svg width="30" height="8" viewBox="0 0 30 8" className="text-black">
+            <line x1="0" y1="4" x2="24" y2="4" stroke="currentColor" strokeWidth="2"/>
+            <polygon points="24,0 30,4 24,8" fill="currentColor"/>
           </svg>
         </div>
       )}
-      <div className="flex gap-1">
+      <div className="flex gap-0.5">
         {valores.map((valor) => (
           <ScoreButton 
             key={valor}
@@ -97,22 +97,22 @@ export default function CataForm() {
   };
 
   return (
-    <div className="h-[625px] bg-gradient-to-br from-gray-50 to-gray-100 p-3 overflow-hidden">
-      <div className="h-full max-w-7xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
+    <div className="h-[600px] w-[1200px] bg-gradient-to-br from-gray-50 to-gray-100 p-2 overflow-hidden">
+      <div className="h-full w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-800 px-4 py-2">
-          <h1 className="text-xl font-bold text-white text-center">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 px-3 py-1.5">
+          <h1 className="text-base font-bold text-white text-center">
             FICHA DE CATA
           </h1>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Main Form Area - Left 2/3 */}
-          <div className="flex-1 p-3 overflow-y-auto">
+          <div className="flex-1 p-2 overflow-y-auto">
             {/* VISTA Section */}
-            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-2 border border-yellow-300 mb-2">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Vista</h2>
+            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-1.5 border border-yellow-300 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <h2 className="text-[11px] font-bold text-gray-800 uppercase w-20">Vista</h2>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Limpidez" 
@@ -122,8 +122,8 @@ export default function CataForm() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-28"></div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-20"></div>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Color" 
@@ -135,9 +135,9 @@ export default function CataForm() {
             </div>
 
             {/* OLFATO Section */}
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-2 border border-purple-300 mb-2">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Olfato</h2>
+            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-1.5 border border-purple-300 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <h2 className="text-[11px] font-bold text-gray-800 uppercase w-20">Olfato</h2>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Limpidez" 
@@ -146,8 +146,8 @@ export default function CataForm() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-28"></div>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="w-20"></div>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Intensidad" 
@@ -156,8 +156,8 @@ export default function CataForm() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-28"></div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-20"></div>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Calidad" 
@@ -169,9 +169,9 @@ export default function CataForm() {
             </div>
 
             {/* SABOR Section */}
-            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-2 border border-yellow-300 mb-2">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Sabor</h2>
+            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-1.5 border border-yellow-300 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <h2 className="text-[11px] font-bold text-gray-800 uppercase w-20">Sabor</h2>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Limpio" 
@@ -180,8 +180,8 @@ export default function CataForm() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-28"></div>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="w-20"></div>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Intensidad" 
@@ -190,8 +190,8 @@ export default function CataForm() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-28"></div>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="w-20"></div>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Persistencia" 
@@ -200,8 +200,8 @@ export default function CataForm() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-28"></div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-20"></div>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Calidad" 
@@ -213,9 +213,9 @@ export default function CataForm() {
             </div>
 
             {/* JUICIO GLOBAL Section */}
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg p-2 border border-gray-400 mb-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-gray-800 uppercase w-28">Juicio Global</h2>
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg p-1.5 border border-gray-400 mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-[11px] font-bold text-gray-800 uppercase w-20">Juicio Global</h2>
                 <div className="flex-1">
                   <ScoreRow 
                     label="Valoración" 
@@ -227,55 +227,55 @@ export default function CataForm() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2 mt-2">
-              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm">
+            <div className="flex gap-1.5 mt-1.5">
+              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 rounded shadow-md transition-all text-xs">
                 Siguiente Vino
               </button>
-              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm">
+              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 rounded shadow-md transition-all text-xs">
                 Desechar Vino
               </button>
               <button 
                 onClick={handleReset}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 rounded shadow-md transition-all text-xs"
               >
                 Reset
               </button>
-              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-md transition-all text-sm">
+              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 rounded shadow-md transition-all text-xs">
                 ENVIAR
               </button>
             </div>
           </div>
 
           {/* Info Sidebar - Right 1/3 */}
-          <div className="w-56 bg-gradient-to-b from-gray-50 to-gray-100 border-l-4 border-purple-600 p-3 space-y-2">
+          <div className="w-44 bg-gradient-to-b from-gray-50 to-gray-100 border-l-4 border-purple-600 p-2 space-y-1.5">
             {/* Código */}
-            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Código</div>
-              <div className="text-2xl font-bold text-purple-700">3975</div>
+            <div className="bg-white rounded-lg p-1.5 shadow-md border-2 border-gray-300">
+              <div className="text-[9px] text-gray-600 uppercase font-semibold mb-0.5">Código</div>
+              <div className="text-xl font-bold text-purple-700">3975</div>
             </div>
 
             {/* Puntos */}
-            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-red-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Puntos</div>
-              <div className="text-4xl font-bold text-red-600">{calculateTotal()}</div>
+            <div className="bg-white rounded-lg p-1.5 shadow-md border-2 border-red-300">
+              <div className="text-[9px] text-gray-600 uppercase font-semibold mb-0.5">Puntos</div>
+              <div className="text-3xl font-bold text-red-600">{calculateTotal()}</div>
             </div>
 
             {/* Orden */}
-            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Orden</div>
-              <div className="text-2xl font-bold text-gray-800">1</div>
+            <div className="bg-white rounded-lg p-1.5 shadow-md border-2 border-gray-300">
+              <div className="text-[9px] text-gray-600 uppercase font-semibold mb-0.5">Orden</div>
+              <div className="text-xl font-bold text-gray-800">1</div>
             </div>
 
             {/* Nº Catador */}
-            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Nº Catador</div>
-              <div className="text-2xl font-bold text-gray-800">115</div>
+            <div className="bg-white rounded-lg p-1.5 shadow-md border-2 border-gray-300">
+              <div className="text-[9px] text-gray-600 uppercase font-semibold mb-0.5">Nº Catador</div>
+              <div className="text-xl font-bold text-gray-800">115</div>
             </div>
 
             {/* Tanda */}
-            <div className="bg-white rounded-lg p-2 shadow-md border-2 border-blue-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-0.5">Tanda</div>
-              <div className="text-2xl font-bold text-blue-700">Tanda13</div>
+            <div className="bg-white rounded-lg p-1.5 shadow-md border-2 border-blue-300">
+              <div className="text-[9px] text-gray-600 uppercase font-semibold mb-0.5">Tanda</div>
+              <div className="text-xl font-bold text-blue-700">Tanda13</div>
             </div>
           </div>
         </div>
