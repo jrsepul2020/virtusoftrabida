@@ -61,28 +61,49 @@ export default function SettingsManager() {
   };
 
   const applyOrientation = (newOrientation: 'portrait' | 'landscape') => {
+    const body = document.body;
     const root = document.documentElement;
     
     if (newOrientation === 'landscape') {
       // Forzar orientación horizontal
-      root.style.transform = 'rotate(90deg)';
-      root.style.transformOrigin = 'left top';
-      root.style.width = '100vh';
-      root.style.height = '100vw';
-      root.style.overflow = 'hidden';
-      root.style.position = 'fixed';
-      root.style.top = '100%';
-      root.style.left = '0';
+      body.classList.add('force-landscape');
+      root.classList.add('force-landscape');
+      
+      // Aplicar estilos inline como fallback
+      body.style.transform = 'rotate(90deg)';
+      body.style.transformOrigin = 'top left';
+      body.style.position = 'fixed';
+      body.style.top = '0';
+      body.style.left = '100vw';
+      body.style.width = '100vh';
+      body.style.height = '100vw';
+      body.style.overflow = 'auto';
+      
+      // Ajustar viewport
+      let viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta) {
+        viewportMeta.setAttribute('content', 'width=device-height, initial-scale=1.0, user-scalable=no');
+      }
     } else {
       // Orientación vertical (normal)
-      root.style.transform = '';
-      root.style.transformOrigin = '';
-      root.style.width = '';
-      root.style.height = '';
-      root.style.overflow = '';
-      root.style.position = '';
-      root.style.top = '';
-      root.style.left = '';
+      body.classList.remove('force-landscape');
+      root.classList.remove('force-landscape');
+      
+      // Limpiar estilos inline
+      body.style.transform = '';
+      body.style.transformOrigin = '';
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.width = '';
+      body.style.height = '';
+      body.style.overflow = '';
+      
+      // Restaurar viewport
+      let viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta) {
+        viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
+      }
     }
   };
 
