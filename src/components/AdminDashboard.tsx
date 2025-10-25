@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, Wine, LogOut, FolderTree, LucideIcon } from 'lucide-react';
+import { Building2, FlaskConical, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, Wine, LogOut, FolderTree, LucideIcon } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -37,7 +37,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'companies', label: 'Empresas', icon: Building2 },
     { id: 'samples', label: 'Muestras', icon: FlaskConical },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
-    { id: 'print', label: 'Imprimir Listado', icon: Printer },
     { id: 'separator2', label: '', icon: null, isSeparator: true },
     { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
     { id: 'gestionTandas', label: 'Gestión Tandas', icon: FolderTree },
@@ -235,8 +234,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="p-4">
             {activeTab === 'statistics' && <StatisticsManager />}
             {activeTab === 'companies' && <CompaniesManager />}
-            {activeTab === 'samples' && <SamplesManager />}
-            {activeTab === 'simpleList' && <SimpleSamplesList />}
+            {activeTab === 'samples' && <SamplesManager onNavigateToPrint={() => setActiveTab('print')} />}
+            {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} />}
             {activeTab === 'crearTandas' && <TandasManager />}
             {activeTab === 'gestionTandas' && <GestionTandas />}
             {activeTab === 'mesas' && <MesasManager />}

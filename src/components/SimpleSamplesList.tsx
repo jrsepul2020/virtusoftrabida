@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand, Printer } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
 
 type SortField = 'codigo' | 'nombre' | 'categoria' | 'pais' | 'azucar' | 'grado';
 type SortDirection = 'asc' | 'desc';
 
-export default function SimpleSamplesList() {
+interface SimpleSamplesListProps {
+  onNavigateToPrint?: () => void;
+}
+
+export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesListProps) {
   const [samples, setSamples] = useState<Sample[]>([]);
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,6 +240,17 @@ export default function SimpleSamplesList() {
               <span className="hidden sm:inline">Total: </span>{samples.length}
             </div>
           </div>
+
+          {onNavigateToPrint && (
+            <button
+              onClick={onNavigateToPrint}
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium whitespace-nowrap"
+            >
+              <Printer className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Imprimir</span>
+              <span className="sm:hidden text-sm">Print</span>
+            </button>
+          )}
         </div>
       </div>
 
