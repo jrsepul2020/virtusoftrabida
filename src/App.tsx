@@ -5,6 +5,7 @@ import MainLayout from './components/MainLayout';
 import UnifiedInscriptionForm from './components/UnifiedInscriptionForm';
 import HeroLanding from './components/HeroLanding';
 import PWAInstallBanner from './components/PWAInstallBanner';
+import UpdateNotification, { VersionBadge } from './components/UpdateNotification';
 import Reglamento from './components/Reglamento';
 import Normativa from './components/Normativa';
 
@@ -97,6 +98,12 @@ function App() {
 
       {/* PWA Install Banner */}
       <PWAInstallBanner />
+      
+      {/* Update Notification */}
+      <UpdateNotification />
+      
+      {/* Version Badge */}
+      <VersionBadge />
     </MainLayout>
   );
 }

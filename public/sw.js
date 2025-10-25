@@ -1,4 +1,5 @@
-const CACHE_NAME = 'virtus-cata-v1.2';
+const APP_VERSION = '2.1.0';
+const CACHE_NAME = `virtus-cata-v${APP_VERSION}`;
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -11,39 +12,41 @@ const STATIC_ASSETS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
+  console.log(`[SW] Instalando versión ${APP_VERSION}...`);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Caching static assets');
+        console.log('[SW] Cacheando assets estáticos');
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('Service Worker installed successfully');
-        self.skipWaiting();
+        console.log(`[SW] Versión ${APP_VERSION} instalada correctamente`);
+        // Forzar activación inmediata
+        return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('Failed to cache static assets:', error);
+        console.error('[SW] Error al cachear assets:', error);
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
+  console.log(`[SW] Activando versión ${APP_VERSION}...`);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            console.log('[SW] Eliminando caché antigua:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('Service Worker activated');
-      self.clients.claim();
+      console.log(`[SW] Versión ${APP_VERSION} activada`);
+      // Tomar control de todas las páginas inmediatamente
+      return self.clients.claim();
     })
   );
 });
@@ -62,25 +65,38 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Para HTML: Network First (siempre intentar red primero)
+  if (event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Para otros recursos: Cache First
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
         if (response) {
-          console.log('Serving from cache:', event.request.url);
           return response;
         }
 
-        console.log('Fetching from network:', event.request.url);
         return fetch(event.request).then((response) => {
-          // Don't cache non-successful responses
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
 
-          // Clone the response before caching
           const responseToCache = response.clone();
-          
           caches.open(CACHE_NAME)
             .then((cache) => {
               cache.put(event.request, responseToCache);
@@ -90,12 +106,23 @@ self.addEventListener('fetch', (event) => {
         });
       })
       .catch(() => {
-        // Fallback for offline navigation
         if (event.request.destination === 'document') {
           return caches.match('/index.html');
         }
       })
   );
+});
+
+// Escuchar mensajes desde la app para forzar actualización
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Forzando activación de nueva versión');
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: APP_VERSION });
+  }
 });
 
 // Background sync for offline form submissions
