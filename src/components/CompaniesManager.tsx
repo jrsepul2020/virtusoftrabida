@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
-import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer } from 'lucide-react';
+import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 type SortField = 'name' | 'email' | 'created_at' | 'pais' | 'totalinscripciones' | 'pedido';
 type SortDirection = 'asc' | 'desc';
@@ -322,6 +323,65 @@ export default function CompaniesManager() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleExportToExcel = () => {
+    // Preparar los datos para Excel
+    const excelData = filteredCompanies.map(company => ({
+      'Nombre': company.name,
+      'Email': company.email,
+      'NIF': company.nif || '',
+      'Teléfono': company.phone || company.telefono || '',
+      'Móvil': company.movil || '',
+      'Persona Contacto': company.contact_person || '',
+      'Dirección': company.address || '',
+      'Código Postal': company.codigo_postal || company.postal || '',
+      'Población': company.poblacion || '',
+      'Ciudad': company.ciudad || company.city || '',
+      'País': company.pais || company.country || '',
+      'Página Web': company.pagina_web || '',
+      'Cómo nos conoció': company.conocimiento || '',
+      'Observaciones': company.observaciones || '',
+      'Total Inscripciones': company.totalinscripciones || 0,
+      'Estado': statusConfigs.find(s => s.value === company.status)?.label || company.status,
+      'Nº Muestras': company.samples?.length || 0,
+      'Fecha Creación': company.created_at ? new Date(company.created_at).toLocaleDateString('es-ES') : '',
+      'Última Actualización': company.updated_at ? new Date(company.updated_at).toLocaleDateString('es-ES') : ''
+    }));
+
+    // Crear el libro de trabajo
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Empresas');
+
+    // Ajustar ancho de columnas
+    const columnWidths = [
+      { wch: 30 }, // Nombre
+      { wch: 30 }, // Email
+      { wch: 15 }, // NIF
+      { wch: 15 }, // Teléfono
+      { wch: 15 }, // Móvil
+      { wch: 25 }, // Persona Contacto
+      { wch: 40 }, // Dirección
+      { wch: 12 }, // Código Postal
+      { wch: 20 }, // Población
+      { wch: 20 }, // Ciudad
+      { wch: 15 }, // País
+      { wch: 30 }, // Página Web
+      { wch: 20 }, // Cómo nos conoció
+      { wch: 40 }, // Observaciones
+      { wch: 15 }, // Total Inscripciones
+      { wch: 12 }, // Estado
+      { wch: 12 }, // Nº Muestras
+      { wch: 15 }, // Fecha Creación
+      { wch: 20 }  // Última Actualización
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Generar el archivo
+    const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+    const estadoTexto = statusFilter !== 'all' ? `_${statusFilter}` : '';
+    XLSX.writeFile(workbook, `empresas${estadoTexto}_${fecha}.xlsx`);
   };
 
   const handlePrint = () => {
@@ -648,6 +708,14 @@ export default function CompaniesManager() {
           >
             <Printer className="w-5 h-5" />
             <span className="hidden md:inline">Imprimir</span>
+          </button>
+          <button
+            onClick={handleExportToExcel}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+            title="Exportar a Excel"
+          >
+            <FileSpreadsheet className="w-5 h-5" />
+            <span className="hidden md:inline">Excel</span>
           </button>
         </div>
 
