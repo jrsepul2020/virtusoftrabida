@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, Wine, LogOut, FolderTree } from 'lucide-react';
+import { Building2, FlaskConical, BarChart3, Layers, List, Printer, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, Wine, LogOut, FolderTree, LucideIcon } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -16,6 +16,13 @@ import GestionTandas from './GestionTandas';
 
 type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'cata' | 'print' | 'form' | 'emailTest' | 'settings';
 
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: LucideIcon | null;
+  isSeparator?: boolean;
+}
+
 interface AdminDashboardProps {
   onLogout?: () => void;
 }
@@ -24,19 +31,25 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
+    { id: 'separator1', label: '', icon: null, isSeparator: true },
     { id: 'companies', label: 'Empresas', icon: Building2 },
     { id: 'samples', label: 'Muestras', icon: FlaskConical },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
+    { id: 'print', label: 'Imprimir Listado', icon: Printer },
+    { id: 'separator2', label: '', icon: null, isSeparator: true },
     { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
     { id: 'gestionTandas', label: 'Gestión Tandas', icon: FolderTree },
-    { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
+    { id: 'separator3', label: '', icon: null, isSeparator: true },
     { id: 'catadores', label: 'Catadores', icon: Users },
+    { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
+    { id: 'separator4', label: '', icon: null, isSeparator: true },
     { id: 'cata', label: 'Ficha de Cata', icon: Wine },
-    { id: 'print', label: 'Imprimir Listado', icon: Printer },
+    { id: 'separator5', label: '', icon: null, isSeparator: true },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
+    { id: 'separator6', label: '', icon: null, isSeparator: true },
     { id: 'settings', label: 'Configuración', icon: Settings },
   ];
 
@@ -58,7 +71,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           {/* Navigation */}
           <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
             {menuItems.map((item) => {
-              const Icon = item.icon;
+              // Renderizar separador
+              if (item.isSeparator) {
+                return (
+                  <div key={item.id} className="py-2">
+                    <div className="border-t border-white/20"></div>
+                  </div>
+                );
+              }
+
+              const Icon = item.icon!;
               const isActive = activeTab === item.id;
               return (
                 <button
@@ -123,7 +145,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {/* Mobile Navigation */}
             <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
               {menuItems.map((item) => {
-                const Icon = item.icon;
+                // Renderizar separador
+                if (item.isSeparator) {
+                  return (
+                    <div key={item.id} className="py-2">
+                      <div className="border-t border-white/20"></div>
+                    </div>
+                  );
+                }
+
+                const Icon = item.icon!;
                 const isActive = activeTab === item.id;
                 return (
                   <button
