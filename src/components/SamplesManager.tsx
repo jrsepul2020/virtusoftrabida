@@ -113,24 +113,60 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
   };
 
   const handleGetCategoriaOIV = async () => {
+    if (!confirm('¿Deseas actualizar la Categoría OIV de todas las muestras?\n\nEsto procesará cada muestra con los valores de azúcar, grado y categoría.')) {
+      return;
+    }
+
     try {
       setLoading(true);
-      const { data, error } = await supabase.rpc('rpc_get_categoriaoiv_muestra');
+      let processed = 0;
+      let errors = 0;
       
-      if (error) {
-        console.error('Error calling RPC function:', error);
-        alert(`Error al ejecutar la función: ${error.message}`);
-        return;
+      // Procesar cada muestra
+      for (const sample of samples) {
+        try {
+          // Llamar a la función RPC con los parámetros de cada muestra
+          const { data, error } = await supabase.rpc('rpc_get_categoriaoiv_muestra', {
+            p_azucar: sample.azucar || 0,
+            p_grado: sample.grado || 0,
+            p_categoria: sample.categoria || ''
+          });
+          
+          if (error) {
+            console.error(`Error en muestra ${sample.codigo}:`, error);
+            errors++;
+            continue;
+          }
+          
+          // Si la función devuelve un resultado, actualizar la muestra
+          if (data) {
+            const { error: updateError } = await supabase
+              .from('muestras')
+              .update({ categoriaoiv: data })
+              .eq('id', sample.id);
+            
+            if (updateError) {
+              console.error(`Error al actualizar muestra ${sample.codigo}:`, updateError);
+              errors++;
+            } else {
+              processed++;
+              console.log(`Muestra ${sample.codigo}: ${data}`);
+            }
+          }
+        } catch (err) {
+          console.error(`Error procesando muestra ${sample.codigo}:`, err);
+          errors++;
+        }
       }
       
-      console.log('Resultado de rpc_get_categoriaoiv_muestra:', data);
-      alert(`Función ejecutada correctamente. Revisa la consola para ver el resultado.\nResultado: ${JSON.stringify(data, null, 2)}`);
+      // Mostrar resultado
+      alert(`✅ Proceso completado:\n\n✓ Procesadas: ${processed}\n✗ Errores: ${errors}\n\nRevisa la consola para más detalles.`);
       
-      // Refrescar las muestras después de ejecutar la función
+      // Refrescar las muestras
       await fetchSamples();
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error al ejecutar la función RPC');
+      console.error('Error general:', error);
+      alert('❌ Error al ejecutar la función RPC');
     } finally {
       setLoading(false);
     }
@@ -231,9 +267,10 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
               onClick={handleGetCategoriaOIV}
               className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
               disabled={loading}
+              title="Calcular categoría OIV para todas las muestras basado en azúcar, grado y categoría"
             >
               <Database className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-sm sm:text-base hidden sm:inline">Categoría OIV</span>
+              <span className="text-sm sm:text-base hidden sm:inline">Actualizar OIV</span>
               <span className="text-sm sm:text-base sm:hidden">OIV</span>
             </button>
           </div>
