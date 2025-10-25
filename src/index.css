@@ -122,3 +122,31 @@
 .transition-all {
   transition: all 0.2s ease-in-out;
 }
+
+/* Forzar orientación horizontal */
+body.force-landscape {
+  transform: rotate(90deg);
+  transform-origin: top left;
+  position: fixed !important;
+  top: 0 !important;
+  left: 100vw !important;
+  width: 100vh !important;
+  height: 100vw !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.force-landscape {
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* Ajustar el contenedor principal en modo landscape */
+body.force-landscape #root {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: auto !important;
+}
