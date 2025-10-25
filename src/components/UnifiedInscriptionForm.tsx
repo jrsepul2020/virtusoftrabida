@@ -76,26 +76,6 @@ export default function UnifiedInscriptionForm({
 
   const [payment, setPayment] = useState<PaymentMethod>('transferencia');
 
-  // Función para generar número de pedido único
-  const generateOrderNumber = async (): Promise<number> => {
-    try {
-      // Obtener el número de pedido más alto actual
-      const { data: maxOrderData } = await supabase
-        .from('empresas')
-        .select('pedido')
-        .not('pedido', 'is', null)
-        .order('pedido', { ascending: false })
-        .limit(1);
-
-      const currentMax = maxOrderData?.[0]?.pedido || 0;
-      return currentMax + 1;
-    } catch (error) {
-      console.error('Error generating order number:', error);
-      // Fallback: usar timestamp
-      return Date.now();
-    }
-  };
-
   // Función para generar código único para muestras manuales
   const generateUniqueCode = async (): Promise<number> => {
     // Obtener códigos existentes
@@ -205,10 +185,8 @@ export default function UnifiedInscriptionForm({
         return;
       }
 
-      // Generar número de pedido automáticamente
-      const orderNumber = await generateOrderNumber();
-
       // Mapear los datos del formulario a los nombres de columnas de la BD
+      // El número de pedido se generará automáticamente en Supabase mediante trigger
       const empresaData = {
         nif: company.nif,
         name: company.nombre_empresa,  // nombre_empresa -> name
@@ -224,7 +202,7 @@ export default function UnifiedInscriptionForm({
         conocimiento: company.medio_conocio,  // medio_conocio -> conocimiento
         pagina_web: company.pagina_web,
         observaciones: company.observaciones,
-        pedido: orderNumber,  // Número de pedido generado automáticamente
+        // pedido se asigna automáticamente por el trigger en Supabase
         totalinscripciones: company.num_muestras,  // Número de muestras como total de inscripciones
         status: 'pending',  // Estado por defecto
         created_at: new Date().toISOString(),
