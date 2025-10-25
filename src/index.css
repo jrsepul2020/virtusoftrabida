@@ -123,7 +123,7 @@
   transition: all 0.2s ease-in-out;
 }
 
-/* Forzar orientación horizontal */
+/* Forzar orientación horizontal - Rotación física del contenido */
 body.force-landscape {
   transform: rotate(90deg);
   transform-origin: top left;
@@ -131,7 +131,8 @@ body.force-landscape {
   top: 0 !important;
   left: 100vw !important;
   width: 100vh !important;
-  height: 100vw !important;
+  min-height: 100vw !important;
+  height: auto !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
   margin: 0 !important;
@@ -147,6 +148,45 @@ html.force-landscape {
 /* Ajustar el contenedor principal en modo landscape */
 body.force-landscape #root {
   width: 100% !important;
+  min-height: 100vw !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Forzar que los breakpoints responsive funcionen en landscape */
+@media (orientation: portrait) {
+  body.force-landscape {
+    /* Simular pantalla ancha cuando está rotado */
+  }
+}
+
+/* Ajustar el AdminDashboard en modo landscape */
+body.force-landscape .flex.h-screen {
   height: 100% !important;
-  overflow: auto !important;
+  min-height: 100vw !important;
+}
+
+/* Asegurar que la barra lateral se vea en modo landscape */
+body.force-landscape aside,
+body.force-landscape nav {
+  display: flex !important;
+}
+
+/* Media query personalizado para modo landscape forzado */
+body.force-landscape .md\:hidden {
+  display: block !important;
+}
+
+body.force-landscape .hidden.md\:block {
+  display: block !important;
+}
+
+/* Forzar layout desktop en modo landscape */
+body.force-landscape .md\:flex {
+  display: flex !important;
+}
+
+body.force-landscape .md\:w-64 {
+  width: 16rem !important;
 }

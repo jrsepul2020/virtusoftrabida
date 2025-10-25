@@ -64,46 +64,40 @@ export default function SettingsManager() {
     const body = document.body;
     const root = document.documentElement;
     
+    // Remover clases anteriores
+    body.classList.remove('force-landscape', 'force-portrait');
+    root.classList.remove('force-landscape', 'force-portrait');
+    
     if (newOrientation === 'landscape') {
-      // Forzar orientación horizontal
+      // Forzar orientación horizontal - modo landscape simulado
       body.classList.add('force-landscape');
       root.classList.add('force-landscape');
       
-      // Aplicar estilos inline como fallback
-      body.style.transform = 'rotate(90deg)';
-      body.style.transformOrigin = 'top left';
-      body.style.position = 'fixed';
-      body.style.top = '0';
-      body.style.left = '100vw';
-      body.style.width = '100vh';
-      body.style.height = '100vw';
-      body.style.overflow = 'auto';
-      
-      // Ajustar viewport
+      // Ajustar viewport para simular landscape
       let viewportMeta = document.querySelector('meta[name="viewport"]');
       if (viewportMeta) {
-        viewportMeta.setAttribute('content', 'width=device-height, initial-scale=1.0, user-scalable=no');
+        // Forzar dimensiones landscape
+        viewportMeta.setAttribute('content', 'width=device-height, height=device-width, initial-scale=1.0, user-scalable=no');
       }
+      
+      // Forzar recalculo del layout
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
     } else {
       // Orientación vertical (normal)
-      body.classList.remove('force-landscape');
-      root.classList.remove('force-landscape');
+      body.classList.add('force-portrait');
       
-      // Limpiar estilos inline
-      body.style.transform = '';
-      body.style.transformOrigin = '';
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.width = '';
-      body.style.height = '';
-      body.style.overflow = '';
-      
-      // Restaurar viewport
+      // Restaurar viewport normal
       let viewportMeta = document.querySelector('meta[name="viewport"]');
       if (viewportMeta) {
         viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
       }
+      
+      // Forzar recalculo del layout
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
     }
   };
 
