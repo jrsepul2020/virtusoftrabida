@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand, Printer } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand, Printer, FileSpreadsheet } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
+import * as XLSX from 'xlsx';
 
 type SortField = 'codigo' | 'nombre' | 'categoria' | 'pais' | 'azucar' | 'grado';
 type SortDirection = 'asc' | 'desc';
@@ -160,6 +161,59 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
     }
   };
 
+  const handleExportToExcel = () => {
+    // Preparar los datos para Excel (usar filteredSamples para exportar solo lo que se ve)
+    const excelData = filteredSamples.map(sample => ({
+      'Código': sample.codigo,
+      'Código Texto': sample.codigotexto || '',
+      'Nombre': sample.nombre,
+      'Categoría': sample.categoria || '',
+      'Empresa': sample.empresa || '',
+      'País': sample.pais || '',
+      'Origen': sample.origen || '',
+      'Azúcar (g/l)': sample.azucar || '',
+      'Grado Alcohólico': sample.grado || '',
+      'Año': sample.año || '',
+      'Tipo Uva': sample.tipouva || '',
+      'Tipo Aceituna': sample.tipoaceituna || '',
+      'Tanda': sample.tanda || '',
+      'Pagada': sample.pagada ? 'Sí' : 'No',
+      'Manual': sample.manual ? 'Sí' : 'No',
+      'Fecha Creación': sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES') : ''
+    }));
+
+    // Crear el libro de trabajo
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Muestras');
+
+    // Ajustar ancho de columnas
+    const columnWidths = [
+      { wch: 8 },  // Código
+      { wch: 12 }, // Código Texto
+      { wch: 30 }, // Nombre
+      { wch: 20 }, // Categoría
+      { wch: 30 }, // Empresa
+      { wch: 15 }, // País
+      { wch: 15 }, // Origen
+      { wch: 12 }, // Azúcar
+      { wch: 15 }, // Grado
+      { wch: 8 },  // Año
+      { wch: 20 }, // Tipo Uva
+      { wch: 20 }, // Tipo Aceituna
+      { wch: 8 },  // Tanda
+      { wch: 8 },  // Pagada
+      { wch: 8 },  // Manual
+      { wch: 15 }  // Fecha
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Generar el archivo
+    const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+    const categoriaTexto = selectedCategories.length > 0 ? `_${selectedCategories.join('_')}` : '';
+    XLSX.writeFile(workbook, `muestras${categoriaTexto}_${fecha}.xlsx`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -251,6 +305,15 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
               <span className="sm:hidden text-sm">Print</span>
             </button>
           )}
+
+          <button
+            onClick={handleExportToExcel}
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium whitespace-nowrap"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span className="hidden sm:inline text-sm">Excel</span>
+            <span className="sm:hidden text-sm">XLS</span>
+          </button>
         </div>
       </div>
 

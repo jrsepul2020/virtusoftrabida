@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, MapPin, Calendar, Droplet, Wine, Grape, Trash2, X, Hand, Printer } from 'lucide-react';
+import { Search, MapPin, Calendar, Droplet, Wine, Grape, Trash2, X, Hand, Printer, FileSpreadsheet } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
+import * as XLSX from 'xlsx';
 
 interface SamplesManagerProps {
   onNavigateToPrint?: () => void;
@@ -111,6 +112,58 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
     }
   };
 
+  const handleExportToExcel = () => {
+    // Preparar los datos para Excel
+    const excelData = samples.map(sample => ({
+      'Código': sample.codigo,
+      'Código Texto': sample.codigotexto || '',
+      'Nombre': sample.nombre,
+      'Categoría': sample.categoria || '',
+      'Empresa': sample.empresa || '',
+      'País': sample.pais || '',
+      'Origen': sample.origen || '',
+      'Azúcar (g/l)': sample.azucar || '',
+      'Grado Alcohólico': sample.grado || '',
+      'Año': sample.año || '',
+      'Tipo Uva': sample.tipouva || '',
+      'Tipo Aceituna': sample.tipoaceituna || '',
+      'Tanda': sample.tanda || '',
+      'Pagada': sample.pagada ? 'Sí' : 'No',
+      'Manual': sample.manual ? 'Sí' : 'No',
+      'Fecha Creación': sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES') : ''
+    }));
+
+    // Crear el libro de trabajo
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Muestras');
+
+    // Ajustar ancho de columnas
+    const columnWidths = [
+      { wch: 8 },  // Código
+      { wch: 12 }, // Código Texto
+      { wch: 30 }, // Nombre
+      { wch: 20 }, // Categoría
+      { wch: 30 }, // Empresa
+      { wch: 15 }, // País
+      { wch: 15 }, // Origen
+      { wch: 12 }, // Azúcar
+      { wch: 15 }, // Grado
+      { wch: 8 },  // Año
+      { wch: 20 }, // Tipo Uva
+      { wch: 20 }, // Tipo Aceituna
+      { wch: 8 },  // Tanda
+      { wch: 8 },  // Pagada
+      { wch: 8 },  // Manual
+      { wch: 15 }  // Fecha
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Generar el archivo
+    const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+    XLSX.writeFile(workbook, `muestras_${fecha}.xlsx`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -143,6 +196,13 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
                 <span className="text-sm sm:text-base">Imprimir Listado</span>
               </button>
             )}
+            <button
+              onClick={handleExportToExcel}
+              className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium whitespace-nowrap"
+            >
+              <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base">Exportar Excel</span>
+            </button>
           </div>
         </div>
 
