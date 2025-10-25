@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Building2, FlaskConical, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, Wine, LogOut, FolderTree, LucideIcon } from 'lucide-react';
+import { useOrientation } from '../hooks/useOrientation';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -30,6 +31,10 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const isLandscape = useOrientation();
+  
+  // Forzar comportamiento desktop cuando está en landscape
+  const forceDesktopMode = isLandscape;
 
   const menuItems: MenuItem[] = [
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
@@ -59,8 +64,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   return (
     <div className="flex flex-1 bg-gray-100 min-h-screen">
-      {/* Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      {/* Sidebar - Mostrar siempre en landscape mode */}
+      <div className={`${forceDesktopMode ? 'flex' : 'hidden lg:flex'} lg:flex-shrink-0`}>
         <div className="flex flex-col w-64 bg-[#3C542E] min-h-screen lg:h-screen lg:sticky lg:top-0">
           {/* Logo/Header */}
           <div className="flex items-center h-16 px-6 bg-[#2D3F20] shadow-sm flex-shrink-0">
@@ -202,8 +207,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Mobile header */}
-        <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+        {/* Mobile header - Ocultar en landscape mode */}
+        <div className={`${forceDesktopMode ? 'hidden' : 'lg:hidden'} bg-white shadow-sm border-b border-gray-200 flex-shrink-0`}>
           <div className="flex items-center justify-between px-4 py-4">
             <div className="flex items-center gap-3">
               <button
