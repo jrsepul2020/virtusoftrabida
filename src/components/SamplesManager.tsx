@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, MapPin, Calendar, Droplet, Wine, Grape, Trash2, X, Hand, Printer, FileSpreadsheet } from 'lucide-react';
+import { Search, MapPin, Calendar, Droplet, Wine, Grape, Trash2, X, Hand, Printer, FileSpreadsheet, Database } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
 import * as XLSX from 'xlsx';
 
@@ -112,6 +112,30 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
     }
   };
 
+  const handleGetCategoriaOIV = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.rpc('rpc_get_categoriaoiv_muestra');
+      
+      if (error) {
+        console.error('Error calling RPC function:', error);
+        alert(`Error al ejecutar la función: ${error.message}`);
+        return;
+      }
+      
+      console.log('Resultado de rpc_get_categoriaoiv_muestra:', data);
+      alert(`Función ejecutada correctamente. Revisa la consola para ver el resultado.\nResultado: ${JSON.stringify(data, null, 2)}`);
+      
+      // Refrescar las muestras después de ejecutar la función
+      await fetchSamples();
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al ejecutar la función RPC');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleExportToExcel = () => {
     // Preparar los datos para Excel
     const excelData = samples.map(sample => ({
@@ -202,6 +226,15 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
             >
               <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="text-sm sm:text-base">Exportar Excel</span>
+            </button>
+            <button
+              onClick={handleGetCategoriaOIV}
+              className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
+              disabled={loading}
+            >
+              <Database className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base hidden sm:inline">Categoría OIV</span>
+              <span className="text-sm sm:text-base sm:hidden">OIV</span>
             </button>
           </div>
         </div>
