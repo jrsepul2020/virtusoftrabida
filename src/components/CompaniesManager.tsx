@@ -1128,34 +1128,37 @@ export default function CompaniesManager() {
 
       {editingCompany && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">Editar Empresa</h2>
+          <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-black border-b border-gray-700 px-6 py-3 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white">{editingCompany.name || 'Nueva Empresa'}</h2>
               <button
                 onClick={() => setEditingCompany(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-300 hover:text-white"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveCompany} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+            <form onSubmit={handleSaveCompany} className="p-5 bg-gradient-to-br from-red-100 to-pink-100">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                {/* Nombre - Línea completa */}
+                <div className="md:col-span-4">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Nombre de la Empresa *
                   </label>
                   <input
                     type="text"
                     required
+                    autoFocus
                     value={editingCompany.name}
                     onChange={(e) => setEditingCompany({ ...editingCompany, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-4 focus:ring-red-300 focus:ring-opacity-50 focus:border-red-500 bg-white shadow-sm transition-all duration-300"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                {/* Email - Línea completa */}
+                <div className="md:col-span-4">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Email *
                   </label>
                   <input
@@ -1163,162 +1166,158 @@ export default function CompaniesManager() {
                     required
                     value={editingCompany.email}
                     onChange={(e) => setEditingCompany({ ...editingCompany, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                {/* Fila 1: Persona de Contacto (2 cols) + Teléfono + Móvil */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Persona de Contacto
                   </label>
                   <input
                     type="text"
                     value={editingCompany.contact_person || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, contact_person: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Teléfono
                   </label>
                   <input
                     type="text"
+                    maxLength={15}
                     value={editingCompany.phone || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Móvil
                   </label>
                   <input
                     type="text"
+                    maxLength={15}
                     value={editingCompany.movil || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, movil: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
+                {/* Fila 2: NIF + País + Ciudad + Población */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     NIF
                   </label>
                   <input
                     type="text"
+                    maxLength={15}
                     value={editingCompany.nif || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, nif: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     País
                   </label>
                   <input
                     type="text"
                     value={editingCompany.pais || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, pais: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Ciudad
                   </label>
                   <input
                     type="text"
                     value={editingCompany.ciudad || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, ciudad: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Población
                   </label>
                   <input
                     type="text"
                     value={editingCompany.poblacion || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, poblacion: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
+                {/* Fila 3: Código Postal + Dirección (3 cols) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Código Postal
                   </label>
                   <input
                     type="text"
+                    maxLength={8}
                     value={editingCompany.codigo_postal || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, codigo_postal: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Dirección
                   </label>
-                  <textarea
+                  <input
+                    type="text"
                     value={editingCompany.address || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, address: e.target.value })}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                {/* Fila 4: Página Web (2 cols) + Total Inscripciones + Estado */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Página Web
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     value={editingCompany.pagina_web || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, pagina_web: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pedido
-                  </label>
-                  <input
-                    type="number"
-                    value={editingCompany.pedido || ''}
-                    onChange={(e) => setEditingCompany({ ...editingCompany, pedido: e.target.value ? parseInt(e.target.value) : undefined })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Total Inscripciones
                   </label>
                   <input
                     type="number"
                     value={editingCompany.totalinscripciones}
                     onChange={(e) => setEditingCompany({ ...editingCompany, totalinscripciones: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Estado
                   </label>
                   <select
                     value={editingCompany.status}
                     onChange={(e) => setEditingCompany({ ...editingCompany, status: e.target.value as 'pending' | 'approved' | 'rejected' })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   >
                     {statusConfigs.map((config) => (
                       <option key={config.value} value={config.value}>
@@ -1328,36 +1327,37 @@ export default function CompaniesManager() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                {/* Fila 5: Cómo nos conoció (2 cols) + Observaciones (2 cols) */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Cómo nos conoció
                   </label>
                   <input
                     type="text"
                     value={editingCompany.conocimiento || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, conocimiento: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Observaciones
                   </label>
                   <textarea
                     value={editingCompany.observaciones || ''}
                     onChange={(e) => setEditingCompany({ ...editingCompany, observaciones: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    rows={2}
+                    className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white resize-none"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-6 border-t border-gray-200 mt-6">
+              <div className="flex gap-3 pt-4 border-t border-red-200 mt-4">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 text-white px-6 py-2.5 rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
@@ -1366,7 +1366,7 @@ export default function CompaniesManager() {
                   type="button"
                   onClick={() => setEditingCompany(null)}
                   disabled={saving}
-                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancelar
                 </button>
