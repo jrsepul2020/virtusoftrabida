@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, MapPin, Calendar, Droplet, Wine, Grape, Trash2, X, Hand } from 'lucide-react';
+import { Search, MapPin, Calendar, Droplet, Wine, Grape, Trash2, X, Hand, Printer } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
 
-export default function SamplesManager() {
+interface SamplesManagerProps {
+  onNavigateToPrint?: () => void;
+}
+
+export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProps) {
   const [samples, setSamples] = useState<Sample[]>([]);
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,15 +123,26 @@ export default function SamplesManager() {
     <div>
       <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
         <div className="mb-4 sm:mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
-            <input
-              type="text"
-              placeholder="Buscar por código, nombre, empresa..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-lg"
-            />
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+              <input
+                type="text"
+                placeholder="Buscar por código, nombre, empresa..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-lg"
+              />
+            </div>
+            {onNavigateToPrint && (
+              <button
+                onClick={onNavigateToPrint}
+                className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium whitespace-nowrap"
+              >
+                <Printer className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-sm sm:text-base">Imprimir Listado</span>
+              </button>
+            )}
           </div>
         </div>
 
