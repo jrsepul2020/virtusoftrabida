@@ -190,3 +190,27 @@ body.force-landscape .md\:flex {
 body.force-landscape .md\:w-64 {
   width: 16rem !important;
 }
+
+/* IMPORTANTE: Corregir dirección de flex en sidebar cuando está rotado */
+body.force-landscape .flex-col {
+  flex-direction: column !important;
+}
+
+body.force-landscape .flex-row {
+  flex-direction: row !important;
+}
+
+/* Asegurar que los elementos de navegación se mantengan verticales */
+body.force-landscape nav.space-y-1 {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Asegurar que los contenedores flex mantengan sus direcciones */
+body.force-landscape .flex.flex-col {
+  flex-direction: column !important;
+}
+
+body.force-landscape .flex.items-center {
+  align-items: center !important;
+}
