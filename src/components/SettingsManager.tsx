@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Settings, Plus, Edit2, Save, Trash2 } from 'lucide-react';
+import { Settings, Plus, Edit2, Save, Trash2, RotateCw, Smartphone } from 'lucide-react';
 
 interface StatusConfig {
   id: string;
@@ -17,6 +17,7 @@ export default function SettingsManager() {
   const [editingStatus, setEditingStatus] = useState<StatusConfig | null>(null);
   const [newStatus, setNewStatus] = useState<Partial<StatusConfig> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
 
   // Estados por defecto
   const defaultStatuses: StatusConfig[] = [
@@ -48,7 +49,49 @@ export default function SettingsManager() {
 
   useEffect(() => {
     loadStatuses();
+    loadOrientation();
   }, []);
+
+  const loadOrientation = () => {
+    const savedOrientation = localStorage.getItem('app-orientation') as 'portrait' | 'landscape' | null;
+    if (savedOrientation) {
+      setOrientation(savedOrientation);
+      applyOrientation(savedOrientation);
+    }
+  };
+
+  const applyOrientation = (newOrientation: 'portrait' | 'landscape') => {
+    const root = document.documentElement;
+    
+    if (newOrientation === 'landscape') {
+      // Forzar orientación horizontal
+      root.style.transform = 'rotate(90deg)';
+      root.style.transformOrigin = 'left top';
+      root.style.width = '100vh';
+      root.style.height = '100vw';
+      root.style.overflow = 'hidden';
+      root.style.position = 'fixed';
+      root.style.top = '100%';
+      root.style.left = '0';
+    } else {
+      // Orientación vertical (normal)
+      root.style.transform = '';
+      root.style.transformOrigin = '';
+      root.style.width = '';
+      root.style.height = '';
+      root.style.overflow = '';
+      root.style.position = '';
+      root.style.top = '';
+      root.style.left = '';
+    }
+  };
+
+  const toggleOrientation = () => {
+    const newOrientation = orientation === 'portrait' ? 'landscape' : 'portrait';
+    setOrientation(newOrientation);
+    applyOrientation(newOrientation);
+    localStorage.setItem('app-orientation', newOrientation);
+  };
 
   const loadStatuses = async () => {
     setLoading(true);
@@ -204,6 +247,43 @@ export default function SettingsManager() {
         </div>
 
         <div className="space-y-8">
+          {/* Control de Orientación */}
+          <div className="border-b border-gray-200 pb-6">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Orientación de Pantalla</h3>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <Smartphone className={`w-12 h-12 text-blue-600 transition-transform duration-500 ${orientation === 'landscape' ? 'rotate-90' : ''}`} />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    {orientation === 'portrait' ? 'Modo Vertical' : 'Modo Horizontal'}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {orientation === 'portrait' 
+                      ? 'La aplicación está en modo vertical. Pulsa el botón para forzar rotación a horizontal.'
+                      : 'La aplicación está en modo horizontal. Pulsa el botón para volver a modo vertical.'}
+                  </p>
+                  <button
+                    onClick={toggleOrientation}
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                  >
+                    <RotateCw className={`w-5 h-5 transition-transform ${orientation === 'landscape' ? 'rotate-180' : ''}`} />
+                    <span className="font-medium">
+                      Rotar a {orientation === 'portrait' ? 'Horizontal' : 'Vertical'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-blue-200">
+                <p className="text-xs text-blue-800">
+                  💡 <strong>Tip:</strong> Este control es especialmente útil en tablets que no rotan automáticamente. 
+                  El cambio se aplicará inmediatamente y se recordará en tus próximas visitas.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Gestión de Estados */}
           <div>
             <div className="flex items-center justify-between mb-4">
