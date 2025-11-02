@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type CriterioScore = {
   [key: string]: number | null;
 };
 
 export default function CataForm() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  
   const [scores, setScores] = useState<CriterioScore>({
     vistaLimpidez: null,
     vistaColor: null,
@@ -126,9 +129,9 @@ export default function CataForm() {
           <span className="text-red-600">Insuficiente</span>
         </div>
 
-        <div className="flex">
+        <div className="flex relative">
           {/* Main Form Area */}
-          <div className="flex-1 p-6">
+          <div className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen ? 'mr-0' : 'mr-0'}`}>
             {/* VISTA Section */}
             <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl p-4 border-2 border-yellow-300 mb-4 shadow-sm">
               <div className="flex items-start gap-3">
@@ -233,42 +236,55 @@ export default function CataForm() {
             </div>
           </div>
 
-          {/* Info Sidebar */}
-          <div className="w-72 bg-gradient-to-b from-gray-50 to-gray-100 border-l-2 border-gray-200 p-6 space-y-4">
-            {/* Código */}
-            <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-1 text-center">Código</div>
-              <div className="text-4xl font-bold text-purple-700 text-center">3975</div>
-            </div>
-
-            {/* Puntos */}
-            <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-red-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-1 text-center">Puntos</div>
-              <div className="text-5xl font-bold text-red-600 text-center">{calculateTotal()}</div>
-            </div>
-
-            {/* Orden */}
-            <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-1 text-center">Orden</div>
-              <div className="text-3xl font-bold text-gray-800 text-center">1</div>
-            </div>
-
-            {/* Nº Catador */}
-            <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-1 text-center">Nº Catador</div>
-              <div className="text-3xl font-bold text-gray-800 text-center">115</div>
-            </div>
-
-            {/* Tanda */}
-            <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-300">
-              <div className="text-xs text-gray-600 uppercase font-semibold mb-1 text-center">Tanda</div>
-              <div className="text-2xl font-bold text-blue-700 text-center">Tanda13</div>
-            </div>
-
-            {/* Botón ENVIAR */}
-            <button className="w-full bg-gray-400 hover:bg-gray-500 text-white font-bold py-4 rounded-lg shadow-lg transition-all text-lg">
-              ENVIAR
+          {/* Sidebar Retráctil */}
+          <div className={`relative transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0'}`}>
+            {/* Toggle Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="absolute -left-8 top-4 bg-gray-700 hover:bg-gray-800 text-white p-2 rounded-l-lg shadow-lg z-10 transition-all"
+            >
+              {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             </button>
+
+            {/* Sidebar Content */}
+            <div className={`h-full bg-gradient-to-b from-gray-50 to-gray-100 border-l-2 border-gray-200 overflow-hidden transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="p-4 space-y-2">
+                {/* Código */}
+                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
+                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Código</div>
+                  <div className="text-2xl font-bold text-purple-700 text-center">3975</div>
+                </div>
+
+                {/* Puntos */}
+                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-red-300">
+                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Puntos</div>
+                  <div className="text-4xl font-bold text-red-600 text-center">{calculateTotal()}</div>
+                </div>
+
+                {/* Orden */}
+                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
+                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Orden</div>
+                  <div className="text-2xl font-bold text-gray-800 text-center">1</div>
+                </div>
+
+                {/* Nº Catador */}
+                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
+                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Nº Catador</div>
+                  <div className="text-2xl font-bold text-gray-800 text-center">115</div>
+                </div>
+
+                {/* Tanda */}
+                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
+                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Tanda</div>
+                  <div className="text-xl font-bold text-blue-700 text-center">Tanda13</div>
+                </div>
+
+                {/* Botón ENVIAR */}
+                <button className="w-full bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all text-base">
+                  ENVIAR
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
