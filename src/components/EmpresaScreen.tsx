@@ -212,13 +212,20 @@ export function EmpresaScreen({
         </div>
         
         {/* Resumen de precio */}
-        <div className="text-center sm:text-right text-primary-700 font-semibold mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              {company.num_muestras} muestra{company.num_muestras !== 1 ? 's' : ''}
+        <div className="text-center sm:text-right text-primary-700 font-semibold mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-sm text-gray-700">
+              <span>{company.num_muestras} muestra{company.num_muestras !== 1 ? 's' : ''} total</span>
+              <span>({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''}{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
             </div>
-            <div className="text-lg font-bold text-primary-800">
-              Total: {precio.total}€
+            {precio.gratis > 0 && (
+              <div className="text-xs text-green-600 text-right">
+                🎉 ¡{precio.gratis} muestra{precio.gratis !== 1 ? 's' : ''} gratis!
+              </div>
+            )}
+            <div className="flex items-center justify-between border-t border-orange-200 pt-2">
+              <span className="text-base">Total a pagar:</span>
+              <span className="text-xl font-bold text-primary-800">{precio.total}€</span>
             </div>
           </div>
         </div>

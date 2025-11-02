@@ -75,7 +75,8 @@ export default function AdminInscriptionForm() {
 
   // Funciones de cálculo de precio (igual que en PaymentSelection)
   const calculatePrice = (numMuestras: number) => {
-    // Cada 5 muestras, 1 gratis
+    // Por cada 4 muestras pagadas, la 5ª es gratis
+    // Ejemplos: 1-4 muestras → 0 gratis | 5-9 muestras → 1 gratis | 10-14 muestras → 2 gratis
     const gratis = Math.floor(numMuestras / 5);
     const pagadas = numMuestras - gratis;
     const total = pagadas * 150;

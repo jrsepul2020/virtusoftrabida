@@ -237,50 +237,50 @@ export default function CataForm() {
           </div>
 
           {/* Sidebar Retráctil */}
-          <div className={`relative transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0'}`}>
+          <div className={`relative transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-12'}`}>
             {/* Toggle Button */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="absolute -left-8 top-4 bg-gray-700 hover:bg-gray-800 text-white p-2 rounded-l-lg shadow-lg z-10 transition-all"
+              className="absolute left-0 top-4 bg-gray-800 hover:bg-gray-900 text-white p-2 rounded-r-lg shadow-lg z-20 transition-all"
             >
               {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             </button>
 
             {/* Sidebar Content */}
-            <div className={`h-full bg-gradient-to-b from-gray-50 to-gray-100 border-l-2 border-gray-200 overflow-hidden transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="p-4 space-y-2">
+            <div className={`h-full bg-gradient-to-b from-gray-700 to-gray-800 border-l-2 border-gray-600 overflow-hidden transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="p-3 pt-16 space-y-1.5">
                 {/* Código */}
-                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
-                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Código</div>
-                  <div className="text-2xl font-bold text-purple-700 text-center">3975</div>
+                <div className="bg-gray-900 rounded-lg p-1.5 shadow-md border border-gray-600">
+                  <div className="text-[9px] text-gray-400 uppercase font-semibold mb-0.5 text-center">Código</div>
+                  <div className="text-xl font-bold text-purple-400 text-center">3975</div>
                 </div>
 
                 {/* Puntos */}
-                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-red-300">
-                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Puntos</div>
-                  <div className="text-4xl font-bold text-red-600 text-center">{calculateTotal()}</div>
+                <div className="bg-gray-900 rounded-lg p-1.5 shadow-md border border-red-500">
+                  <div className="text-[9px] text-gray-400 uppercase font-semibold mb-0.5 text-center">Puntos</div>
+                  <div className="text-3xl font-bold text-red-500 text-center">{calculateTotal()}</div>
                 </div>
 
                 {/* Orden */}
-                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
-                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Orden</div>
-                  <div className="text-2xl font-bold text-gray-800 text-center">1</div>
+                <div className="bg-gray-900 rounded-lg p-1.5 shadow-md border border-gray-600">
+                  <div className="text-[9px] text-gray-400 uppercase font-semibold mb-0.5 text-center">Orden</div>
+                  <div className="text-xl font-bold text-gray-100 text-center">1</div>
                 </div>
 
                 {/* Nº Catador */}
-                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
-                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Nº Catador</div>
-                  <div className="text-2xl font-bold text-gray-800 text-center">115</div>
+                <div className="bg-gray-900 rounded-lg p-1.5 shadow-md border border-gray-600">
+                  <div className="text-[9px] text-gray-400 uppercase font-semibold mb-0.5 text-center">Nº Catador</div>
+                  <div className="text-xl font-bold text-gray-100 text-center">115</div>
                 </div>
 
                 {/* Tanda */}
-                <div className="bg-white rounded-lg p-2 shadow-md border-2 border-gray-300">
-                  <div className="text-[10px] text-gray-600 uppercase font-semibold mb-0.5 text-center">Tanda</div>
-                  <div className="text-xl font-bold text-blue-700 text-center">Tanda13</div>
+                <div className="bg-gray-900 rounded-lg p-1.5 shadow-md border border-gray-600">
+                  <div className="text-[9px] text-gray-400 uppercase font-semibold mb-0.5 text-center">Tanda</div>
+                  <div className="text-lg font-bold text-blue-400 text-center">Tanda13</div>
                 </div>
 
                 {/* Botón ENVIAR */}
-                <button className="w-full bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all text-base">
+                <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg shadow-lg transition-all text-sm mt-2">
                   ENVIAR
                 </button>
               </div>

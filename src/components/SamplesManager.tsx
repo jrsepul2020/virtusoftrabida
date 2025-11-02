@@ -184,7 +184,7 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
       'Origen': sample.origen || '',
       'Azúcar (g/l)': sample.azucar || '',
       'Grado Alcohólico': sample.grado || '',
-      'Año': sample.año || '',
+      'Año': sample.anio || '',
       'Tipo Uva': sample.tipouva || '',
       'Tipo Aceituna': sample.tipoaceituna || '',
       'Tanda': sample.tanda || '',
@@ -342,10 +342,10 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
                         </div>
                       )}
 
-                      {sample.año && (
+                      {sample.anio && (
                         <div className="flex items-center gap-2 text-gray-700">
                           <Calendar className="w-4 h-4 text-gray-500" />
-                          <span>{sample.año}</span>
+                          <span>{sample.anio}</span>
                         </div>
                       )}
 
@@ -526,10 +526,10 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
                   </div>
                 )}
 
-                {viewingSample.año && (
+                {viewingSample.anio && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Año</label>
-                    <p className="text-gray-900">{viewingSample.año}</p>
+                    <p className="text-gray-900">{viewingSample.anio}</p>
                   </div>
                 )}
 

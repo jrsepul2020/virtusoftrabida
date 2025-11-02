@@ -375,7 +375,7 @@ export default function PrintSamples() {
                 <td>{sample.categoria || '-'}</td>
                 <td>{sample.empresa || '-'}</td>
                 <td>{sample.pais || '-'}</td>
-                <td>{sample.año || '-'}</td>
+                <td>{sample.anio || '-'}</td>
               </tr>
             ))}
           </tbody>
