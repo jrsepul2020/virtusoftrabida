@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { EmpresaScreen } from './EmpresaScreen';
 import { MuestrasScreen } from './MuestrasScreen';
 import { ConfirmacionScreen } from './ConfirmacionScreen';
+import { InscripcionExitosa } from './InscripcionExitosa';
 import { CompanyData, SampleData, PaymentMethod } from './types';
 import { supabase } from '../lib/supabase';
 import { User } from 'lucide-react';
 import Modal from './Modal';
 
-type FormStep = 'empresa' | 'muestras' | 'confirmacion';
+type FormStep = 'empresa' | 'muestras' | 'confirmacion' | 'exitosa';
 
 interface UnifiedInscriptionFormProps {
   isAdmin?: boolean; // Si es true, muestra opciones de admin
@@ -98,7 +99,8 @@ export default function UnifiedInscriptionForm({
 
   // Funciones de cálculo de precio
   const calculatePrice = (numMuestras: number) => {
-    // Cada 5 muestras, 1 gratis
+    // Por cada 4 muestras pagadas, la 5ª es gratis
+    // Ejemplos: 1-4 muestras → 0 gratis | 5-9 muestras → 1 gratis | 10-14 muestras → 2 gratis
     const gratis = Math.floor(numMuestras / 5);
     const pagadas = numMuestras - gratis;
     const total = pagadas * 150;
@@ -167,24 +169,53 @@ export default function UnifiedInscriptionForm({
     setCurrentStep('muestras');
   };
 
+  // Función para resetear el formulario
+  const handleReset = () => {
+    setSuccess(false);
+    setCurrentStep('empresa');
+    setCompany({
+      nif: '',
+      nombre_empresa: '',
+      persona_contacto: '',
+      telefono: '',
+      movil: '',
+      email: '',
+      direccion: '',
+      poblacion: '',
+      codigo_postal: '',
+      ciudad: '',
+      pais: '',
+      medio_conocio: '',
+      pagina_web: '',
+      observaciones: '',
+      num_muestras: 1,
+    });
+    setSamples([{
+      nombre_muestra: '',
+      categoria: '',
+      origen: '',
+      igp: '',
+      pais: '',
+      azucar: '',
+      grado_alcoholico: '',
+      existencias: '',
+      anio: '',
+      tipo_uva: '',
+      tipo_aceituna: '',
+      destilado: '',
+    }]);
+    setPayment('transferencia');
+    if (isAdmin) {
+      setIsManualInscription(true);
+    }
+  };
+
   // Envío final del formulario
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
 
     try {
-      // Verificar si el email ya existe (opcional)
-      const { data: existingCompany } = await supabase
-        .from('empresas')
-        .select('email')
-        .eq('email', company.email)
-        .maybeSingle();
-
-      if (existingCompany) {
-        showModal('error', 'Email ya registrado', 'Ya existe una empresa registrada con este email. Por favor, usa un email diferente.');
-        return;
-      }
-
       // Mapear los datos del formulario a los nombres de columnas de la BD
       // El número de pedido se generará automáticamente en Supabase mediante trigger
       const empresaData = {
@@ -241,11 +272,11 @@ export default function UnifiedInscriptionForm({
           azucar: sample.azucar ? parseFloat(sample.azucar) : null,
           grado: sample.grado_alcoholico ? parseFloat(sample.grado_alcoholico) : null,  // grado_alcoholico -> grado
           existencias: sample.existencias ? parseInt(sample.existencias) : 0,
-          año: sample.anio ? parseInt(sample.anio) : null,  // anio -> año
+          anio: sample.anio ? parseInt(sample.anio) : null,  // anio campo en DB
           tipouva: sample.tipo_uva,  // tipo_uva -> tipouva
           tipoaceituna: sample.tipo_aceituna,  // tipo_aceituna -> tipoaceituna
           destilado: sample.destilado,
-          ididempresa: empresa.id,  // empresa_id -> ididempresa
+          empresa_id: empresa.id,  // Relación con tabla empresas
           manual: isAdmin && isManualInscription,
           codigo: codigoMuestra, // Código único para muestras manuales (si aplica)
         });
@@ -294,8 +325,9 @@ export default function UnifiedInscriptionForm({
         console.log('No se envía email porque es inscripción de admin');
       }
 
+      // Cambiar a la pantalla de éxito
       setSuccess(true);
-      showModal('success', '¡Inscripción completada!', 'Tu inscripción ha sido enviada correctamente. Recibirás un email de confirmación en breve.');
+      setCurrentStep('exitosa');
       
       // Si es admin y manual, mostrar los códigos generados
       if (isAdmin && isManualInscription) {
@@ -306,47 +338,6 @@ export default function UnifiedInscriptionForm({
       if (onSuccess) {
         onSuccess();
       }
-      
-      // Limpiar formulario después de un tiempo
-      setTimeout(() => {
-        setSuccess(false);
-        setCurrentStep('empresa');
-        setCompany({
-          nif: '',
-          nombre_empresa: '',
-          persona_contacto: '',
-          telefono: '',
-          movil: '',
-          email: '',
-          direccion: '',
-          poblacion: '',
-          codigo_postal: '',
-          ciudad: '',
-          pais: '',
-          medio_conocio: '',
-          pagina_web: '',
-          observaciones: '',
-          num_muestras: 1,
-        });
-        setSamples([{
-          nombre_muestra: '',
-          categoria: '',
-          origen: '',
-          igp: '',
-          pais: '',
-          azucar: '',
-          grado_alcoholico: '',
-          existencias: '',
-          anio: '',
-          tipo_uva: '',
-          tipo_aceituna: '',
-          destilado: '',
-        }]);
-        setPayment('transferencia');
-        if (isAdmin) {
-          setIsManualInscription(true);
-        }
-      }, 3000);
 
     } catch (err: any) {
       console.error('Error en inscripción:', err);
@@ -364,6 +355,11 @@ export default function UnifiedInscriptionForm({
       setLoading(false);
     }
   };
+
+  // Si está en la pantalla de éxito, mostrarla
+  if (currentStep === 'exitosa') {
+    return <InscripcionExitosa onClose={handleReset} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
@@ -485,6 +481,7 @@ export default function UnifiedInscriptionForm({
           success={success}
           loading={loading}
           error={error}
+          onPayPalSuccess={handleSubmit}
         />
       )}
 

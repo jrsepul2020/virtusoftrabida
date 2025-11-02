@@ -33,7 +33,7 @@ type Sample = {
   azucar: number;
   grado: number;
   existencias: number;
-  año: number;
+  anio: number;
   tipouva: string;
   tipoaceituna: string;
   destilado: string;
@@ -81,7 +81,7 @@ export default function UserDashboard({ onLogout }: Props) {
         const { data: samplesData, error: samplesError } = await supabase
           .from('muestras')
           .select('*')
-          .eq('ididempresa', companyData.id)
+          .eq('empresa_id', companyData.id)
           .order('codigo', { ascending: true });
 
         if (samplesError) throw samplesError;
@@ -433,7 +433,7 @@ export default function UserDashboard({ onLogout }: Props) {
                       <td className="px-4 py-3 text-sm text-gray-900">{sample.nombre}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{sample.categoria || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{sample.pais || '-'}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{sample.año || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{sample.anio || '-'}</td>
                       <td className="px-4 py-3 text-center">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${

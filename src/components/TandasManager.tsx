@@ -428,10 +428,10 @@ export default function TandasManager() {
                   </div>
                 )}
 
-                {viewingSample.año && (
+                {viewingSample.anio && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Año</label>
-                    <p className="text-gray-900">{viewingSample.año}</p>
+                    <p className="text-gray-900">{viewingSample.anio}</p>
                   </div>
                 )}
 

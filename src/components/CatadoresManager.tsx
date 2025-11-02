@@ -1,71 +1,90 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Search, Edit2, Trash2, Plus, X, Eye, Crown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Users, Plus, Save, X, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
 
-type Catador = {
+interface Catador {
   id: string;
-  codigocatador?: string;
+  codigocatador: string | null;
   nombre: string;
-  rol?: string;
-  mesa?: number;
-  puesto?: number;
-  ntablet?: string;
-  estado?: 'activo' | 'inactivo' | 'presente' | 'ausente';
-  email?: string;
-  telefono?: string;
-  especialidad?: string;
-  activo?: boolean;
+  pais: string | null;
+  rol: string | null;
+  mesa: number | null;
+  puesto: number | null;
+  tablet: string | null;
   created_at: string;
-};
+}
 
-type SortField = 'codigocatador' | 'nombre' | 'rol' | 'mesa' | 'puesto' | 'ntablet';
-type SortDirection = 'asc' | 'desc';
+type SortField = 'codigocatador' | 'nombre' | 'pais' | 'rol' | 'mesa' | 'puesto' | 'tablet';
 
 export default function CatadoresManager() {
   const [catadores, setCatadores] = useState<Catador[]>([]);
-  const [filteredCatadores, setFilteredCatadores] = useState<Catador[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editingCatador, setEditingCatador] = useState<Catador | null>(null);
-  const [viewingCatador, setViewingCatador] = useState<Catador | null>(null);
-  const [newCatador, setNewCatador] = useState<Partial<Catador>>({});
-  const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [sortField, setSortField] = useState<SortField>('mesa');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('nombre');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [mesasDisponibles, setMesasDisponibles] = useState<number[]>([]);
+  const [tabletsDisponibles, setTabletsDisponibles] = useState<string[]>([]);
 
-  // Función para obtener colores de mesa
-  const getMesaColors = (mesa: number) => {
-    const colors = {
-      1: { bg: 'from-purple-500/20 to-pink-500/20', border: 'border-purple-300', text: 'text-purple-800', button: 'bg-gradient-to-r from-purple-500 to-pink-500' },
-      2: { bg: 'from-blue-500/20 to-cyan-500/20', border: 'border-blue-300', text: 'text-blue-800', button: 'bg-gradient-to-r from-blue-500 to-cyan-500' },
-      3: { bg: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-300', text: 'text-emerald-800', button: 'bg-gradient-to-r from-emerald-500 to-teal-500' },
-      4: { bg: 'from-orange-500/20 to-red-500/20', border: 'border-orange-300', text: 'text-orange-800', button: 'bg-gradient-to-r from-orange-500 to-red-500' },
-      5: { bg: 'from-indigo-500/20 to-purple-500/20', border: 'border-indigo-300', text: 'text-indigo-800', button: 'bg-gradient-to-r from-indigo-500 to-purple-500' }
-    };
-    return colors[mesa as keyof typeof colors] || { bg: '', border: 'border-gray-300', text: 'text-gray-800', button: 'bg-gray-500' };
-  };
+  const ROLES = [
+    'Administrador',
+    'Presidente',
+    'Catador'
+  ];
+  const PUESTOS = Array.from({ length: 5 }, (_, i) => i + 1);
+  
+  const [formData, setFormData] = useState({
+    codigocatador: '',
+    nombre: '',
+    pais: '',
+    rol: '',
+    mesa: '',
+    puesto: '',
+    tablet: ''
+  });
 
   useEffect(() => {
     fetchCatadores();
+    fetchMesasYTablets();
   }, []);
 
-  useEffect(() => {
-    filterCatadores();
-  }, [searchTerm, catadores, sortField, sortDirection]);
+  const fetchMesasYTablets = async () => {
+    try {
+      // Mesas configurables desde tabla de configuración
+      const { data: configMesas, error: configErr } = await supabase
+        .from('configuracion')
+        .select('valor')
+        .eq('clave', 'numero_mesas')
+        .single();
+      
+      let numMesas = 5; // Default
+      if (!configErr && configMesas?.valor) {
+        numMesas = parseInt(configMesas.valor);
+      }
+      setMesasDisponibles(Array.from({ length: numMesas }, (_, i) => i + 1));
+
+      // Tablets 1-25
+      setTabletsDisponibles(Array.from({ length: 25 }, (_, i) => String(i + 1)));
+    } catch (e) {
+      setMesasDisponibles(Array.from({ length: 5 }, (_, i) => i + 1));
+      setTabletsDisponibles(Array.from({ length: 25 }, (_, i) => String(i + 1)));
+    }
+  };
 
   const fetchCatadores = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const { data, error } = await supabase
-        .from('catadores')
+        .from('usuarios')
         .select('*')
         .order('nombre', { ascending: true });
 
       if (error) throw error;
       setCatadores(data || []);
     } catch (error) {
-      console.error('Error fetching catadores:', error);
+      console.error('Error al cargar catadores:', error);
+      alert('Error al cargar catadores');
     } finally {
       setLoading(false);
     }
@@ -80,952 +99,568 @@ export default function CatadoresManager() {
     }
   };
 
-  const sortCatadores = (catadoresArray: Catador[]) => {
-    return [...catadoresArray].sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
-
-      // Handle undefined values - put them at the end
-      if (aValue === undefined || aValue === null) return 1;
-      if (bValue === undefined || bValue === null) return -1;
-
-      // Convert to strings for comparison
-      const aStr = String(aValue).toLowerCase();
-      const bStr = String(bValue).toLowerCase();
-
-      const comparison = aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
+  const getSortedCatadores = () => {
+    return [...catadores].sort((a, b) => {
+  const aVal = a[sortField];
+  const bVal = b[sortField];
+      
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+      
+      const comparison = aVal > bVal ? 1 : -1;
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   };
 
-  const filterCatadores = () => {
-    let filtered = catadores;
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = catadores.filter(
-        (catador) =>
-          catador.nombre.toLowerCase().includes(term) ||
-          catador.codigocatador?.toLowerCase().includes(term) ||
-          catador.email?.toLowerCase().includes(term) ||
-          catador.especialidad?.toLowerCase().includes(term)
-      );
-    }
-
-    // Apply sorting
-    const sorted = sortCatadores(filtered);
-    setFilteredCatadores(sorted);
+  const handleFieldChange = (id: string, field: keyof Catador, value: any) => {
+    // Actualizar localmente sin guardar aún
+    setCatadores(prev => prev.map(cat => 
+      cat.id === id ? { ...cat, [field]: value } : cat
+    ));
   };
 
-  const handleFieldUpdate = async (id: string, field: string, value: any) => {
+  const handleFieldUpdate = async (id: string, field: keyof Catador, value: any) => {
+    console.log('Actualizando campo:', { id, field, value });
     try {
+      setSaving(true);
+      
       const { error } = await supabase
-        .from('catadores')
+        .from('usuarios')
         .update({ [field]: value })
         .eq('id', id);
 
-      if (error) throw error;
-
-      // Actualizar el estado local
-      setCatadores(prev => prev.map(catador => 
-        catador.id === id ? { ...catador, [field]: value } : catador
+      if (error) {
+        console.error('Error de Supabase:', error);
+        throw error;
+      }
+      
+      console.log('Actualización exitosa en BD');
+      
+      // Actualizar el estado local después de guardar exitosamente
+      setCatadores(prev => prev.map(cat => 
+        cat.id === id ? { ...cat, [field]: value } : cat
       ));
     } catch (error) {
-      console.error(`Error updating ${field}:`, error);
-      alert(`Error al actualizar ${field}`);
-    }
-  };
-
-  const handleSave = async (catador: Catador) => {
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('catadores')
-        .update({
-          codigocatador: catador.codigocatador,
-          nombre: catador.nombre,
-          rol: catador.rol,
-          mesa: catador.mesa,
-          puesto: catador.puesto,
-          ntablet: catador.ntablet,
-          estado: catador.estado,
-          email: catador.email,
-          telefono: catador.telefono,
-          especialidad: catador.especialidad,
-          activo: catador.activo
-        })
-        .eq('id', catador.id);
-
-      if (error) throw error;
-      setEditingCatador(null);
+      console.error('Error al actualizar:', error);
+      alert('Error al actualizar el campo');
+      // Recargar para revertir el cambio
       await fetchCatadores();
-    } catch (error) {
-      console.error('Error updating catador:', error);
-      alert('Error al guardar los cambios');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleAdd = async () => {
-    if (!newCatador.nombre) {
+  const handleSave = async () => {
+    if (!formData.nombre.trim()) {
       alert('El nombre es obligatorio');
       return;
     }
 
-    setSaving(true);
     try {
-      const { error } = await supabase
-        .from('catadores')
-        .insert([{
-          codigocatador: newCatador.codigocatador,
-          nombre: newCatador.nombre,
-          rol: newCatador.rol,
-          mesa: newCatador.mesa,
-          puesto: newCatador.puesto,
-          ntablet: newCatador.ntablet,
-          estado: newCatador.estado || 'activo',
-          email: newCatador.email,
-          telefono: newCatador.telefono,
-          especialidad: newCatador.especialidad,
-          activo: newCatador.activo ?? true
-        }]);
+      setSaving(true);
 
-      if (error) throw error;
-      setNewCatador({});
-      setShowAddForm(false);
+      const dataToSave: any = {
+        codigocatador: formData.codigocatador?.trim() || null,
+        nombre: formData.nombre.trim(),
+        pais: formData.pais?.trim() || null,
+        rol: formData.rol || null,
+        mesa: formData.mesa ? parseInt(formData.mesa) : null,
+        puesto: formData.puesto ? parseInt(formData.puesto) : null,
+        tablet: formData.tablet || null
+      };
+
+      // Si es una inserción nueva, generar un UUID explícito
+      if (!editingId) {
+        dataToSave.id = crypto.randomUUID();
+      }
+
+      console.log('Guardando catador:', dataToSave);
+
+      if (editingId) {
+        const { error } = await supabase
+          .from('usuarios')
+          .update(dataToSave)
+          .eq('id', editingId);
+
+        if (error) {
+          console.error('Error en update:', error);
+          throw error;
+        }
+        console.log('Catador actualizado exitosamente');
+      } else {
+        const { error } = await supabase
+          .from('usuarios')
+          .insert([dataToSave]);
+
+        if (error) {
+          console.error('Error en insert:', error);
+          throw error;
+        }
+        console.log('Catador creado exitosamente');
+      }
+
       await fetchCatadores();
+      resetForm();
     } catch (error) {
-      console.error('Error adding catador:', error);
-      alert('Error al añadir el catador');
+      console.error('Error al guardar:', error);
+      alert(`Error al guardar el catador: ${(error as any)?.message || 'Error desconocido'}`);
     } finally {
       setSaving(false);
     }
   };
 
+  const handleEdit = (catador: Catador) => {
+    setEditingId(catador.id);
+    setFormData({
+      codigocatador: (catador as any).codigocatador || '',
+      nombre: catador.nombre,
+      pais: catador.pais || '',
+      rol: catador.rol || '',
+      mesa: catador.mesa?.toString() || '',
+      puesto: catador.puesto?.toString() || '',
+      tablet: catador.tablet || ''
+    });
+    setShowForm(true);
+  };
+
   const handleDelete = async (id: string, nombre: string) => {
-    if (!confirm(`¿Estás seguro de que deseas eliminar el catador "${nombre}"?`)) {
+    if (!confirm(`¿Estás seguro de que quieres eliminar al catador "${nombre}"?`)) {
       return;
     }
 
     try {
+      setSaving(true);
       const { error } = await supabase
-        .from('catadores')
+        .from('usuarios')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error al eliminar:', error);
+        throw error;
+      }
+
       await fetchCatadores();
+      console.log('Catador eliminado exitosamente');
     } catch (error) {
-      console.error('Error deleting catador:', error);
-      alert('Error al eliminar el catador');
+      console.error('Error al eliminar:', error);
+      alert(`Error al eliminar el catador: ${(error as any)?.message || 'Error desconocido'}`);
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      codigocatador: '',
+      nombre: '',
+      pais: '',
+      rol: '',
+      mesa: '',
+      puesto: '',
+      tablet: ''
+    });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleVaciarCampo = async (campo: 'rol' | 'mesa' | 'puesto' | 'tablet') => {
+    const mensajes = {
+      rol: 'roles',
+      mesa: 'mesas',
+      puesto: 'puestos',
+      tablet: 'tablets'
+    };
+
+    if (!confirm(`¿Estás seguro de que quieres vaciar todos los ${mensajes[campo]}?`)) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      // Actualizar todos los registros poniendo el campo a null
+      const { error } = await supabase
+        .from('usuarios')
+        .update({ [campo]: null })
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Actualizar todos los registros
+
+      if (error) {
+        console.error(`Error al vaciar ${campo}:`, error);
+        throw error;
+      }
+
+      await fetchCatadores();
+      console.log(`${campo} vaciados exitosamente`);
+    } catch (error) {
+      console.error(`Error al vaciar ${campo}:`, error);
+      alert(`Error al vaciar ${mensajes[campo]}: ${(error as any)?.message || 'Error desconocido'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const SortButton = ({ field, label }: { field: SortField; label: string }) => (
+    <button
+      onClick={() => handleSort(field)}
+      className="flex items-center gap-1 hover:text-blue-600"
+    >
+      {label}
+      {sortField === field && (
+        sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+      )}
+    </button>
+  );
+
+  const getMesaBg = (mesa: number | null) => {
+    if (!mesa || mesa <= 0) return 'bg-white';
+    const colors = [
+      'bg-rose-100',
+      'bg-orange-100',
+      'bg-amber-100',
+      'bg-lime-100',
+      'bg-emerald-100',
+      'bg-teal-100',
+      'bg-sky-100',
+      'bg-indigo-100',
+      'bg-fuchsia-100',
+      'bg-pink-100'
+    ];
+    return colors[(mesa - 1) % colors.length];
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-xl text-gray-600">Cargando catadores...</div>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-500">Cargando catadores...</div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Gestión de Catadores</h2>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Añadir Catador
-          </button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Users className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold">Gestión de Catadores</h2>
         </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          <Plus className="w-5 h-5" />
+          Nuevo Catador
+        </button>
+      </div>
 
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
-            <input
-              type="text"
-              placeholder="Buscar por código, nombre, email o especialidad..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
-            />
+      {/* Botones para vaciar campos */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => handleVaciarCampo('rol')}
+          disabled={saving}
+          className="px-3 py-1.5 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 disabled:opacity-50"
+        >
+          Vaciar Roles
+        </button>
+        <button
+          onClick={() => handleVaciarCampo('mesa')}
+          disabled={saving}
+          className="px-3 py-1.5 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 disabled:opacity-50"
+        >
+          Vaciar Mesas
+        </button>
+        <button
+          onClick={() => handleVaciarCampo('puesto')}
+          disabled={saving}
+          className="px-3 py-1.5 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 disabled:opacity-50"
+        >
+          Vaciar Puestos
+        </button>
+        <button
+          onClick={() => handleVaciarCampo('tablet')}
+          disabled={saving}
+          className="px-3 py-1.5 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 disabled:opacity-50"
+        >
+          Vaciar Tablets
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">
+            {editingId ? 'Editar Catador' : 'Nuevo Catador'}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Código</label>
+              <input
+                type="text"
+                value={formData.codigocatador}
+                onChange={(e) => setFormData({ ...formData, codigocatador: e.target.value })}
+                className="w-full p-2 border rounded"
+                placeholder="Código"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Nombre *</label>
+              <input
+                type="text"
+                value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                className="w-full p-2 border rounded"
+                placeholder="Nombre completo"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">País</label>
+              <input
+                type="text"
+                value={formData.pais}
+                onChange={(e) => setFormData({ ...formData, pais: e.target.value })}
+                className="w-full p-2 border rounded"
+                placeholder="País"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Rol</label>
+              <select
+                value={formData.rol}
+                onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
+                className="w-full p-2 border rounded bg-white"
+              >
+                <option value="">-</option>
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Tablet</label>
+              <select
+                value={formData.tablet}
+                onChange={(e) => setFormData({ ...formData, tablet: e.target.value })}
+                className="w-full p-2 border rounded bg-white"
+              >
+                <option value="">-</option>
+                {tabletsDisponibles.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Mesa</label>
+              <select
+                value={formData.mesa}
+                onChange={(e) => setFormData({ ...formData, mesa: e.target.value })}
+                className="w-full p-2 border rounded bg-white"
+              >
+                <option value="">-</option>
+                {mesasDisponibles.map((m) => (
+                  <option key={m} value={String(m)}>Mesa {m}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Puesto</label>
+              <select
+                value={formData.puesto}
+                onChange={(e) => setFormData({ ...formData, puesto: e.target.value })}
+                className="w-full p-2 border rounded bg-white"
+              >
+                <option value="">-</option>
+                {PUESTOS.map((p) => (
+                  <option key={p} value={String(p)}>Puesto {p}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+            >
+              <Save className="w-4 h-4" />
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+            <button
+              onClick={resetForm}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              <X className="w-4 h-4" />
+              Cancelar
+            </button>
           </div>
         </div>
+      )}
 
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <div>
-            {filteredCatadores.length} de {catadores.length} catadores
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">{catadores.length}</div>
+          <div className="text-sm text-gray-600">Total Catadores</div>
+        </div>
+        <div className="bg-green-50 p-4 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">
+            {catadores.filter(c => c.rol).length}
           </div>
-          <div className="text-xs text-gray-500">
-            Ordenado por: <span className="font-medium text-gray-700">{sortField === 'codigocatador' ? 'Código' : sortField === 'nombre' ? 'Nombre' : sortField === 'rol' ? 'Rol' : sortField === 'mesa' ? 'Mesa' : sortField === 'puesto' ? 'Puesto' : 'Tablet'}</span> ({sortDirection === 'asc' ? '↑' : '↓'})
+          <div className="text-sm text-gray-600">Con Rol Asignado</div>
+        </div>
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="text-2xl font-bold text-purple-600">
+            {catadores.filter(c => c.mesa !== null).length}
           </div>
+          <div className="text-sm text-gray-600">Asignados a Mesa</div>
         </div>
       </div>
 
-      {/* Lista responsive */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        {/* Tabla para pantallas grandes */}
-        <div className="hidden md:block overflow-x-auto">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800 border-b border-gray-200">
+            <thead className="bg-gray-50 border-b">
               <tr>
-                <th 
-                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                  onClick={() => handleSort('codigocatador')}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>Código</span>
-                    {sortField === 'codigocatador' && (
-                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                    )}
-                  </div>
+                <th className="px-2 py-2 text-left text-sm font-semibold">
+                  <SortButton field="codigocatador" label="Código" />
                 </th>
-                <th 
-                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                  onClick={() => handleSort('nombre')}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>Catador</span>
-                    {sortField === 'nombre' && (
-                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                    )}
-                  </div>
+                <th className="px-2 py-2 text-left text-sm font-semibold">
+                  <SortButton field="nombre" label="Nombre" />
                 </th>
-                <th 
-                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                  onClick={() => handleSort('rol')}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>Rol</span>
-                    {sortField === 'rol' && (
-                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                    )}
-                  </div>
+                <th className="px-2 py-2 text-left text-sm font-semibold">
+                  <SortButton field="pais" label="País" />
                 </th>
-                <th 
-                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                  onClick={() => handleSort('mesa')}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>Mesa</span>
-                    {sortField === 'mesa' && (
-                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                    )}
-                  </div>
+                <th className="px-2 py-2 text-left text-sm font-semibold">
+                  <SortButton field="rol" label="Rol" />
                 </th>
-                <th 
-                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                  onClick={() => handleSort('puesto')}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>Puesto</span>
-                    {sortField === 'puesto' && (
-                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                    )}
-                  </div>
+                <th className="px-2 py-2 text-left text-sm font-semibold">
+                  <SortButton field="mesa" label="Mesa" />
                 </th>
-                <th 
-                  className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                  onClick={() => handleSort('ntablet')}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>Tablet</span>
-                    {sortField === 'ntablet' && (
-                      sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                    )}
-                  </div>
+                <th className="px-2 py-2 text-left text-sm font-semibold">
+                  <SortButton field="puesto" label="Puesto" />
                 </th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Acciones
+                <th className="px-2 py-2 text-left text-sm font-semibold">
+                  <SortButton field="tablet" label="Tablet" />
                 </th>
+                <th className="px-2 py-2 text-left text-sm font-semibold">Acciones</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCatadores.map((catador) => {
-                const isPresidente = catador.rol === 'presidente';
-                const mesaColors = catador.mesa ? getMesaColors(catador.mesa) : null;
-                
-                return (
-                  <tr 
-                    key={catador.id} 
-                    className={`
-                      group transition-all duration-500 cursor-pointer transform hover:scale-[1.01]
-                      ${mesaColors 
-                        ? `bg-gradient-to-r ${mesaColors.bg} border-l-4 ${mesaColors.border}` 
-                        : 'hover:bg-gray-50'
-                      }
-                    `}
-                    onClick={() => setViewingCatador(catador)}
-                  >
-                    <td className="px-3 py-4">
-                      <div className="text-sm font-mono text-gray-600">
-                        {catador.codigocatador || '-'}
-                      </div>
-                    </td>
-                    <td className="px-3 py-4">
-                      <div className="flex items-center gap-3">
-                        {isPresidente && (
-                          <div title="Presidente">
-                            <Crown className="w-5 h-5 text-yellow-600 animate-pulse" />
-                          </div>
-                        )}
-                        <div>
-                          <div className="text-sm font-bold text-gray-900">
-                            {catador.nombre}
-                          </div>
-                          <div className="text-xs text-gray-500 space-y-1">
-                            {catador.email && <div>{catador.email}</div>}
-                            {catador.telefono && <div>{catador.telefono}</div>}
-                            {catador.especialidad && <div className="italic">{catador.especialidad}</div>}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 py-4">
-                      <select
-                        value={catador.rol || ''}
-                        onChange={(e) => handleFieldUpdate(catador.id, 'rol', e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full text-sm rounded-lg px-3 py-2 font-medium transition-all duration-300 border-gray-300 hover:border-blue-400 focus:ring-2 focus:ring-blue-500"
+            <tbody className="divide-y">
+              {getSortedCatadores().map((catador) => (
+                <tr key={catador.id} className={`${getMesaBg(catador.mesa)} hover:opacity-95`}>
+                  <td className="px-2 py-1 text-sm">
+                    <input
+                      type="text"
+                      value={(catador as any).codigocatador || ''}
+                      onChange={(e) => handleFieldChange(catador.id, 'codigocatador', e.target.value || null)}
+                      onBlur={(e) => handleFieldUpdate(catador.id, 'codigocatador', e.target.value || null)}
+                      className="w-16 p-1 border rounded text-sm"
+                      placeholder="-"
+                      maxLength={7}
+                      disabled={saving}
+                    />
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <input
+                      type="text"
+                      value={catador.nombre}
+                      onChange={(e) => handleFieldChange(catador.id, 'nombre', e.target.value)}
+                      onBlur={(e) => handleFieldUpdate(catador.id, 'nombre', e.target.value)}
+                      className="w-full p-1 border rounded text-sm font-medium"
+                      disabled={saving}
+                    />
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <input
+                      type="text"
+                      value={catador.pais || ''}
+                      onChange={(e) => handleFieldChange(catador.id, 'pais', e.target.value || null)}
+                      onBlur={(e) => handleFieldUpdate(catador.id, 'pais', e.target.value || null)}
+                      className="w-24 p-1 border rounded text-sm"
+                      placeholder="-"
+                      disabled={saving}
+                    />
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <select
+                      value={catador.rol || ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'rol', e.target.value || null)}
+                      className="w-36 p-1 border rounded bg-white text-sm"
+                      disabled={saving}
+                    >
+                      <option value="">-</option>
+                      {ROLES.map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <select
+                      value={catador.mesa ?? ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'mesa', e.target.value ? parseInt(e.target.value) : null)}
+                      className="w-24 p-1 border rounded bg-white text-center text-sm"
+                      disabled={saving}
+                    >
+                      <option value="">-</option>
+                      {mesasDisponibles.map((m) => (
+                        <option key={m} value={String(m)}>Mesa {m}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <select
+                      value={catador.puesto ?? ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'puesto', e.target.value ? parseInt(e.target.value) : null)}
+                      className="w-24 p-1 border rounded bg-white text-center text-sm"
+                      disabled={saving}
+                    >
+                      <option value="">-</option>
+                      {PUESTOS.map((p) => (
+                        <option key={p} value={String(p)}>Puesto {p}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <select
+                      value={catador.tablet || ''}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'tablet', e.target.value || null)}
+                      className="w-28 p-1 border rounded bg-white text-sm"
+                      disabled={saving}
+                    >
+                      <option value="">-</option>
+                      {tabletsDisponibles.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEdit(catador)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Editar"
                       >
-                        <option value="">Seleccionar</option>
-                        <option value="catador">🎯 Catador</option>
-                        <option value="presidente">👑 Presidente</option>
-                      </select>
-                    </td>
-                    <td className="px-3 py-4">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map(num => {
-                          const isSelected = catador.mesa === num;
-                          const colors = getMesaColors(num);
-                          return (
-                            <button
-                              key={num}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleFieldUpdate(catador.id, 'mesa', isSelected ? undefined : num);
-                              }}
-                              className={`
-                                w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 transform hover:scale-110
-                                ${isSelected 
-                                  ? `${colors.button} text-white shadow-lg` 
-                                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                                }
-                              `}
-                            >
-                              {num}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-3 py-4">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map(num => {
-                          const isSelected = catador.puesto === num;
-                          const mesaColors = catador.mesa ? getMesaColors(catador.mesa) : null;
-                          return (
-                            <button
-                              key={num}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleFieldUpdate(catador.id, 'puesto', isSelected ? undefined : num);
-                              }}
-                              className={`
-                                w-8 h-8 rounded text-xs font-bold transition-all duration-300 transform hover:scale-110
-                                ${isSelected && mesaColors
-                                  ? `${mesaColors.button} text-white shadow-lg` 
-                                  : isSelected 
-                                    ? 'bg-blue-500 text-white shadow-lg'
-                                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                                }
-                              `}
-                            >
-                              {num}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-3 py-4">
-                      <select
-                        value={catador.ntablet || ''}
-                        onChange={(e) => handleFieldUpdate(catador.id, 'ntablet', e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className={`
-                          w-full text-sm rounded-lg px-3 py-2 transition-all duration-300
-                          ${mesaColors 
-                            ? `bg-white border-2 ${mesaColors.border} ${mesaColors.text} shadow-sm` 
-                            : 'border-gray-300 hover:border-blue-400 focus:ring-2 focus:ring-blue-500'
-                          }
-                        `}
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(catador.id, catador.nombre)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Eliminar"
+                        disabled={saving}
                       >
-                        <option value="">📱 Tablet</option>
-                        {Array.from({length: 25}, (_, i) => i + 1).map(num => (
-                          <option key={num} value={num.toString()}>📱 {num}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-3 py-4 text-center">
-                      <div className="flex justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => setViewingCatador(catador)}
-                          className="text-blue-600 hover:text-blue-700 p-2 rounded-full hover:bg-blue-100 transition-all duration-300 transform hover:scale-110"
-                          title="Ver detalles"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingCatador({...catador})}
-                          className="text-green-600 hover:text-green-700 p-2 rounded-full hover:bg-green-100 transition-all duration-300 transform hover:scale-110"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(catador.id, catador.nombre)}
-                          className="text-red-600 hover:text-red-700 p-2 rounded-full hover:bg-red-100 transition-all duration-300 transform hover:scale-110"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Vista de tarjetas para móvil */}
-        <div className="md:hidden">
-          {filteredCatadores.map((catador) => (
-            <div 
-              key={catador.id} 
-              className="border-b border-gray-200 p-4 cursor-pointer hover:bg-gray-50"
-              onClick={() => setViewingCatador(catador)}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900 mb-2">{catador.nombre}</h3>
-                  
-                  {/* Selectores en móvil */}
-                  <div className="grid grid-cols-2 gap-2 mb-2" onClick={(e) => e.stopPropagation()}>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Rol</label>
-                      <select
-                        value={catador.rol || ''}
-                        onChange={(e) => handleFieldUpdate(catador.id, 'rol', e.target.value)}
-                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">Seleccionar</option>
-                        <option value="catador">Catador</option>
-                        <option value="presidente">Presidente</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Mesa</label>
-                      <select
-                        value={catador.mesa || ''}
-                        onChange={(e) => handleFieldUpdate(catador.id, 'mesa', parseInt(e.target.value) || undefined)}
-                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">Mesa</option>
-                        {[1, 2, 3, 4, 5].map(num => (
-                          <option key={num} value={num}>{num}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Puesto</label>
-                      <select
-                        value={catador.puesto || ''}
-                        onChange={(e) => handleFieldUpdate(catador.id, 'puesto', parseInt(e.target.value) || undefined)}
-                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">Puesto</option>
-                        {[1, 2, 3, 4, 5].map(num => (
-                          <option key={num} value={num}>{num}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Tablet</label>
-                      <select
-                        value={catador.ntablet || ''}
-                        onChange={(e) => handleFieldUpdate(catador.id, 'ntablet', e.target.value)}
-                        className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">Tablet</option>
-                        {Array.from({length: 25}, (_, i) => i + 1).map(num => (
-                          <option key={num} value={num.toString()}>{num}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => setViewingCatador(catador)}
-                    className="text-blue-600 hover:text-blue-700 p-1"
-                    title="Ver detalles"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setEditingCatador({...catador})}
-                    className="text-green-600 hover:text-green-700 p-1"
-                    title="Editar"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(catador.id, catador.nombre)}
-                    className="text-red-600 hover:text-red-700 p-1"
-                    title="Eliminar"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              
-              <div className="text-xs text-gray-500">
-                {catador.email && <div>{catador.email}</div>}
-                {catador.telefono && <div>{catador.telefono}</div>}
-                {catador.especialidad && <div>{catador.especialidad}</div>}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredCatadores.length === 0 && (
+        {catadores.length === 0 && (
           <div className="text-center py-12 text-gray-500">
-            No se encontraron catadores
+            No hay catadores registrados
           </div>
         )}
       </div>
-
-      {/* Modal para añadir catador */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Añadir Nuevo Catador</h3>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código Catador
-                  </label>
-                  <input
-                    type="text"
-                    value={newCatador.codigocatador || ''}
-                    onChange={(e) => setNewCatador({...newCatador, codigocatador: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    placeholder="Código único"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    value={newCatador.nombre || ''}
-                    onChange={(e) => setNewCatador({...newCatador, nombre: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rol
-                  </label>
-                  <select
-                    value={newCatador.rol || ''}
-                    onChange={(e) => setNewCatador({...newCatador, rol: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Seleccionar rol</option>
-                    <option value="catador">Catador</option>
-                    <option value="presidente">Presidente</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mesa
-                  </label>
-                  <select
-                    value={newCatador.mesa || ''}
-                    onChange={(e) => setNewCatador({...newCatador, mesa: parseInt(e.target.value) || undefined})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Seleccionar mesa</option>
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Puesto
-                  </label>
-                  <select
-                    value={newCatador.puesto || ''}
-                    onChange={(e) => setNewCatador({...newCatador, puesto: parseInt(e.target.value) || undefined})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Seleccionar puesto</option>
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nº Tablet
-                  </label>
-                  <select
-                    value={newCatador.ntablet || ''}
-                    onChange={(e) => setNewCatador({...newCatador, ntablet: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Seleccionar tablet</option>
-                    {Array.from({length: 25}, (_, i) => i + 1).map(num => (
-                      <option key={num} value={num.toString()}>{num}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={newCatador.email || ''}
-                  onChange={(e) => setNewCatador({...newCatador, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Teléfono
-                  </label>
-                  <input
-                    type="text"
-                    value={newCatador.telefono || ''}
-                    onChange={(e) => setNewCatador({...newCatador, telefono: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Especialidad
-                  </label>
-                  <input
-                    type="text"
-                    value={newCatador.especialidad || ''}
-                    onChange={(e) => setNewCatador({...newCatador, especialidad: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={newCatador.activo ?? true}
-                    onChange={(e) => setNewCatador({...newCatador, activo: e.target.checked})}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Activo</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowAddForm(false);
-                  setNewCatador({});
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleAdd}
-                disabled={saving || !newCatador.nombre}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
-              >
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal para editar catador */}
-      {editingCatador && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Editar Catador</h3>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código Catador
-                  </label>
-                  <input
-                    type="text"
-                    value={editingCatador.codigocatador || ''}
-                    onChange={(e) => setEditingCatador({...editingCatador, codigocatador: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    placeholder="Código único"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    value={editingCatador.nombre}
-                    onChange={(e) => setEditingCatador({...editingCatador, nombre: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={editingCatador.email || ''}
-                    onChange={(e) => setEditingCatador({...editingCatador, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-              
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Teléfono
-                  </label>
-                  <input
-                    type="text"
-                    value={editingCatador.telefono || ''}
-                    onChange={(e) => setEditingCatador({...editingCatador, telefono: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Especialidad
-                </label>
-                <input
-                  type="text"
-                  value={editingCatador.especialidad || ''}
-                  onChange={(e) => setEditingCatador({...editingCatador, especialidad: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={editingCatador.activo ?? true}
-                    onChange={(e) => setEditingCatador({...editingCatador, activo: e.target.checked})}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Activo</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setEditingCatador(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleSave(editingCatador)}
-                disabled={saving || !editingCatador.nombre}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
-              >
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de detalles */}
-      {viewingCatador && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-xl font-bold text-gray-800">Detalles del Catador</h3>
-              <button
-                onClick={() => setViewingCatador(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Información personal */}
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Información Personal</h4>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Nombre</label>
-                  <p className="text-gray-900 font-medium">{viewingCatador.nombre}</p>
-                </div>
-                
-                {viewingCatador.email && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Email</label>
-                    <p className="text-gray-900">{viewingCatador.email}</p>
-                  </div>
-                )}
-                
-                {viewingCatador.telefono && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Teléfono</label>
-                    <p className="text-gray-900">{viewingCatador.telefono}</p>
-                  </div>
-                )}
-                
-                {viewingCatador.especialidad && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Especialidad</label>
-                    <p className="text-gray-900">{viewingCatador.especialidad}</p>
-                  </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Estado General</label>
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                    viewingCatador.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {viewingCatador.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Información de asignación */}
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">Asignación</h4>
-                
-                {viewingCatador.rol && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Rol</label>
-                    <p className="text-gray-900 font-medium">{viewingCatador.rol}</p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Mesa</label>
-                    <p className="text-gray-900">{viewingCatador.mesa ? `Mesa ${viewingCatador.mesa}` : 'No asignada'}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Puesto</label>
-                    <p className="text-gray-900">{viewingCatador.puesto || 'No asignado'}</p>
-                  </div>
-                </div>
-                
-                {viewingCatador.ntablet && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Tablet Asignada</label>
-                    <p className="text-gray-900 font-mono">{viewingCatador.ntablet}</p>
-                  </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Estado de Asistencia</label>
-                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                    viewingCatador.estado === 'presente'
-                      ? 'bg-green-100 text-green-800' 
-                      : viewingCatador.estado === 'ausente'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : viewingCatador.estado === 'activo'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {viewingCatador.estado || 'Sin estado'}
-                  </span>
-                </div>
-                
-                {viewingCatador.created_at && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Fecha de Registro</label>
-                    <p className="text-gray-900">{new Date(viewingCatador.created_at).toLocaleDateString('es-ES', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Acciones */}
-            <div className="flex gap-3 mt-8 pt-6 border-t">
-              <button
-                onClick={() => {
-                  setViewingCatador(null);
-                  setEditingCatador({...viewingCatador});
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                <Edit2 className="w-4 h-4" />
-                Editar Catador
-              </button>
-              <button
-                onClick={() => setViewingCatador(null)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

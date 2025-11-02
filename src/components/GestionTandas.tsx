@@ -152,7 +152,7 @@ export default function GestionTandas() {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="text-sm text-gray-700">
-                          {sample.año || '-'}
+                          {sample.anio || '-'}
                         </span>
                       </td>
                     </tr>
@@ -233,7 +233,7 @@ export default function GestionTandas() {
                           <td className="px-2 py-2 text-xs">{sample.categoria || ''}</td>
                           <td className="px-2 py-2 text-xs">{sample.azucar || ''}</td>
                           <td className="px-2 py-2 text-xs">{sample.grado || ''}</td>
-                          <td className="px-2 py-2 text-xs">{sample.año || ''}</td>
+                          <td className="px-2 py-2 text-xs">{sample.anio || ''}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -50,7 +50,7 @@ export type Sample = {
   azucar?: number;
   grado?: number;
   existencias?: number;
-  año?: number;
+  anio?: number;
   tipouva?: string;
   tipoaceituna?: string;
   destilado?: string;

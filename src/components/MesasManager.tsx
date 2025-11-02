@@ -1,122 +1,125 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Plus, Trash2 } from 'lucide-react';
+import { RefreshCw, Users } from 'lucide-react';
 
-type Mesa = {
+type Usuario = {
   id: string;
-  mesa: number;
-  'puesto 1': boolean;
-  'puesto 2': boolean;
-  'puesto 3': boolean;
-  'puesto 4': boolean;
-  'puesto 5': boolean;
-  completa: boolean;
-  created_at: string;
-};
-
-type CatadorActivo = {
-  id: string;
+  codigocatador: string | null;
   nombre: string;
-  email: string;
-  rol: string;
-  mesa: number;
-  puesto: number;
-  ntablet?: string;
-  loginTime: string;
+  pais: string | null;
+  rol: string | null;
+  mesa: number | null;
+  puesto: number | null;
+  tablet: string | null;
+  user_id: string | null;
 };
 
 export default function MesasManager() {
-  const [mesas, setMesas] = useState<Mesa[]>([]);
-  const [catadoresActivos, setCatadoresActivos] = useState<CatadorActivo[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuariosLogueados, setUsuariosLogueados] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMesas();
-    fetchCatadoresActivos();
+    fetchUsuarios();
+    subscribeToPresence();
     
-    // Actualizar catadores activos cada 30 segundos
-    const interval = setInterval(fetchCatadoresActivos, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      // Cleanup: remover suscripción al salir
+      supabase.removeAllChannels();
+    };
   }, []);
 
-  const fetchMesas = async () => {
+  const fetchUsuarios = async () => {
     try {
       const { data, error } = await supabase
-        .from('mesas')
+        .from('usuarios')
         .select('*')
-        .order('mesa', { ascending: true });
+        .not('mesa', 'is', null)
+        .order('mesa', { ascending: true })
+        .order('puesto', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching mesas:', error);
-        return;
-      }
-
-      setMesas(data || []);
+      if (error) throw error;
+      setUsuarios(data || []);
     } catch (error) {
-      console.error('Error general:', error);
+      console.error('Error fetching usuarios:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCatadoresActivos = async () => {
-    try {
-      // Por ahora simulamos catadores activos basados en localStorage
-      // En una implementación real, esto vendría de una tabla de sesiones
-      const sessionData = localStorage.getItem('catadores_activos');
-      let activos: CatadorActivo[] = [];
-      
-      if (sessionData) {
-        activos = JSON.parse(sessionData);
-        // Filtrar sesiones que han expirado (más de 4 horas)
-        const ahora = new Date().getTime();
-        activos = activos.filter(catador => {
-          const loginTime = new Date(catador.loginTime).getTime();
-          const cuatroHoras = 4 * 60 * 60 * 1000;
-          return (ahora - loginTime) < cuatroHoras;
+  const subscribeToPresence = async () => {
+    // Crear canal de presencia para tracking en tiempo real
+    const channel = supabase.channel('online-users', {
+      config: {
+        presence: {
+          key: 'user_id',
+        },
+      },
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineUserIds = new Set<string>();
+        
+        Object.keys(state).forEach((presenceKey) => {
+          const presences = state[presenceKey];
+          presences.forEach((presence: any) => {
+            if (presence.user_id) {
+              onlineUserIds.add(presence.user_id);
+            }
+          });
         });
         
-        // Actualizar localStorage con sesiones válidas
-        localStorage.setItem('catadores_activos', JSON.stringify(activos));
-      }
-      
-      setCatadoresActivos(activos);
-    } catch (error) {
-      console.error('Error fetching catadores activos:', error);
-    }
+        setUsuariosLogueados(onlineUserIds);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          // Trackear presencia del usuario actual si está logueado
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            await channel.track({
+              user_id: session.user.id,
+              online_at: new Date().toISOString(),
+            });
+          }
+        }
+      });
   };
 
-  const addNewMesa = async () => {
-    const ultimaMesa = mesas.length > 0 ? Math.max(...mesas.map(m => m.mesa)) : 0;
-    const nuevoNumeroMesa = ultimaMesa + 1;
+  const isUsuarioLogueado = (userId: string | null): boolean => {
+    if (!userId) return false;
+    return usuariosLogueados.has(userId);
+  };
 
-    try {
-      const { data, error } = await supabase
-        .from('mesas')
-        .insert([
-          {
-            mesa: nuevoNumeroMesa,
-            'puesto 1': false,
-            'puesto 2': false,
-            'puesto 3': false,
-            'puesto 4': false,
-            'puesto 5': false,
-            completa: false
-          }
-        ])
-        .select();
+  const getMesaBg = (mesaNum: number) => {
+    const colors = [
+      'bg-rose-50 border-rose-300',
+      'bg-orange-50 border-orange-300',
+      'bg-amber-50 border-amber-300',
+      'bg-lime-50 border-lime-300',
+      'bg-emerald-50 border-emerald-300',
+    ];
+    return colors[(mesaNum - 1) % colors.length];
+  };
 
-      if (error) {
-        console.error('Error creating mesa:', error);
-        return;
-      }
+  const getMesaHeaderBg = (mesaNum: number) => {
+    const colors = [
+      'bg-rose-500',
+      'bg-orange-500',
+      'bg-amber-500',
+      'bg-lime-500',
+      'bg-emerald-500',
+    ];
+    return colors[(mesaNum - 1) % colors.length];
+  };
 
-      if (data) {
-        setMesas([...mesas, ...data]);
-      }
-    } catch (error) {
-      console.error('Error general:', error);
-    }
+  const getUsuariosPorMesa = (mesaNum: number) => {
+    return usuarios.filter(u => u.mesa === mesaNum);
+  };
+
+  const getTotalAsignados = () => {
+    return usuarios.filter(u => u.puesto !== null).length;
   };
 
   if (loading) {
@@ -129,160 +132,139 @@ export default function MesasManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Gestión de Mesas</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Estado en tiempo real de catadores activos
-          </p>
+        <div className="flex items-center gap-2">
+          <Users className="w-6 h-6 text-blue-600" />
+          <div>
+            <h2 className="text-2xl font-bold">Distribución por Mesas</h2>
+            <p className="text-sm text-gray-600">
+              {getTotalAsignados()} catadores asignados en {[1,2,3,4,5].filter(m => getUsuariosPorMesa(m).length > 0).length} mesas activas
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              fetchCatadoresActivos();
-              fetchMesas();
-            }}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
-          >
-            🔄 Actualizar
-          </button>
-          <button
-            onClick={addNewMesa}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nueva Mesa
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            fetchUsuarios();
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Actualizar
+        </button>
       </div>
 
-      {/* Estadísticas generales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-blue-800">Total Mesas</h3>
-          <p className="text-2xl font-bold text-blue-600">{mesas.length}</p>
-        </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-green-800">Catadores Activos</h3>
-          <p className="text-2xl font-bold text-green-600">{catadoresActivos.length}</p>
-        </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-yellow-800">Puestos Ocupados</h3>
-          <p className="text-2xl font-bold text-yellow-600">
-            {catadoresActivos.length} / {mesas.length * 5}
-          </p>
-        </div>
-      </div>
+      {/* Grid de 5 Mesas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5].map((mesaNum) => {
+          const usuariosEnMesa = getUsuariosPorMesa(mesaNum);
+          const ocupados = usuariosEnMesa.filter(u => u.puesto !== null).length;
 
-      {/* Visualización de mesas con catadores */}
-      {mesas.length > 0 && (
-        <div className="space-y-6">
-          {mesas.map((mesa) => {
-            const catadoresEnMesa = catadoresActivos.filter(c => c.mesa === mesa.mesa);
-            return (
-              <div key={mesa.id} className="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">Mesa {mesa.mesa}</h3>
-                      <p className="text-sm text-gray-600">
-                        {catadoresEnMesa.length}/5 puestos ocupados
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (confirm('¿Estás seguro de que quieres eliminar esta mesa?')) {
-                          supabase.from('mesas').delete().eq('id', mesa.id).then(() => {
-                            setMesas(mesas.filter(m => m.id !== mesa.id));
-                          });
-                        }
-                      }}
-                      className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50"
-                      title="Eliminar mesa"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Visualización de puestos */}
-                <div className="p-6">
-                  <div className="grid grid-cols-5 gap-4">
-                    {[1, 2, 3, 4, 5].map(puestoNum => {
-                      const catadorEnPuesto = catadoresEnMesa.find(c => c.puesto === puestoNum);
-                      const puestoKey = `puesto ${puestoNum}` as keyof Mesa;
-                      const puestoHabilitado = mesa[puestoKey] as boolean;
-                      
-                      return (
-                        <div
-                          key={puestoNum}
-                          className={`border rounded-lg p-4 text-center transition-all ${
-                            catadorEnPuesto
-                              ? 'border-green-500 bg-green-50'
-                              : puestoHabilitado
-                              ? 'border-yellow-300 bg-yellow-50'
-                              : 'border-gray-300 bg-gray-50'
-                          }`}
-                        >
-                          <div className={`text-lg font-bold mb-2 ${
-                            catadorEnPuesto
-                              ? 'text-green-700'
-                              : puestoHabilitado
-                              ? 'text-yellow-700'
-                              : 'text-gray-500'
-                          }`}>
-                            Puesto {puestoNum}
-                          </div>
-                          
-                          {catadorEnPuesto ? (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-green-800 text-sm">
-                                {catadorEnPuesto.nombre}
-                              </div>
-                              <div className="text-xs text-green-600">
-                                {catadorEnPuesto.rol}
-                              </div>
-                              {catadorEnPuesto.ntablet && (
-                                <div className="text-xs text-green-600">
-                                  📱 {catadorEnPuesto.ntablet}
-                                </div>
-                              )}
-                              <div className="text-xs text-green-500">
-                                🟢 Activo
-                              </div>
-                            </div>
-                          ) : puestoHabilitado ? (
-                            <div className="text-sm text-yellow-600">
-                              Disponible
-                            </div>
-                          ) : (
-                            <div className="text-sm text-gray-500">
-                              No habilitado
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+          return (
+            <div
+              key={mesaNum}
+              className={`border-2 rounded-lg overflow-hidden shadow-lg ${getMesaBg(mesaNum)}`}
+            >
+              {/* Header de Mesa */}
+              <div className={`${getMesaHeaderBg(mesaNum)} text-white px-3 py-2`}>
+                <div className="font-bold text-lg text-center">MESA {mesaNum}</div>
+                <div className="text-xs text-center opacity-90">
+                  {ocupados}/5 puestos
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      {mesas.length === 0 && !loading && (
-        <div className="text-center py-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay mesas</h3>
-          <p className="text-gray-500 mb-4">Comienza agregando una nueva mesa.</p>
-          <button
-            onClick={addNewMesa}
-            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Crear Primera Mesa
-          </button>
+              {/* Mini Tabla */}
+              <div className="p-2">
+                <table className="w-full text-xs">
+                  <thead className="border-b border-gray-300">
+                    <tr className="text-gray-700">
+                      <th className="px-1 py-1 text-center font-semibold">Puesto</th>
+                      <th className="px-1 py-1 text-left font-semibold">Nombre</th>
+                      <th className="px-1 py-1 text-left font-semibold">Rol</th>
+                      <th className="px-1 py-1 text-center font-semibold">Tablet</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {[1, 2, 3, 4, 5].map((puestoNum) => {
+                      const usuario = usuariosEnMesa.find(u => u.puesto === puestoNum);
+                      const logueado = usuario ? isUsuarioLogueado(usuario.user_id) : false;
+                      
+                      return (
+                        <tr
+                          key={puestoNum}
+                          className={usuario ? 'bg-white' : 'bg-gray-50 opacity-50'}
+                        >
+                          <td className="px-1 py-1.5 font-bold text-gray-700 text-center">{puestoNum}</td>
+                          <td className="px-1 py-1.5 font-medium text-gray-800 truncate max-w-[120px]">
+                            {usuario ? (
+                              <div className="flex items-center gap-1">
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    logueado ? 'bg-green-500' : 'bg-red-500'
+                                  }`}
+                                  title={logueado ? 'Logueado' : 'Desconectado'}
+                                />
+                                <span className="truncate">{usuario.nombre}</span>
+                              </div>
+                            ) : '-'}
+                          </td>
+                          <td className="px-1 py-1.5 text-gray-600 truncate">
+                            {usuario?.rol ? (
+                              <span className="text-xs">
+                                {usuario.rol === 'Administrador' ? 'Admin' : usuario.rol === 'Presidente' ? 'Pres' : 'Cat'}
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td className="px-1 py-1.5 text-gray-600 text-center">
+                            {usuario?.tablet || '-'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Footer con estadísticas */}
+              {ocupados > 0 && (
+                <div className="px-2 pb-2">
+                  <div className="text-xs text-gray-600 bg-white rounded px-2 py-1 border border-gray-200">
+                    <strong>{ocupados}</strong> asignado{ocupados !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Leyenda de roles y estados */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+        <div className="text-xs text-gray-600 flex gap-4 justify-center flex-wrap">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            <strong>Logueado</strong>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <strong>Desconectado</strong>
+          </span>
+          <span>|</span>
+          <span><strong>Admin:</strong> Administrador</span>
+          <span><strong>Pres:</strong> Presidente</span>
+          <span><strong>Cat:</strong> Catador</span>
+        </div>
+      </div>
+
+      {/* Mensaje si no hay asignaciones */}
+      {usuarios.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
+          <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay catadores asignados</h3>
+          <p className="text-gray-500">
+            Ve a Gestión de Catadores para asignar mesas y puestos.
+          </p>
         </div>
       )}
     </div>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, Wine, LogOut, FolderTree, LucideIcon } from 'lucide-react';
-import { useOrientation } from '../hooks/useOrientation';
+import { Building2, FlaskConical, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, LogOut, FolderTree, LucideIcon, CreditCard } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -10,12 +9,12 @@ import TandasManager from './TandasManager';
 import StatisticsManager from './StatisticsManager';
 import MesasManager from './MesasManager';
 import EmailTest from './EmailTest';
-import SettingsManager from './SettingsManager';
 import CatadoresManager from './CatadoresManager';
-import CataForm from './CataForm';
 import GestionTandas from './GestionTandas';
+import PagosPaypalManager from './PagosPaypalManager';
+import ConfiguracionManager from './ConfiguracionManager';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'cata' | 'print' | 'form' | 'emailTest' | 'settings';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
 
 interface MenuItem {
   id: string;
@@ -31,10 +30,6 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const isLandscape = useOrientation();
-  
-  // Forzar comportamiento desktop cuando está en landscape
-  const forceDesktopMode = isLandscape;
 
   const menuItems: MenuItem[] = [
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
@@ -49,12 +44,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'catadores', label: 'Catadores', icon: Users },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
-    { id: 'cata', label: 'Ficha de Cata', icon: Wine },
+    { id: 'paypal', label: 'Pagos PayPal', icon: CreditCard },
     { id: 'separator5', label: '', icon: null, isSeparator: true },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'separator6', label: '', icon: null, isSeparator: true },
-    { id: 'settings', label: 'Configuración', icon: Settings },
+    { id: 'configuracion', label: 'Configuración', icon: Settings },
   ];
 
   const handleTabChange = (tab: Tab) => {
@@ -64,16 +59,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   return (
     <div className="flex flex-1 bg-gray-100 min-h-screen">
-      {/* Sidebar - Mostrar siempre en landscape mode */}
-      <div className={`${forceDesktopMode ? 'flex' : 'hidden lg:flex'} lg:flex-shrink-0`}>
-        <div className="flex flex-col w-64 bg-[#3C542E] min-h-screen lg:h-screen lg:sticky lg:top-0">
+      {/* Sidebar */}
+      <div className="hidden lg:flex lg:flex-shrink-0">
+        <div className="flex flex-col w-64 bg-[#2B3D22] min-h-screen lg:h-screen lg:sticky lg:top-0"> 
           {/* Logo/Header */}
-          <div className="flex items-center h-16 px-6 bg-[#2D3F20] shadow-sm flex-shrink-0">
-            <h2 className="text-lg font-semibold text-white">VIRTUS ADMIN 2.0</h2>
+          <div className="flex items-center h-16 px-6 justify-between bg-[#1E2A16] shadow-sm flex-shrink-0">
+            <div className="flex items-center gap-3 text-white">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold">V</div>
+              <h2 className="text-lg font-semibold text-white truncate">VIRTUS ADMIN 2.0</h2>
+            </div>
           </div>
           
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {menuItems.map((item) => {
               // Renderizar separador
               if (item.isSeparator) {
@@ -90,6 +88,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <button
                   key={item.id}
                   onClick={() => handleTabChange(item.id as Tab)}
+                  title={item.label}
                   className={`w-full group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-white/10 text-white shadow-lg border-l-4 border-white/50'
@@ -122,6 +121,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <button 
               onClick={onLogout}
               className="w-full mt-2 flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              title="Cerrar sesión"
             >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
@@ -207,32 +207,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Mobile header - Ocultar en landscape mode */}
-        <div className={`${forceDesktopMode ? 'hidden' : 'lg:hidden'} bg-white shadow-sm border-b border-gray-200 flex-shrink-0`}>
-          <div className="flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowMobileMenu(true)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <Menu className="w-5 h-5 text-gray-600" />
-              </button>
-              <h1 className="text-lg font-semibold text-gray-800">
-                {menuItems.find(item => item.id === activeTab)?.label}
-              </h1>
-            </div>
-          </div>
-        </div>
-
-        {/* Desktop header */}
-        <div className="hidden lg:block bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
-          <div className="px-6 py-3">
-            <h1 className="text-xl font-bold text-gray-800">
-              {menuItems.find(item => item.id === activeTab)?.label}
-            </h1>
-            <p className="text-xs text-gray-600">Gestiona y supervisa el sistema VIRTUS</p>
-          </div>
-        </div>
+        {/* Floating mobile menu button */}
+        {!showMobileMenu && (
+          <button
+            onClick={() => setShowMobileMenu(true)}
+            className="fixed top-3 left-3 z-40 p-2 rounded-lg bg-[#1E2A16] text-white shadow-md lg:hidden"
+            aria-label="Abrir menú"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
@@ -245,11 +229,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'gestionTandas' && <GestionTandas />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
-            {activeTab === 'cata' && <CataForm />}
+            {activeTab === 'paypal' && <PagosPaypalManager />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
-            {activeTab === 'settings' && <SettingsManager />}
+            {activeTab === 'configuracion' && <ConfiguracionManager />}
           </div>
         </div>
       </div>

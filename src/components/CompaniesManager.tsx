@@ -91,7 +91,7 @@ export default function CompaniesManager() {
           const { data: samples } = await supabase
             .from('muestras')
             .select('*')
-            .eq('ididempresa', company.id)
+            .eq('empresa_id', company.id)
             .order('codigo', { ascending: true });
 
           return {
@@ -292,7 +292,7 @@ export default function CompaniesManager() {
       const { error: samplesError } = await supabase
         .from('muestras')
         .delete()
-        .eq('ididempresa', showDeleteConfirm.id);
+        .eq('empresa_id', showDeleteConfirm.id);
 
       if (samplesError) {
         console.error('Error deleting samples:', samplesError);
@@ -1091,7 +1091,7 @@ export default function CompaniesManager() {
                             {sample.pais || '-'}
                           </td>
                           <td className="px-4 py-4 text-gray-700">
-                            {sample.año || '-'}
+                            {sample.anio || '-'}
                           </td>
                           <td className="px-4 py-4 text-gray-700">
                             <div>{sample.origen || '-'}</div>
@@ -1138,10 +1138,10 @@ export default function CompaniesManager() {
                               <span className="font-medium">{sample.pais}</span>
                             </div>
                           )}
-                          {sample.año && (
+                          {sample.anio && (
                             <div className="flex justify-between">
                               <span>Año:</span>
-                              <span className="font-medium">{sample.año}</span>
+                              <span className="font-medium">{sample.anio}</span>
                             </div>
                           )}
                           {sample.origen && (
