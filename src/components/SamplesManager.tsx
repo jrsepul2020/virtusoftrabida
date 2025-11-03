@@ -29,11 +29,25 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
     try {
       const { data: samplesData, error } = await supabase
         .from('muestras')
-        .select('*')
+        .select(`
+          *,
+          empresas:empresa_id (
+            name,
+            pedido
+          )
+        `)
         .order('codigo', { ascending: true });
 
       if (error) throw error;
-      setSamples(samplesData || []);
+      
+      // Mapear los datos para incluir el nombre de la empresa y pedido
+      const samplesWithEmpresa = samplesData?.map(sample => ({
+        ...sample,
+        empresa_nombre: sample.empresas?.name || sample.empresa || 'Sin empresa',
+        empresa_pedido: sample.empresas?.pedido || null
+      })) || [];
+      
+      setSamples(samplesWithEmpresa);
     } catch (error) {
       console.error('Error fetching samples:', error);
     } finally {
@@ -70,27 +84,6 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
     if (cat.includes('aceite')) return 'bg-green-100 text-green-800';
 
     return 'bg-primary-100 text-primary-800';
-  };
-
-  const getPaymentBadge = (pagada: boolean) => {
-    if (pagada) {
-      return <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Pagada</span>;
-    }
-    return <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">No Pagada</span>;
-  };
-
-  const togglePaymentStatus = async (sample: Sample) => {
-    try {
-      const { error } = await supabase
-        .from('muestras')
-        .update({ pagada: !sample.pagada })
-        .eq('id', sample.id);
-
-      if (error) throw error;
-      await fetchSamples();
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-    }
   };
 
   const handleDeleteSample = async (sample: Sample) => {
@@ -173,24 +166,18 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
   };
 
   const handleExportToExcel = () => {
-    // Preparar los datos para Excel
-    const excelData = samples.map(sample => ({
+    const excelData = filteredSamples.map(sample => ({
       'Código': sample.codigo,
-      'Código Texto': sample.codigotexto || '',
       'Nombre': sample.nombre,
+      'Empresa': sample.empresa_nombre || sample.empresa || '',
+      'Pedido': sample.empresa_pedido || '',
       'Categoría': sample.categoria || '',
-      'Empresa': sample.empresa || '',
       'País': sample.pais || '',
-      'Origen': sample.origen || '',
-      'Azúcar (g/l)': sample.azucar || '',
-      'Grado Alcohólico': sample.grado || '',
       'Año': sample.anio || '',
-      'Tipo Uva': sample.tipouva || '',
-      'Tipo Aceituna': sample.tipoaceituna || '',
-      'Tanda': sample.tanda || '',
-      'Pagada': sample.pagada ? 'Sí' : 'No',
-      'Manual': sample.manual ? 'Sí' : 'No',
-      'Fecha Creación': sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES') : ''
+      'Azúcar (g/L)': sample.azucar || '',
+      'Grado Alcohólico': sample.grado || '',
+      'Existencias': sample.existencias || 0,
+      'Manual': sample.manual ? 'Sí' : 'No'
     }));
 
     // Crear el libro de trabajo
@@ -200,22 +187,17 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
 
     // Ajustar ancho de columnas
     const columnWidths = [
-      { wch: 8 },  // Código
-      { wch: 12 }, // Código Texto
+      { wch: 10 }, // Código
       { wch: 30 }, // Nombre
-      { wch: 20 }, // Categoría
       { wch: 30 }, // Empresa
+      { wch: 10 }, // Pedido
+      { wch: 20 }, // Categoría
       { wch: 15 }, // País
-      { wch: 15 }, // Origen
+      { wch: 8 },  // Año
       { wch: 12 }, // Azúcar
       { wch: 15 }, // Grado
-      { wch: 8 },  // Año
-      { wch: 20 }, // Tipo Uva
-      { wch: 20 }, // Tipo Aceituna
-      { wch: 8 },  // Tanda
-      { wch: 8 },  // Pagada
-      { wch: 8 },  // Manual
-      { wch: 15 }  // Fecha
+      { wch: 12 }, // Existencias
+      { wch: 8 }   // Manual
     ];
     worksheet['!cols'] = columnWidths;
 
@@ -322,15 +304,6 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
                       <span className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(sample.categoria || null)}`}>
                         {sample.categoria || 'Sin categoría'}
                       </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePaymentStatus(sample);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        {getPaymentBadge(sample.pagada || false)}
-                      </button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 text-sm mb-3">
@@ -412,9 +385,18 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
                 </div>
 
                 <div className="flex items-center gap-3 lg:gap-4 lg:ml-4">
-                  {sample.empresa && (
-                    <span className="text-lg font-medium text-gray-700">{sample.empresa}</span>
-                  )}
+                  <div className="flex flex-col items-end gap-1">
+                    {(sample.empresa_nombre || sample.empresa) && (
+                      <span className="text-lg font-medium text-gray-700">
+                        {sample.empresa_nombre || sample.empresa}
+                      </span>
+                    )}
+                    {sample.empresa_pedido && (
+                      <span className="inline-flex items-center justify-center px-3 py-1 bg-black text-white rounded-lg text-sm font-bold shadow-md">
+                        PEDIDO: {sample.empresa_pedido}
+                      </span>
+                    )}
+                  </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -483,11 +465,6 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
                   <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(viewingSample.categoria || null)}`}>
                     {viewingSample.categoria || 'Sin categoría'}
                   </span>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Estado de Pago</label>
-                  {getPaymentBadge(viewingSample.pagada || false)}
                 </div>
 
                 {viewingSample.manual && (
@@ -599,4 +576,3 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
     </div>
   );
 }
-

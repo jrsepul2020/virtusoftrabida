@@ -23,6 +23,7 @@ export default function UnifiedInscriptionForm({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [pedidoNumero, setPedidoNumero] = useState<number | null>(null); // Guardar número de pedido
   
   // Estados para el modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -77,24 +78,38 @@ export default function UnifiedInscriptionForm({
 
   const [payment, setPayment] = useState<PaymentMethod>('transferencia');
 
-  // Función para generar código único para muestras manuales
+  // Función para generar código único para muestras manuales (rango 1-999)
   const generateUniqueCode = async (): Promise<number> => {
-    // Obtener códigos existentes
-    const { data: existingCodes } = await supabase
-      .from('muestras')
-      .select('codigo_muestra')
-      .not('codigo_muestra', 'is', null);
-    
-    const usedCodes = new Set(existingCodes?.map(item => item.codigo_muestra) || []);
-    
-    // Buscar primer código disponible del 1 al 999
-    for (let code = 1; code <= 999; code++) {
-      if (!usedCodes.has(code)) {
-        return code;
+    try {
+      // Obtener códigos existentes en el rango manual (1-999)
+      const { data: existingCodes, error } = await supabase
+        .from('muestras')
+        .select('codigo')
+        .gte('codigo', 1)
+        .lte('codigo', 999)
+        .not('codigo', 'is', null);
+      
+      if (error) {
+        console.error('Error al obtener códigos existentes:', error);
+        throw error;
       }
+      
+      const usedCodes = new Set(existingCodes?.map(item => item.codigo) || []);
+      console.log('Códigos manuales ya usados (1-999):', Array.from(usedCodes).sort((a, b) => a - b));
+      
+      // Buscar primer código disponible del 1 al 999
+      for (let code = 1; code <= 999; code++) {
+        if (!usedCodes.has(code)) {
+          console.log(`Código disponible encontrado: ${code}`);
+          return code;
+        }
+      }
+      
+      throw new Error('No hay códigos disponibles en el rango 1-999 para muestras manuales');
+    } catch (error) {
+      console.error('Error en generateUniqueCode:', error);
+      throw error;
     }
-    
-    throw new Error('No hay códigos disponibles (1-999)');
   };
 
   // Funciones de cálculo de precio
@@ -252,18 +267,21 @@ export default function UnifiedInscriptionForm({
         throw empresaError;
       }
 
-      // Preparar muestras con códigos únicos si es manual
+      // Preparar muestras para insertar
       const samplesWithEmpresaId = [];
       
       for (const sample of samples) {
-        let codigoMuestra = null;
+        // Determinar si es manual
+        const esManual = isAdmin && isManualInscription;
         
-        // Si es inscripción manual de admin, generar código único
-        if (isAdmin && isManualInscription) {
+        // Generar código único solo para muestras manuales (rango 1-999)
+        // Las muestras automáticas (manual=false) obtendrán su código del trigger de Supabase (rango 1000-9999)
+        let codigoMuestra = null;
+        if (esManual) {
           codigoMuestra = await generateUniqueCode();
         }
         
-        samplesWithEmpresaId.push({
+        const sampleData: any = {
           nombre: sample.nombre_muestra,  // nombre_muestra -> nombre
           categoria: sample.categoria,
           origen: sample.origen,
@@ -277,9 +295,15 @@ export default function UnifiedInscriptionForm({
           tipoaceituna: sample.tipo_aceituna,  // tipo_aceituna -> tipoaceituna
           destilado: sample.destilado,
           empresa_id: empresa.id,  // Relación con tabla empresas
-          manual: isAdmin && isManualInscription,
-          codigo: codigoMuestra, // Código único para muestras manuales (si aplica)
-        });
+          manual: esManual,
+        };
+        
+        // Solo incluir codigo si es manual (si no es manual, Supabase lo generará automáticamente)
+        if (esManual && codigoMuestra !== null) {
+          sampleData.codigo = codigoMuestra;
+        }
+        
+        samplesWithEmpresaId.push(sampleData);
       }
 
       const { error: samplesError } = await supabase
@@ -288,15 +312,35 @@ export default function UnifiedInscriptionForm({
 
       if (samplesError) throw samplesError;
 
-      // Si no es admin, enviar email de confirmación
-      if (!isAdmin) {
-        console.log('Enviando email de confirmación...');
-        try {
+      // Enviar email de confirmación (siempre, tanto para admin como para usuarios)
+      console.log('Enviando email de confirmación...');
+      
+      // Detectar si estamos en desarrollo local o en producción
+      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      try {
+        if (isDevelopment) {
+          console.warn('⚠️ MODO DESARROLLO: Los emails NO se envían en local.');
+          console.warn('⚠️ Para probar el envío de emails, despliega en Vercel.');
+          console.log('📧 Datos que se enviarían:', {
+            empresa: company,
+            muestras: samples,
+            precio: calculatePrice(company.num_muestras),
+            metodoPago: payment,
+            pedido: empresa.pedido,
+            isAdmin: isAdmin,
+            isManual: isManualInscription,
+          });
+        } else {
+          // Solo en producción (Vercel)
           const emailData = {
             empresa: company,
             muestras: samples,
             precio: calculatePrice(company.num_muestras),
             metodoPago: payment,
+            pedido: empresa.pedido,
+            isAdmin: isAdmin,
+            isManual: isManualInscription,
           };
           
           console.log('Datos del email:', emailData);
@@ -318,14 +362,14 @@ export default function UnifiedInscriptionForm({
             const result = await response.json();
             console.log('Email enviado correctamente:', result);
           }
-        } catch (emailError) {
-          console.error('Error enviando email:', emailError);
         }
-      } else {
-        console.log('No se envía email porque es inscripción de admin');
+      } catch (emailError) {
+        console.error('Error enviando email:', emailError);
+        // No lanzar error, solo registrar en consola
       }
 
       // Cambiar a la pantalla de éxito
+      setPedidoNumero(empresa.pedido); // Guardar el número de pedido
       setSuccess(true);
       setCurrentStep('exitosa');
       
@@ -340,14 +384,32 @@ export default function UnifiedInscriptionForm({
       }
 
     } catch (err: any) {
-      console.error('Error en inscripción:', err);
+      console.error('Error completo en inscripción:', err);
+      console.error('Error code:', err.code);
+      console.error('Error message:', err.message);
+      console.error('Error details:', err.details);
       
       // Manejar errores específicos con modal
-      if (err.message?.includes('duplicate key value violates unique constraint "companies_email_key"') || 
-          err.message?.includes('empresas_email_key')) {
-        showModal('error', 'Email duplicado', 'Ya existe una empresa registrada con este email. Por favor, usa un email diferente o contacta con el administrador si ya te registraste anteriormente.');
+      if (err.code === '23505') {
+        // Error de violación de restricción única (duplicate key)
+        if (err.message?.includes('muestras_codigo_key') || 
+                   err.message?.includes('samples_codigo_key') ||
+                   err.details?.includes('codigo')) {
+          showModal('error', 'Código de muestra duplicado', 
+            `Ya existe una muestra con el código asignado. Esto puede ocurrir si:\n\n` +
+            `• El código ya está en uso\n` +
+            `• Hay un conflicto en la asignación automática\n\n` +
+            `Por favor, inténtalo de nuevo.`);
+        } else {
+          showModal('error', 'Datos duplicados', 
+            `Ya existe un registro con estos datos en el sistema.\n\n` +
+            `Detalles: ${err.details || err.message}\n\n` +
+            `Por favor, verifica la información e inténtalo de nuevo.`);
+        }
       } else if (err.message?.includes('duplicate key value violates unique constraint')) {
-        showModal('error', 'Datos duplicados', 'Ya existe un registro con estos datos. Por favor, verifica la información.');
+        // Fallback para errores de duplicado sin código específico
+        showModal('error', 'Datos duplicados', 
+          `Ya existe un registro con estos datos. Por favor, verifica la información.`);
       } else {
         showModal('error', 'Error de inscripción', err.message || 'Error al procesar la inscripción. Por favor, inténtalo de nuevo.');
       }
@@ -358,7 +420,7 @@ export default function UnifiedInscriptionForm({
 
   // Si está en la pantalla de éxito, mostrarla
   if (currentStep === 'exitosa') {
-    return <InscripcionExitosa onClose={handleReset} />;
+    return <InscripcionExitosa onClose={handleReset} pedido={pedidoNumero} />;
   }
 
   return (
@@ -457,6 +519,7 @@ export default function UnifiedInscriptionForm({
           onChange={handleCompanyChange}
           onNext={handleCompanyNext}
           precio={calculatePrice(company.num_muestras)}
+          isManualInscription={isManualInscription}
         />
       )}
 
@@ -482,6 +545,7 @@ export default function UnifiedInscriptionForm({
           loading={loading}
           error={error}
           onPayPalSuccess={handleSubmit}
+          isManualInscription={isManualInscription}
         />
       )}
 

@@ -4,7 +4,7 @@ import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand, 
 import SampleEditModal from './SampleEditModal';
 import * as XLSX from 'xlsx';
 
-type SortField = 'codigo' | 'nombre' | 'categoria' | 'pais' | 'azucar' | 'grado';
+type SortField = 'codigotexto' | 'nombre' | 'empresa' | 'categoria' | 'categoriadecata' | 'pais' | 'created_at';
 type SortDirection = 'asc' | 'desc';
 
 interface SimpleSamplesListProps {
@@ -16,7 +16,7 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<SortField>('codigo');
+  const [sortField, setSortField] = useState<SortField>('codigotexto');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [editingSample, setEditingSample] = useState<Sample | null>(null);
   const [viewingSample, setViewingSample] = useState<Sample | null>(null);
@@ -37,15 +37,28 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
     try {
       const { data: samplesData, error } = await supabase
         .from('muestras')
-        .select('*')
-        .order('codigo', { ascending: true });
+        .select(`
+          *,
+          empresas:empresa_id (
+            name,
+            pedido
+          )
+        `)
+        .order('codigotexto', { ascending: true });
 
       if (error) throw error;
 
-      setSamples(samplesData || []);
+      // Mapear los datos para incluir el nombre de la empresa y pedido
+      const samplesWithEmpresa = samplesData?.map(sample => ({
+        ...sample,
+        empresa_nombre: sample.empresas?.name || sample.empresa || 'Sin empresa',
+        empresa_pedido: sample.empresas?.pedido || null
+      })) || [];
+
+      setSamples(samplesWithEmpresa);
 
       const uniqueCategories = Array.from(
-        new Set(samplesData?.map(s => s.categoria).filter(Boolean) as string[])
+        new Set(samplesWithEmpresa?.map(s => s.categoria).filter(Boolean) as string[])
       ).sort();
       setAvailableCategories(uniqueCategories);
     } catch (error) {
@@ -80,29 +93,33 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
       let bValue: any;
 
       switch (sortField) {
-        case 'codigo':
-          aValue = a.codigo;
-          bValue = b.codigo;
+        case 'codigotexto':
+          aValue = (a.codigotexto || a.codigo?.toString() || '').toLowerCase();
+          bValue = (b.codigotexto || b.codigo?.toString() || '').toLowerCase();
           break;
         case 'nombre':
           aValue = a.nombre.toLowerCase();
           bValue = b.nombre.toLowerCase();
           break;
+        case 'empresa':
+          aValue = (a.empresa_nombre || '').toLowerCase();
+          bValue = (b.empresa_nombre || '').toLowerCase();
+          break;
         case 'categoria':
           aValue = a.categoria?.toLowerCase() || '';
           bValue = b.categoria?.toLowerCase() || '';
+          break;
+        case 'categoriadecata':
+          aValue = a.categoriadecata?.toLowerCase() || '';
+          bValue = b.categoriadecata?.toLowerCase() || '';
           break;
         case 'pais':
           aValue = a.pais?.toLowerCase() || '';
           bValue = b.pais?.toLowerCase() || '';
           break;
-        case 'azucar':
-          aValue = a.azucar ?? -1;
-          bValue = b.azucar ?? -1;
-          break;
-        case 'grado':
-          aValue = a.grado ?? -1;
-          bValue = b.grado ?? -1;
+        case 'created_at':
+          aValue = a.created_at || '';
+          bValue = b.created_at || '';
           break;
         default:
           return 0;
@@ -164,22 +181,16 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
   const handleExportToExcel = () => {
     // Preparar los datos para Excel (usar filteredSamples para exportar solo lo que se ve)
     const excelData = filteredSamples.map(sample => ({
-      'Código': sample.codigo,
-      'Código Texto': sample.codigotexto || '',
+      'Código': sample.codigotexto || sample.codigo,
       'Nombre': sample.nombre,
+      'Empresa': sample.empresa_nombre || '',
+      'Pedido': sample.empresa_pedido || '',
       'Categoría': sample.categoria || '',
-      'Empresa': sample.empresa || '',
+      'Cat. Cata': sample.categoriadecata || '',
       'País': sample.pais || '',
-      'Origen': sample.origen || '',
-      'Azúcar (g/l)': sample.azucar || '',
-      'Grado Alcohólico': sample.grado || '',
-      'Año': sample.anio || '',
-      'Tipo Uva': sample.tipouva || '',
-      'Tipo Aceituna': sample.tipoaceituna || '',
-      'Tanda': sample.tanda || '',
-      'Pagada': sample.pagada ? 'Sí' : 'No',
+      'F. Inscripción': sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES') : '',
       'Manual': sample.manual ? 'Sí' : 'No',
-      'Fecha Creación': sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES') : ''
+      'Tanda': sample.tanda || ''
     }));
 
     // Crear el libro de trabajo
@@ -189,22 +200,16 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
 
     // Ajustar ancho de columnas
     const columnWidths = [
-      { wch: 8 },  // Código
-      { wch: 12 }, // Código Texto
+      { wch: 10 }, // Código
       { wch: 30 }, // Nombre
-      { wch: 20 }, // Categoría
       { wch: 30 }, // Empresa
+      { wch: 10 }, // Pedido
+      { wch: 20 }, // Categoría
+      { wch: 20 }, // Cat. Cata
       { wch: 15 }, // País
-      { wch: 15 }, // Origen
-      { wch: 12 }, // Azúcar
-      { wch: 15 }, // Grado
-      { wch: 8 },  // Año
-      { wch: 20 }, // Tipo Uva
-      { wch: 20 }, // Tipo Aceituna
-      { wch: 8 },  // Tanda
-      { wch: 8 },  // Pagada
+      { wch: 15 }, // F. Inscripción
       { wch: 8 },  // Manual
-      { wch: 15 }  // Fecha
+      { wch: 8 }   // Tanda
     ];
     worksheet['!cols'] = columnWidths;
 
@@ -325,11 +330,12 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
               <tr>
                 <th
                   className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
-                  onClick={() => handleSort('codigo')}
+                  onClick={() => handleSort('codigotexto')}
+                  style={{ width: '80px' }}
                 >
                   <div className="flex items-center gap-1">
                     Código
-                    {getSortIcon('codigo')}
+                    {getSortIcon('codigotexto')}
                   </div>
                 </th>
                 <th
@@ -343,11 +349,32 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                 </th>
                 <th
                   className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                  onClick={() => handleSort('empresa')}
+                >
+                  <div className="flex items-center gap-1">
+                    Empresa
+                    {getSortIcon('empresa')}
+                  </div>
+                </th>
+                <th className="px-2 py-1.5 text-center text-xs font-medium text-white uppercase tracking-wider">
+                  Pedido
+                </th>
+                <th
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
                   onClick={() => handleSort('categoria')}
                 >
                   <div className="flex items-center gap-1">
                     Categoría
                     {getSortIcon('categoria')}
+                  </div>
+                </th>
+                <th
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                  onClick={() => handleSort('categoriadecata')}
+                >
+                  <div className="flex items-center gap-1">
+                    Cat. Cata
+                    {getSortIcon('categoriadecata')}
                   </div>
                 </th>
                 <th
@@ -361,20 +388,11 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                 </th>
                 <th
                   className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
-                  onClick={() => handleSort('azucar')}
+                  onClick={() => handleSort('created_at')}
                 >
                   <div className="flex items-center gap-1">
-                    Azúcar
-                    {getSortIcon('azucar')}
-                  </div>
-                </th>
-                <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
-                  onClick={() => handleSort('grado')}
-                >
-                  <div className="flex items-center gap-1">
-                    Grado
-                    {getSortIcon('grado')}
+                    F. Inscripción
+                    {getSortIcon('created_at')}
                   </div>
                 </th>
                 <th className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider">
@@ -387,9 +405,9 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                 <tr
                   key={sample.id}
                   onClick={() => setEditingSample(sample)}
-                  className={`cursor-pointer ${
+                  className={`cursor-pointer transition-colors ${
                     sample.manual
-                      ? 'bg-red-50 hover:bg-red-100 border-l-4 border-red-500'
+                      ? 'bg-red-50 hover:bg-red-100'
                       : index % 2 === 0
                       ? 'bg-white hover:bg-gray-50'
                       : 'bg-gray-50 hover:bg-gray-100'
@@ -397,38 +415,58 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                 >
                   <td className="px-2 py-1.5 whitespace-nowrap">
                     <div className="flex items-center gap-1">
-                      {sample.manual && <Hand className="w-3 h-3 text-red-600" />}
-                      <span className={`text-sm font-bold ${
-                        sample.manual ? 'text-red-700' : 'text-gray-900'
-                      }`}>{sample.codigotexto || sample.codigo}</span>
+                      {sample.manual && <Hand className="w-3 h-3 text-red-600 flex-shrink-0" />}
+                      <span 
+                        className={`text-sm font-mono font-bold ${
+                          sample.manual ? 'text-red-700' : 'text-gray-900'
+                        }`}
+                        style={{ minWidth: '60px', display: 'inline-block' }}
+                      >
+                        {(sample.codigotexto || sample.codigo?.toString() || '').padStart(6, ' ')}
+                      </span>
                     </div>
                   </td>
                   <td className="px-2 py-1.5">
-                    <div className={`text-sm font-medium flex items-center gap-1 ${
+                    <div className={`text-sm font-medium ${
                       sample.manual ? 'text-red-700' : 'text-gray-900'
                     }`}>
-                      {sample.manual && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 bg-red-100 text-red-800 rounded text-xs font-bold border border-red-300">
-                          MANUAL
-                        </span>
-                      )}
                       {sample.nombre}
                     </div>
                   </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700 font-medium' : 'text-gray-900'}`}>{sample.categoria || '-'}</span>
+                  <td className="px-2 py-1.5">
+                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.empresa_nombre || '-'}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    {sample.empresa_pedido ? (
+                      <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        sample.manual ? 'bg-red-100 text-red-700' : 'bg-primary-100 text-primary-700'
+                      }`}>
+                        {sample.empresa_pedido}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-sm">-</span>
+                    )}
                   </td>
                   <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700 font-medium' : 'text-gray-900'}`}>{sample.pais || '-'}</span>
-                  </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700 font-medium' : 'text-gray-900'}`}>
-                      {sample.azucar !== null && sample.azucar !== undefined ? `${sample.azucar}` : '-'}
+                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.categoria || '-'}
                     </span>
                   </td>
                   <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700 font-medium' : 'text-gray-900'}`}>
-                      {sample.grado !== null && sample.grado !== undefined ? `${sample.grado}` : '-'}
+                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.categoriadecata || '-'}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1.5 whitespace-nowrap">
+                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.pais || '-'}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1.5 whitespace-nowrap">
+                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES') : '-'}
                     </span>
                   </td>
                   <td className="px-2 py-1.5">
@@ -462,9 +500,9 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-2">
                   {sample.manual && <Hand className="w-4 h-4 text-red-600" />}
-                  <span className={`text-lg font-bold ${
+                  <span className={`text-lg font-bold font-mono ${
                     sample.manual ? 'text-red-700' : 'text-gray-900'
-                  }`}>#{sample.codigotexto || sample.codigo}</span>
+                  }`}>#{(sample.codigotexto || sample.codigo?.toString() || '').padStart(6, '0')}</span>
                   {sample.manual && (
                     <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold border border-red-300">
                       MANUAL
@@ -488,11 +526,37 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
               }`}>{sample.nombre}</h3>
               
               <div className="space-y-1 text-xs text-gray-600">
+                {sample.empresa_nombre && (
+                  <div className="flex justify-between">
+                    <span>Empresa:</span>
+                    <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.empresa_nombre}
+                    </span>
+                  </div>
+                )}
+                {sample.empresa_pedido && (
+                  <div className="flex justify-between">
+                    <span>Pedido:</span>
+                    <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      sample.manual ? 'bg-red-100 text-red-700' : 'bg-primary-100 text-primary-700'
+                    }`}>
+                      {sample.empresa_pedido}
+                    </span>
+                  </div>
+                )}
                 {sample.categoria && (
                   <div className="flex justify-between">
                     <span>Categoría:</span>
                     <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
                       {sample.categoria}
+                    </span>
+                  </div>
+                )}
+                {sample.categoriadecata && (
+                  <div className="flex justify-between">
+                    <span>Cat. Cata:</span>
+                    <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.categoriadecata}
                     </span>
                   </div>
                 )}
@@ -504,19 +568,11 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                     </span>
                   </div>
                 )}
-                {(sample.azucar !== null && sample.azucar !== undefined) && (
+                {sample.created_at && (
                   <div className="flex justify-between">
-                    <span>Azúcar:</span>
+                    <span>F. Inscripción:</span>
                     <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
-                      {sample.azucar}
-                    </span>
-                  </div>
-                )}
-                {(sample.grado !== null && sample.grado !== undefined) && (
-                  <div className="flex justify-between">
-                    <span>Grado:</span>
-                    <span className={`font-medium ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
-                      {sample.grado}
+                      {new Date(sample.created_at).toLocaleDateString('es-ES')}
                     </span>
                   </div>
                 )}
