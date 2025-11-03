@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, FlaskConical, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, Settings, LogOut, FolderTree, LucideIcon, CreditCard } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, TestTube, Wine } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -11,10 +11,11 @@ import MesasManager from './MesasManager';
 import EmailTest from './EmailTest';
 import CatadoresManager from './CatadoresManager';
 import GestionTandas from './GestionTandas';
-import PagosPaypalManager from './PagosPaypalManager';
-import ConfiguracionManager from './ConfiguracionManager';
+import TestDataInserter from './TestDataInserter';
+// import PagosPaypalManager from './PagosPaypalManager';
+// import ConfiguracionManager from './ConfiguracionManager';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'testData';
 
 interface MenuItem {
   id: string;
@@ -35,7 +36,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
     { id: 'separator1', label: '', icon: null, isSeparator: true },
     { id: 'companies', label: 'Empresas', icon: Building2 },
-    { id: 'samples', label: 'Muestras', icon: FlaskConical },
+    { id: 'samples', label: 'Muestras', icon: Wine },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'separator2', label: '', icon: null, isSeparator: true },
     { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
@@ -44,12 +45,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'catadores', label: 'Catadores', icon: Users },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
-    { id: 'paypal', label: 'Pagos PayPal', icon: CreditCard },
+    { id: 'testData', label: '🧪 Datos de Prueba', icon: TestTube },
     { id: 'separator5', label: '', icon: null, isSeparator: true },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
-    { id: 'separator6', label: '', icon: null, isSeparator: true },
-    { id: 'configuracion', label: 'Configuración', icon: Settings },
+    // { id: 'separator6', label: '', icon: null, isSeparator: true },
+    // { id: 'paypal', label: 'Pagos PayPal', icon: CreditCard },
+    // { id: 'configuracion', label: 'Configuración', icon: Settings },
   ];
 
   const handleTabChange = (tab: Tab) => {
@@ -229,11 +231,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'gestionTandas' && <GestionTandas />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
-            {activeTab === 'paypal' && <PagosPaypalManager />}
+            {activeTab === 'testData' && <TestDataInserter />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
-            {activeTab === 'configuracion' && <ConfiguracionManager />}
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ export function ConfirmacionScreen({
   loading,
   error,
   onPayPalSuccess,
+  isManualInscription = false,
 }: {
   company: CompanyData;
   samples: SampleData[];
@@ -27,6 +28,7 @@ export function ConfirmacionScreen({
   loading: boolean;
   error: string;
   onPayPalSuccess?: (details: any) => void;
+  isManualInscription?: boolean;
 }) {
   const [showPayPalModal, setShowPayPalModal] = useState(false);
 
@@ -311,11 +313,13 @@ export function ConfirmacionScreen({
         ) : (
           <>
             {/* Botones de acción */}
-            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+                        {/* Botones de acción */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button 
                 type="button" 
                 onClick={onPrev} 
-                className="w-full sm:w-auto bg-gray-300 text-gray-700 px-8 py-2 rounded-lg font-medium hover:bg-gray-400 transition-colors"
+                disabled={loading}
+                className="w-full sm:w-auto bg-gray-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Atrás
               </button>
@@ -350,6 +354,20 @@ export function ConfirmacionScreen({
                 </button>
               )}
             </div>
+
+            {/* Mensaje de advertencia para muestras manuales */}
+            {isManualInscription && (
+              <div className="mt-4 p-4 bg-red-50 border-2 border-red-400 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-lg font-bold">!</span>
+                  </div>
+                  <p className="text-red-700 font-bold text-base">
+                    ¡¡OJO: Muestras manuales (códigos del 1 al 999)!!
+                  </p>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

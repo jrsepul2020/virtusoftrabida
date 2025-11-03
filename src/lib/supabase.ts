@@ -43,6 +43,9 @@ export type Sample = {
   nombre: string;
   categoria?: string;
   empresa?: string;
+  empresa_id?: string;
+  empresa_nombre?: string; // Nombre de la empresa (del JOIN con empresas)
+  empresa_pedido?: number; // Pedido de la empresa (del JOIN con empresas)
   codigotexto?: string;
   origen?: string;
   igp?: string;
@@ -58,11 +61,9 @@ export type Sample = {
   pedido?: string;
   manual?: boolean;
   creada: string;
-  ididempresa?: string;
   categoriaoiv?: string;
   categoriadecata?: string;
   created_at: string;
-  pagada?: boolean;
   tanda?: number;
 };
 

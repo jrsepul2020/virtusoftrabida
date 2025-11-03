@@ -7,12 +7,14 @@ export function EmpresaScreen({
   onNext,
   precio,
   validationErrors = {},
+  isManualInscription = false,
 }: {
   company: CompanyData;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onNext: () => void;
   precio: { pagadas: number; gratis: number; total: number };
   validationErrors?: {[key: string]: boolean};
+  isManualInscription?: boolean;
 }) {
   return (
     <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100">
@@ -231,7 +233,19 @@ export function EmpresaScreen({
         </div>
         
         {/* Botón de continuar */}
-        <div className="flex justify-center sm:justify-end pt-6">
+        <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
+          {isManualInscription && (
+            <div className="w-full sm:flex-1 p-3 bg-red-50 border-2 border-red-400 rounded-xl">
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-sm font-bold">!</span>
+                </div>
+                <p className="text-red-700 font-bold text-sm">
+                  ¡¡OJO: Muestras manuales (códigos del 1 al 999)!!
+                </p>
+              </div>
+            </div>
+          )}
           <button
             type="button"
             onClick={onNext}

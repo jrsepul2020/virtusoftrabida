@@ -2,9 +2,10 @@ import { CheckCircle } from 'lucide-react';
 
 interface InscripcionExitosaProps {
   onClose: () => void;
+  pedido?: number | null;
 }
 
-export function InscripcionExitosa({ onClose }: InscripcionExitosaProps) {
+export function InscripcionExitosa({ onClose, pedido }: InscripcionExitosaProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-orange-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center">
@@ -19,9 +20,16 @@ export function InscripcionExitosa({ onClose }: InscripcionExitosaProps) {
         </div>
 
         {/* Título principal */}
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
           ¡Inscripción Realizada!
         </h1>
+
+        {/* Número de pedido */}
+        {pedido && (
+          <p className="text-lg text-gray-600 mb-6">
+            Pedido Nº <span className="font-semibold text-primary-700">{pedido}</span>
+          </p>
+        )}
 
         {/* Logo */}
         <div className="mb-8 flex justify-center">

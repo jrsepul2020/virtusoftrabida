@@ -100,17 +100,26 @@ export default function CompaniesManager() {
             nif: company.nif,
             address: company.address,
             postal: company.postal,
+            codigo_postal: company.codigo_postal,
             city: company.city,
+            ciudad: company.ciudad,
             country: company.country,
+            pais: company.pais,
+            poblacion: company.poblacion,
             telefono: company.telefono,
+            phone: company.phone,
+            movil: company.movil,
             email: company.email,
+            contact_person: company.contact_person,
             status: company.status || 'pending',
             totalinscripciones: company.totalinscripciones,
+            pedido: company.pedido,
+            conocimiento: company.conocimiento,
+            pagina_web: company.pagina_web,
+            observaciones: company.observaciones,
             user_id: company.user_id,
             created_at: company.created_at,
             updated_at: company.updated_at,
-            phone: company.phone,
-            contact_person: company.contact_person,
             samples: samples || [],
           };
         })
@@ -1100,15 +1109,9 @@ export default function CompaniesManager() {
                             )}
                           </td>
                           <td className="px-4 py-4 text-center">
-                            {sample.pagada ? (
-                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                Pagada
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                                No Pagada
-                              </span>
-                            )}
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                              -
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -1169,15 +1172,9 @@ export default function CompaniesManager() {
                             )}
                           </div>
                           <div>
-                            {sample.pagada ? (
-                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                Pagada
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                                No Pagada
-                              </span>
-                            )}
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                              -
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1209,8 +1206,8 @@ export default function CompaniesManager() {
 
             <form onSubmit={handleSaveCompany} className="p-5 bg-gradient-to-br from-red-100 to-pink-100">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                {/* Nombre - Línea completa */}
-                <div className="md:col-span-4">
+                {/* Fila 1: Nombre (2 cols) + Email (2 cols) */}
+                <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Nombre de la Empresa *
                   </label>
@@ -1224,8 +1221,7 @@ export default function CompaniesManager() {
                   />
                 </div>
 
-                {/* Email - Línea completa */}
-                <div className="md:col-span-4">
+                <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Email *
                   </label>
@@ -1238,7 +1234,7 @@ export default function CompaniesManager() {
                   />
                 </div>
 
-                {/* Fila 1: Persona de Contacto (2 cols) + Teléfono + Móvil */}
+                {/* Fila 2: Persona de Contacto (2 cols) + Teléfono + Móvil */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Persona de Contacto
@@ -1277,7 +1273,7 @@ export default function CompaniesManager() {
                   />
                 </div>
 
-                {/* Fila 2: NIF + País + Ciudad + Población */}
+                {/* Fila 3: NIF + Código Postal + Ciudad + Población */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     NIF
@@ -1293,12 +1289,13 @@ export default function CompaniesManager() {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                    País
+                    Código Postal
                   </label>
                   <input
                     type="text"
-                    value={editingCompany.pais || ''}
-                    onChange={(e) => setEditingCompany({ ...editingCompany, pais: e.target.value })}
+                    maxLength={8}
+                    value={editingCompany.codigo_postal || ''}
+                    onChange={(e) => setEditingCompany({ ...editingCompany, codigo_postal: e.target.value })}
                     className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
@@ -1327,16 +1324,15 @@ export default function CompaniesManager() {
                   />
                 </div>
 
-                {/* Fila 3: Código Postal + Dirección (3 cols) */}
+                {/* Fila 4: País + Dirección (3 cols) */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                    Código Postal
+                    País
                   </label>
                   <input
                     type="text"
-                    maxLength={8}
-                    value={editingCompany.codigo_postal || ''}
-                    onChange={(e) => setEditingCompany({ ...editingCompany, codigo_postal: e.target.value })}
+                    value={editingCompany.pais || ''}
+                    onChange={(e) => setEditingCompany({ ...editingCompany, pais: e.target.value })}
                     className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
@@ -1353,7 +1349,7 @@ export default function CompaniesManager() {
                   />
                 </div>
 
-                {/* Fila 4: Página Web (2 cols) + Total Inscripciones + Estado */}
+                {/* Fila 5: Página Web (2 cols) + Pedido + Estado */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Página Web
@@ -1368,12 +1364,12 @@ export default function CompaniesManager() {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                    Total Inscripciones
+                    Pedido
                   </label>
                   <input
                     type="number"
-                    value={editingCompany.totalinscripciones}
-                    onChange={(e) => setEditingCompany({ ...editingCompany, totalinscripciones: parseInt(e.target.value) || 0 })}
+                    value={editingCompany.pedido || ''}
+                    onChange={(e) => setEditingCompany({ ...editingCompany, pedido: parseInt(e.target.value) || undefined })}
                     className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>
@@ -1395,7 +1391,7 @@ export default function CompaniesManager() {
                   </select>
                 </div>
 
-                {/* Fila 5: Cómo nos conoció (2 cols) + Observaciones (2 cols) */}
+                {/* Fila 6: Cómo nos conoció (2 cols) + Observaciones (2 cols) */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-0.5">
                     Cómo nos conoció
@@ -1434,7 +1430,7 @@ export default function CompaniesManager() {
                   type="button"
                   onClick={() => setEditingCompany(null)}
                   disabled={saving}
-                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-black transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancelar
                 </button>
