@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, TestTube, Wine } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, Wine } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -11,11 +11,10 @@ import MesasManager from './MesasManager';
 import EmailTest from './EmailTest';
 import CatadoresManager from './CatadoresManager';
 import GestionTandas from './GestionTandas';
-import TestDataInserter from './TestDataInserter';
 // import PagosPaypalManager from './PagosPaypalManager';
 // import ConfiguracionManager from './ConfiguracionManager';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'testData';
+type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
 
 interface MenuItem {
   id: string;
@@ -45,8 +44,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'catadores', label: 'Catadores', icon: Users },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
-    { id: 'testData', label: '🧪 Datos de Prueba', icon: TestTube },
-    { id: 'separator5', label: '', icon: null, isSeparator: true },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     // { id: 'separator6', label: '', icon: null, isSeparator: true },
@@ -231,7 +228,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'gestionTandas' && <GestionTandas />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
-            {activeTab === 'testData' && <TestDataInserter />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
