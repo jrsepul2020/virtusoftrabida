@@ -18,7 +18,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/virtus-2026-1.jpeg')`
+          backgroundImage: `url(/virtus-2026-1.jpeg)`
         }}
       >
         {/* Overlay oscuro para mejorar legibilidad del texto */}
