@@ -21,15 +21,19 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
           backgroundImage: `url(/virtus-2026-11.webp)`
         }}
       >
+        {/* Velo negro muy suave para mejorar legibilidad */}
+        <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
       {/* Imagen de portada virtus-2026 - Móvil (oculta en desktop) */}
       <div 
         className="md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url(/virtus13.png)`
+          backgroundImage: `url(/virtus14.png)`
         }}
       >
+        {/* Velo negro muy suave para mejorar legibilidad */}
+        <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
