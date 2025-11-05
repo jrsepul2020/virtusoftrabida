@@ -113,11 +113,13 @@ export default function UnifiedInscriptionForm({
   };
 
   // Funciones de cálculo de precio
-  const calculatePrice = (numMuestras: number) => {
+  const calculatePrice = (numMuestras: number | string) => {
+    // Convertir a número si es string, usar 1 como mínimo
+    const num = typeof numMuestras === 'string' ? (numMuestras === '' ? 1 : parseInt(numMuestras) || 1) : numMuestras;
     // Por cada 4 muestras pagadas, la 5ª es gratis
     // Ejemplos: 1-4 muestras → 0 gratis | 5-9 muestras → 1 gratis | 10-14 muestras → 2 gratis
-    const gratis = Math.floor(numMuestras / 5);
-    const pagadas = numMuestras - gratis;
+    const gratis = Math.floor(num / 5);
+    const pagadas = num - gratis;
     const total = pagadas * 150;
     return { pagadas, gratis, total };
   };
@@ -127,12 +129,12 @@ export default function UnifiedInscriptionForm({
     const { name, value } = e.target;
     setCompany(prev => ({
       ...prev,
-      [name]: name === 'num_muestras' ? parseInt(value) || 1 : value
+      [name]: name === 'num_muestras' ? (value === '' ? '' : parseInt(value) || 1) : value
     }));
 
     // Ajustar array de muestras según el número
     if (name === 'num_muestras') {
-      const numMuestras = parseInt(value) || 1;
+      const numMuestras = value === '' ? 1 : parseInt(value) || 1;
       setSamples(prev => {
         const newSamples = [...prev];
         while (newSamples.length < numMuestras) {

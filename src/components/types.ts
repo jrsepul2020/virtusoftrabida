@@ -13,7 +13,7 @@ export type CompanyData = {
   medio_conocio: string;
   pagina_web: string;
   observaciones: string;
-  num_muestras: number;
+  num_muestras: number | string;
 };
 
 export type SampleData = {
