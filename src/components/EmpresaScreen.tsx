@@ -202,11 +202,23 @@ export function EmpresaScreen({
           <div>
             <label className="block text-primary-800 font-medium mb-1">Nº de muestras</label>
             <input 
-              type="number" 
+              type="text" 
+              inputMode="numeric"
+              pattern="[0-9]*"
               name="num_muestras" 
               value={company.num_muestras} 
-              onChange={onChange} 
-              min="1"
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                e.target.value = value;
+                onChange(e);
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                if (value === '' || parseInt(value) < 1) {
+                  e.target.value = '1';
+                  onChange(e as any);
+                }
+              }}
               className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
             />
             <p className="text-xs text-gray-600 mt-1">Mínimo 1 muestra</p>
