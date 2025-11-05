@@ -13,16 +13,17 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
   }, []);
 
   return (
-    <div className="h-screen relative overflow-hidden bg-gradient-to-br from-blue-100/30 via-blue-50/20 to-amber-50/30">
-      {/* Imagen de fondo suave inspirada en la costa */}
+    <div className="h-screen relative overflow-hidden">
+      {/* Imagen de portada virtus-2026 */}
       <div 
-        className="absolute inset-0 opacity-10 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `linear-gradient(45deg, rgba(173, 216, 230, 0.1) 0%, rgba(255, 248, 220, 0.1) 50%, rgba(210, 180, 140, 0.1) 100%),
-                           radial-gradient(circle at 30% 70%, rgba(135, 206, 235, 0.05) 0%, transparent 50%),
-                           radial-gradient(circle at 70% 30%, rgba(244, 164, 96, 0.05) 0%, transparent 50%)`
+          backgroundImage: `url('/virtus-2026-1.jpeg')`
         }}
-      ></div>
+      >
+        {/* Overlay oscuro para mejorar legibilidad del texto */}
+        <div className="absolute inset-0 bg-black/40"></div>
+      </div>
 
       {/* Elementos decorativos animados - adaptados para mobile */}
       <div className="absolute inset-0 overflow-hidden">
@@ -59,16 +60,16 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         {/* Título principal EN UNA SOLA LÍNEA - responsive */}
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`} style={{ transitionDelay: '0.3s' }}>
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight whitespace-nowrap">
-            <span className="bg-gradient-to-r from-[#7A694E] via-[#3C542E] to-[#7A694E] bg-clip-text text-transparent animate-pulse">
+            <span className="text-white drop-shadow-2xl animate-pulse">
               INTERNATIONAL VIRTUS AWARDS
             </span>
           </h1>
           
           {/* Elementos decorativos en el título */}
           <div className="flex justify-center items-center gap-3 sm:gap-4 mt-2">
-            <div className="h-1 w-12 sm:w-16 bg-gradient-to-r from-[#7A694E] to-[#3C542E] rounded-full animate-pulse"></div>
-            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-[#7A694E] animate-spin" style={{ animationDuration: '3s' }} />
-            <div className="h-1 w-12 sm:w-16 bg-gradient-to-r from-[#3C542E] to-[#7A694E] rounded-full animate-pulse"></div>
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-r from-white/70 to-white/50 rounded-full animate-pulse"></div>
+            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-white animate-spin" style={{ animationDuration: '3s' }} />
+            <div className="h-1 w-12 sm:w-16 bg-gradient-to-r from-white/50 to-white/70 rounded-full animate-pulse"></div>
           </div>
         </div>
 
@@ -96,13 +97,13 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         {/* Subtítulo con animación - responsive */}
         <div className={`mb-4 transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`} style={{ transitionDelay: '0.9s' }}>
           <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold leading-tight px-4">
-            <span className="text-gray-700">CONCURSO INTERNACIONAL DE</span>
+            <span className="text-white drop-shadow-lg">CONCURSO INTERNACIONAL DE</span>
             <br />
-            <span className="bg-gradient-to-r from-[#7A694E] to-[#3C542E] bg-clip-text text-transparent">
+            <span className="text-yellow-300 drop-shadow-lg">
               VINOS, ESPIRITUOSOS
             </span>
-            <span className="text-gray-700"> Y </span>
-            <span className="bg-gradient-to-r from-[#3C542E] to-[#7A694E] bg-clip-text text-transparent">
+            <span className="text-white drop-shadow-lg"> Y </span>
+            <span className="text-yellow-300 drop-shadow-lg">
               ACEITE VIRGEN EXTRA
             </span>
           </h2>
@@ -110,15 +111,15 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
 
         {/* Elementos temáticos iberoamericanos - responsive */}
         <div className={`flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-4 px-4 transition-all duration-1000 transform ${isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`} style={{ transitionDelay: '1.2s' }}>
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/80 rounded-full shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/90 rounded-full shadow-lg backdrop-blur-sm">
             <Globe className="w-4 sm:w-5 h-4 sm:h-5 text-[#7A694E]" />
             <span className="text-xs sm:text-sm font-semibold text-gray-700">Iberoamérica</span>
           </div>
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/80 rounded-full shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/90 rounded-full shadow-lg backdrop-blur-sm">
             <Star className="w-4 sm:w-5 h-4 sm:h-5 text-[#3C542E]" />
             <span className="text-xs sm:text-sm font-semibold text-gray-700">Excelencia</span>
           </div>
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/80 rounded-full shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/90 rounded-full shadow-lg backdrop-blur-sm">
             <Trophy className="w-4 sm:w-5 h-4 sm:h-5 text-[#7A694E]" />
             <span className="text-xs sm:text-sm font-semibold text-gray-700">Prestigio</span>
           </div>
@@ -126,7 +127,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
 
         {/* Texto adicional - responsive */}
         <div className={`px-4 transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`} style={{ transitionDelay: '1.5s' }}>
-          <p className="text-xs sm:text-sm text-gray-600 font-medium">
+          <p className="text-xs sm:text-sm text-white font-medium drop-shadow-lg">
             🏆 Participa en el concurso más prestigioso de Iberoamérica
           </p>
         </div>
