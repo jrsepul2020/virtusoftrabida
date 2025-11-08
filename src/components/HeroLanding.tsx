@@ -36,14 +36,28 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-        {/* Título principal EN UNA SOLA LÍNEA - responsive */}
-        <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight whitespace-nowrap">
-            <span className="text-white drop-shadow-2xl">
+      <div className="relative z-10 h-full flex flex-col items-center justify-start md:justify-center text-center px-4 pt-20 md:pt-0">
+        {/* Título principal - responsive con Playfair Display */}
+        <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <span className="text-white drop-shadow-3xl">
               INTERNATIONAL VIRTUS AWARDS
             </span>
           </h1>
+        </div>
+        <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight" >
+            <span className="text-white drop-shadow-3xl">
+              IBEROAMERICANO
+            </span>          
+          </h2>
+        </div>
+        <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
+           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <span className="text-white drop-shadow-3xl">
+              LA RABIDA 2026
+            </span>          
+          </h2>
         </div>
 
         {/* Botón de inscripción debajo del título principal - ROJO DESTACADO */}
