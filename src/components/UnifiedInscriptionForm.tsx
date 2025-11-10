@@ -74,6 +74,7 @@ export default function UnifiedInscriptionForm({
     tipo_uva: '',
     tipo_aceituna: '',
     destilado: '',
+    foto_botella: '',
   }]);
 
   const [payment, setPayment] = useState<PaymentMethod>('transferencia');
@@ -151,6 +152,7 @@ export default function UnifiedInscriptionForm({
             tipo_uva: '',
             tipo_aceituna: '',
             destilado: '',
+            foto_botella: '',
           });
         }
         return newSamples.slice(0, numMuestras);
@@ -162,6 +164,12 @@ export default function UnifiedInscriptionForm({
     const { name, value } = e.target;
     setSamples(prev => prev.map((sample, i) => 
       i === index ? { ...sample, [name]: value } : sample
+    ));
+  };
+
+  const handleSampleImageChange = (index: number, imageUrl: string) => {
+    setSamples(prev => prev.map((sample, i) => 
+      i === index ? { ...sample, foto_botella: imageUrl } : sample
     ));
   };
 
@@ -220,6 +228,7 @@ export default function UnifiedInscriptionForm({
       tipo_uva: '',
       tipo_aceituna: '',
       destilado: '',
+      foto_botella: '',
     }]);
     setPayment('transferencia');
     if (isAdmin) {
@@ -529,6 +538,7 @@ export default function UnifiedInscriptionForm({
         <MuestrasScreen
           samples={samples}
           onChange={handleSampleChange}
+          onImageChange={handleSampleImageChange}
           onNext={handleMuestrasNext}
           onPrev={handleMuestrasPrev}
         />
@@ -595,6 +605,7 @@ export default function UnifiedInscriptionForm({
                 tipo_uva: '',
                 tipo_aceituna: '',
                 destilado: '',
+                foto_botella: '',
               }]);
               setPayment('transferencia');
               if (isAdmin) {
