@@ -1,15 +1,18 @@
 import React from "react";
 import { SampleData } from "./types";
+import ImageUploader from "./ImageUploader";
 
 export function MuestrasScreen({
   samples,
   onChange,
+  onImageChange,
   onPrev,
   onNext,
   validationErrors = {},
 }: {
   samples: SampleData[];
   onChange: (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onImageChange: (index: number, imageUrl: string) => void;
   onPrev: () => void;
   onNext: () => void;
   validationErrors?: {[key: string]: boolean};
@@ -44,6 +47,15 @@ export function MuestrasScreen({
               {validationErrors?.[`muestra_${idx}`] && (
                 <p className="text-red-500 text-sm mt-1">Este campo es obligatorio</p>
               )}
+            </div>
+
+            {/* Foto de la Botella */}
+            <div className="mb-4">
+              <ImageUploader
+                onImageUploaded={(url) => onImageChange(idx, url)}
+                currentImageUrl={sample.foto_botella}
+                label="Foto de la Botella (Opcional)"
+              />
             </div>
             
             {/* Primera fila - Categoría, País, Año */}

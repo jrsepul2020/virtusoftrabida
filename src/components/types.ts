@@ -29,6 +29,7 @@ export type SampleData = {
   tipo_uva: string;
   tipo_aceituna: string;
   destilado: string;
+  foto_botella?: string; // URL de la imagen en Supabase Storage
 };
 
 export type PaymentMethod = 'transferencia' | 'paypal';
