@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
-import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer, FileSpreadsheet } from 'lucide-react';
+import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer, FileSpreadsheet, Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 type SortField = 'name' | 'email' | 'created_at' | 'pais' | 'totalinscripciones' | 'pedido';
 type SortDirection = 'asc' | 'desc';
+
+type ColumnConfig = {
+  key: string;
+  label: string;
+  visible: boolean;
+};
 
 export default function CompaniesManager() {
   const [companies, setCompanies] = useState<CompanyWithSamples[]>([]);
@@ -21,6 +27,18 @@ export default function CompaniesManager() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [statusConfigs, setStatusConfigs] = useState<any[]>([]);
   const [changingStatus, setChangingStatus] = useState<{ companyId: string; currentStatus: string } | null>(null);
+  const [showColumnConfig, setShowColumnConfig] = useState(false);
+  const [columns, setColumns] = useState<ColumnConfig[]>([
+    { key: 'pedido', label: 'Pedido', visible: true },
+    { key: 'name', label: 'Nombre', visible: true },
+    { key: 'totalinscripciones', label: 'Nº Muestras', visible: true },
+    { key: 'telefono', label: 'Teléfono', visible: true },
+    { key: 'movil', label: 'Móvil', visible: true },
+    { key: 'email', label: 'Email', visible: true },
+    { key: 'status', label: 'Estado', visible: true },
+    { key: 'created_at', label: 'Fecha', visible: true },
+    { key: 'pais', label: 'País', visible: true },
+  ]);
 
   useEffect(() => {
     fetchCompanies();
@@ -74,6 +92,10 @@ export default function CompaniesManager() {
     return sortDirection === 'asc' ? 
       <ChevronUp className="w-4 h-4 text-white" /> : 
       <ChevronDown className="w-4 h-4 text-white" />;
+  };
+
+  const isColumnVisible = (key: string) => {
+    return columns.find(col => col.key === key)?.visible ?? true;
   };
 
   const fetchCompanies = async () => {
@@ -254,7 +276,9 @@ export default function CompaniesManager() {
 
     setSaving(true);
     try {
-      const { error } = await supabase
+      console.log('Guardando empresa:', editingCompany);
+      
+      const { data, error } = await supabase
         .from('empresas')
         .update({
           name: editingCompany.name,
@@ -275,14 +299,20 @@ export default function CompaniesManager() {
           totalinscripciones: editingCompany.totalinscripciones,
           status: editingCompany.status,
         })
-        .eq('id', editingCompany.id);
+        .eq('id', editingCompany.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error de Supabase:', error);
+        throw error;
+      }
+      
+      console.log('Datos guardados exitosamente:', data);
       setEditingCompany(null);
       await fetchCompanies();
     } catch (error) {
       console.error('Error updating company:', error);
-      alert('Error al guardar los cambios');
+      alert('Error al guardar los cambios: ' + (error as Error).message);
     } finally {
       setSaving(false);
     }
@@ -710,6 +740,41 @@ export default function CompaniesManager() {
               </option>
             ))}
           </select>
+          <div className="relative">
+            <button
+              onClick={() => setShowColumnConfig(!showColumnConfig)}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md"
+              title="Configurar columnas"
+            >
+              <Settings className="w-5 h-5" />
+              <span className="hidden md:inline">Columnas</span>
+            </button>
+            
+            {showColumnConfig && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50 p-3">
+                <div className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">
+                  Mostrar/Ocultar Columnas
+                </div>
+                <div className="space-y-2">
+                  {columns.map((column) => (
+                    <label key={column.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={column.visible}
+                        onChange={() => {
+                          setColumns(columns.map(col => 
+                            col.key === column.key ? { ...col, visible: !col.visible } : col
+                          ));
+                        }}
+                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-sm text-gray-700">{column.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={handlePrint}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors shadow-md"
@@ -739,63 +804,99 @@ export default function CompaniesManager() {
           <table className="w-full min-w-[800px]">
             <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
-                <th 
-                  onClick={() => handleSort('pedido')}
-                  className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Pedido
-                    {getSortIcon('pedido')}
-                  </div>
-                </th>
-                <th 
-                  onClick={() => handleSort('name')}
-                  className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    Nombre
-                    {getSortIcon('name')}
-                  </div>
-                </th>
-                <th 
-                  onClick={() => handleSort('totalinscripciones')}
-                  className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Nº Muestras
-                    {getSortIcon('totalinscripciones')}
-                  </div>
-                </th>
-                <th 
-                  onClick={() => handleSort('email')}
-                  className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    Email
-                    {getSortIcon('email')}
-                  </div>
-                </th>
-                <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Estado
-                </th>
-                <th 
-                  onClick={() => handleSort('created_at')}
-                  className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    Fecha
-                    {getSortIcon('created_at')}
-                  </div>
-                </th>
-                <th 
-                  onClick={() => handleSort('pais')}
-                  className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    País
-                    {getSortIcon('pais')}
-                  </div>
-                </th>
+                {isColumnVisible('pedido') && (
+                  <th 
+                    onClick={() => handleSort('pedido')}
+                    className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Pedido
+                      {getSortIcon('pedido')}
+                    </div>
+                  </th>
+                )}
+                {isColumnVisible('name') && (
+                  <th 
+                    onClick={() => handleSort('name')}
+                    className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-1">
+                      Nombre
+                      {getSortIcon('name')}
+                    </div>
+                  </th>
+                )}
+                {isColumnVisible('totalinscripciones') && (
+                  <th 
+                    onClick={() => handleSort('totalinscripciones')}
+                    className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Nº Muestras
+                      {getSortIcon('totalinscripciones')}
+                    </div>
+                  </th>
+                )}
+                {isColumnVisible('telefono') && (
+                  <th 
+                    onClick={() => handleSort('telefono')}
+                    className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-1">
+                      Teléfono
+                      {getSortIcon('telefono')}
+                    </div>
+                  </th>
+                )}
+                {isColumnVisible('movil') && (
+                  <th 
+                    onClick={() => handleSort('movil')}
+                    className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-1">
+                      Móvil
+                      {getSortIcon('movil')}
+                    </div>
+                  </th>
+                )}
+                {isColumnVisible('email') && (
+                  <th 
+                    onClick={() => handleSort('email')}
+                    className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-1">
+                      Email
+                      {getSortIcon('email')}
+                    </div>
+                  </th>
+                )}
+                {isColumnVisible('status') && (
+                  <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                    Estado
+                  </th>
+                )}
+                {isColumnVisible('created_at') && (
+                  <th 
+                    onClick={() => handleSort('created_at')}
+                    className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-1">
+                      Fecha
+                      {getSortIcon('created_at')}
+                    </div>
+                  </th>
+                )}
+                {isColumnVisible('pais') && (
+                  <th 
+                    onClick={() => handleSort('pais')}
+                    className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-1">
+                      País
+                      {getSortIcon('pais')}
+                    </div>
+                  </th>
+                )}
                 <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Acciones
                 </th>
@@ -808,78 +909,105 @@ export default function CompaniesManager() {
                   onClick={() => setSelectedCompany(company)}
                   className="hover:bg-gray-50 transition-colors cursor-pointer"
                 >
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
-                    <div>
-                      {company.pedido ? (
-                        <span className="inline-flex items-center justify-center px-2 lg:px-3 py-1 bg-primary-100 text-primary-700 rounded-full font-semibold text-xs lg:text-sm">
-                          {company.pedido}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-sm">-</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4">
-                    <div>
-                      <div className="font-medium text-gray-900 text-sm lg:text-base">{company.name}</div>
-                      <div className="text-xs text-gray-400 mt-1 space-y-0.5">
-                        {company.contact_person && <div>Contacto: {company.contact_person}</div>}
-                        {company.nif && <div>NIF: {company.nif}</div>}
-                        {company.telefono && <div>Tel: {company.telefono}</div>}
-                        {company.address && <div className="truncate max-w-[200px]">Dir: {company.address}</div>}
+                  {isColumnVisible('pedido') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
+                      <div>
+                        {company.pedido ? (
+                          <span className="inline-flex items-center justify-center px-2 lg:px-3 py-1 bg-primary-600 text-white rounded-full font-semibold text-xs lg:text-sm">
+                            {company.pedido}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-sm">-</span>
+                        )}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
-                    <span className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-primary-100 text-primary-700 rounded-full font-bold text-xs lg:text-base">
-                      {company.totalinscripciones || company.samples?.length || 0}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3 lg:py-4">
-                    <div>
-                      <a
-                        href={`mailto:${company.email}`}
-                        className="text-primary-600 hover:text-primary-700 hover:underline flex items-center gap-1 text-xs lg:text-sm"
-                        title={company.email}
-                      >
-                        <Mail className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-                        <span className="truncate max-w-[120px] lg:max-w-[160px]">{company.email}</span>
-                      </a>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {company.movil && <div>Móvil: {company.movil}</div>}
-                        {company.pagina_web && <div className="truncate max-w-[150px]">Web: {company.pagina_web}</div>}
+                    </td>
+                  )}
+                  {isColumnVisible('name') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4">
+                      <div>
+                        <div className="font-medium text-gray-900 text-sm lg:text-base">{company.name}</div>
+                        <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+                          {company.contact_person && <div>Contacto: {company.contact_person}</div>}
+                          {company.nif && <div>NIF: {company.nif}</div>}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
-                    {getStatusBadge(company.status, company.id, true)}
-                  </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-500">
-                    <div>
-                      {new Date(company.created_at).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                      <div className="text-xs text-gray-400 mt-1">
-                        {new Date(company.created_at).toLocaleTimeString('es-ES', {
-                          hour: '2-digit',
-                          minute: '2-digit'
+                    </td>
+                  )}
+                  {isColumnVisible('totalinscripciones') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
+                      <span className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-primary-600 text-white rounded-full font-bold text-xs lg:text-base">
+                        {company.totalinscripciones || company.samples?.length || 0}
+                      </span>
+                    </td>
+                  )}
+                  {isColumnVisible('telefono') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4">
+                      <div className="text-sm text-gray-700">
+                        {company.telefono || <span className="text-gray-400">-</span>}
+                      </div>
+                    </td>
+                  )}
+                  {isColumnVisible('movil') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4">
+                      <div className="text-sm text-gray-700">
+                        {company.movil || <span className="text-gray-400">-</span>}
+                      </div>
+                    </td>
+                  )}
+                  {isColumnVisible('email') && (
+                    <td className="px-3 py-3 lg:py-4">
+                      <div>
+                        <a
+                          href={`mailto:${company.email}`}
+                          className="text-primary-600 hover:text-primary-700 hover:underline flex items-center gap-1 text-xs lg:text-sm"
+                          title={company.email}
+                        >
+                          <Mail className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+                          <span className="truncate max-w-[120px] lg:max-w-[160px]">{company.email}</span>
+                        </a>
+                        {company.pagina_web && (
+                          <div className="text-xs text-gray-400 mt-1 truncate max-w-[150px]">
+                            Web: {company.pagina_web}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  {isColumnVisible('status') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
+                      {getStatusBadge(company.status, company.id, true)}
+                    </td>
+                  )}
+                  {isColumnVisible('created_at') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-gray-500">
+                      <div>
+                        {new Date(company.created_at).toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
                         })}
+                        <div className="text-xs text-gray-400 mt-1">
+                          {new Date(company.created_at).toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4">
-                    <div>
-                      <div className="text-gray-700 text-xs lg:text-sm">
-                        <span className="truncate max-w-[80px] lg:max-w-none">{company.country || company.pais || '-'}</span>
+                    </td>
+                  )}
+                  {isColumnVisible('pais') && (
+                    <td className="px-3 lg:px-6 py-3 lg:py-4">
+                      <div>
+                        <div className="text-gray-700 text-xs lg:text-sm">
+                          <span className="truncate max-w-[80px] lg:max-w-none">{company.country || company.pais || '-'}</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+                          {company.city && <div>{company.city}</div>}
+                          {company.postal && <div>CP: {company.postal}</div>}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-400 mt-1 space-y-0.5">
-                        {company.city && <div>{company.city}</div>}
-                        {company.postal && <div>CP: {company.postal}</div>}
-                      </div>
-                    </div>
-                  </td>
+                    </td>
+                  )}
                   <td className="px-3 lg:px-6 py-3 lg:py-4 text-center">
                     <div className="flex items-center justify-center gap-1 lg:gap-2">
                       <button
@@ -1368,8 +1496,16 @@ export default function CompaniesManager() {
                   </label>
                   <input
                     type="number"
+                    min="1"
                     value={editingCompany.pedido || ''}
-                    onChange={(e) => setEditingCompany({ ...editingCompany, pedido: parseInt(e.target.value) || undefined })}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEditingCompany({ 
+                        ...editingCompany, 
+                        pedido: value === '' ? undefined : parseInt(value) 
+                      });
+                    }}
+                    placeholder="Nº de pedido"
                     className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   />
                 </div>

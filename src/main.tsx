@@ -1,7 +1,16 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import TabletApp from './TabletApp.tsx';
 import './index.css';
+
+// Detectar si es modo tablet (por URL o parámetro)
+const isTabletMode = window.location.pathname.includes('/tablet') || 
+                     window.location.search.includes('tablet=true');
+
+// Log para debug
+console.log('🔍 Modo de aplicación:', isTabletMode ? '📱 TABLET' : '💻 ADMIN/NORMAL');
+console.log('URL actual:', window.location.href);
 
 // Register Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {
@@ -53,7 +62,7 @@ function showInstallPrompt() {
       bottom: 20px;
       left: 20px;
       right: 20px;
-      background: #8A754C;
+      background: #dc2626;
       color: white;
       padding: 16px;
       border-radius: 12px;
@@ -72,7 +81,7 @@ function showInstallPrompt() {
       <div>
         <button id="install-btn" style="
           background: white;
-          color: #8A754C;
+          color: #dc2626;
           border: none;
           padding: 8px 16px;
           border-radius: 6px;
@@ -126,6 +135,6 @@ function showInstallPrompt() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {isTabletMode ? <TabletApp /> : <App />}
   </StrictMode>
 );

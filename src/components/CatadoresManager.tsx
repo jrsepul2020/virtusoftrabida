@@ -11,6 +11,11 @@ interface Catador {
   mesa: number | null;
   puesto: number | null;
   tablet: string | null;
+  email: string | null;
+  telefono: string | null;
+  especialidad: string | null;
+  estado: string | null;
+  activo: boolean | null;
   created_at: string;
 }
 
@@ -80,10 +85,15 @@ export default function CatadoresManager() {
         .select('*')
         .order('nombre', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error al cargar catadores:', error);
+        throw error;
+      }
+      
+      console.log(`Catadores: ${data?.length || 0} cargados`);
       setCatadores(data || []);
     } catch (error) {
-      console.error('Error al cargar catadores:', error);
+      console.error('Error crítico en catadores:', error);
       alert('Error al cargar catadores');
     } finally {
       setLoading(false);
@@ -112,6 +122,89 @@ export default function CatadoresManager() {
     });
   };
 
+  // Función para obtener la bandera del país como emoji
+  const getCountryFlag = (countryName: string | null): string => {
+    if (!countryName) return '';
+    
+    const countryFlags: { [key: string]: string } = {
+      'españa': '🇪🇸',
+      'spain': '🇪🇸',
+      'francia': '🇫🇷',
+      'france': '🇫🇷',
+      'italia': '🇮🇹',
+      'italy': '🇮🇹',
+      'portugal': '🇵🇹',
+      'alemania': '🇩🇪',
+      'germany': '🇩🇪',
+      'reino unido': '🇬🇧',
+      'uk': '🇬🇧',
+      'usa': '🇺🇸',
+      'estados unidos': '🇺🇸',
+      'argentina': '🇦🇷',
+      'chile': '🇨🇱',
+      'méxico': '🇲🇽',
+      'mexico': '🇲🇽',
+      'brasil': '🇧🇷',
+      'brazil': '🇧🇷',
+      'japón': '🇯🇵',
+      'japan': '🇯🇵',
+      'china': '🇨🇳',
+      'australia': '🇦🇺',
+      'canadá': '🇨🇦',
+      'canada': '🇨🇦',
+    };
+    
+    return countryFlags[countryName.toLowerCase()] || '🌍';
+  };
+
+  // Obtener puestos disponibles para una mesa específica
+  const getPuestosDisponibles = (mesaId: number | null, catadorId: string) => {
+    if (!mesaId) return PUESTOS;
+    
+    // Obtener puestos ocupados en esa mesa (excluyendo el catador actual)
+    const puestosOcupados = catadores
+      .filter(c => c.id !== catadorId && c.mesa === mesaId && c.puesto !== null)
+      .map(c => c.puesto);
+    
+    // Filtrar los puestos que no están ocupados
+    return PUESTOS.filter(p => !puestosOcupados.includes(p));
+  };
+
+  // Obtener tablets disponibles (no asignadas)
+  const getTabletsDisponibles = (catadorId: string) => {
+    // Obtener tablets ocupadas (excluyendo el catador actual)
+    const tabletsOcupadas = catadores
+      .filter(c => c.id !== catadorId && c.tablet)
+      .map(c => c.tablet);
+    
+    // Filtrar las tablets que no están ocupadas
+    return tabletsDisponibles.filter(t => !tabletsOcupadas.includes(t));
+  };
+
+  // Obtener información de mesas
+  const getMesasInfo = () => {
+    const mesas = mesasDisponibles.map(mesaNum => {
+      const catadoresEnMesa = catadores.filter(c => c.mesa === mesaNum);
+      const puestosOcupados = catadoresEnMesa.filter(c => c.puesto !== null).length;
+      const totalPuestos = 5; // Máximo de puestos por mesa
+      const completa = puestosOcupados === totalPuestos;
+      
+      return {
+        numero: mesaNum,
+        catadores: catadoresEnMesa,
+        puestosOcupados,
+        totalPuestos,
+        completa
+      };
+    });
+
+    const mesasCompletas = mesas.filter(m => m.completa);
+    const mesasPendientes = mesas.filter(m => !m.completa && m.puestosOcupados > 0);
+    const mesasVacias = mesas.filter(m => m.puestosOcupados === 0);
+
+    return { mesasCompletas, mesasPendientes, mesasVacias, todasLasMesas: mesas };
+  };
+
   const handleFieldChange = (id: string, field: keyof Catador, value: any) => {
     // Actualizar localmente sin guardar aún
     setCatadores(prev => prev.map(cat => 
@@ -121,6 +214,42 @@ export default function CatadoresManager() {
 
   const handleFieldUpdate = async (id: string, field: keyof Catador, value: any) => {
     console.log('Actualizando campo:', { id, field, value });
+    
+    // Validar puesto duplicado en la misma mesa
+    if (field === 'puesto' || field === 'mesa') {
+      const catador = catadores.find(c => c.id === id);
+      const mesaActual = field === 'mesa' ? value : catador?.mesa;
+      const puestoActual = field === 'puesto' ? value : catador?.puesto;
+      
+      if (mesaActual !== null && puestoActual !== null) {
+        const duplicado = catadores.find(c => 
+          c.id !== id && 
+          c.mesa === mesaActual && 
+          c.puesto === puestoActual
+        );
+        
+        if (duplicado) {
+          alert(`El puesto ${puestoActual} de la mesa ${mesaActual} ya está ocupado por ${duplicado.nombre}`);
+          await fetchCatadores(); // Recargar para revertir
+          return;
+        }
+      }
+    }
+
+    // Validar tablet duplicada
+    if (field === 'tablet' && value) {
+      const duplicado = catadores.find(c => 
+        c.id !== id && 
+        c.tablet === value
+      );
+      
+      if (duplicado) {
+        alert(`La tablet ${value} ya está asignada a ${duplicado.nombre}`);
+        await fetchCatadores(); // Recargar para revertir
+        return;
+      }
+    }
+
     try {
       setSaving(true);
       
@@ -494,16 +623,22 @@ export default function CatadoresManager() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-blue-600">{catadores.length}</div>
           <div className="text-sm text-gray-600">Total Catadores</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
-            {catadores.filter(c => c.rol).length}
+            {getMesasInfo().mesasCompletas.length}
           </div>
-          <div className="text-sm text-gray-600">Con Rol Asignado</div>
+          <div className="text-sm text-gray-600">Mesas Completas</div>
+        </div>
+        <div className="bg-orange-50 p-4 rounded-lg">
+          <div className="text-2xl font-bold text-orange-600">
+            {getMesasInfo().mesasPendientes.length}
+          </div>
+          <div className="text-sm text-gray-600">Mesas Pendientes</div>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-purple-600">
@@ -513,76 +648,223 @@ export default function CatadoresManager() {
         </div>
       </div>
 
+      {/* Sección de Mesas Completas */}
+      {getMesasInfo().mesasCompletas.length > 0 && (
+        <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
+          <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
+            <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm">
+              {getMesasInfo().mesasCompletas.length}
+            </span>
+            Mesas Completas (5/5 puestos)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {getMesasInfo().mesasCompletas.map((mesa) => (
+              <div key={mesa.numero} className="bg-white rounded-lg border-2 border-green-400 overflow-hidden">
+                <div className="bg-green-600 text-white px-3 py-2 font-bold flex items-center justify-between">
+                  <span>MESA {mesa.numero}</span>
+                  <span className="text-xs bg-green-500 px-2 py-0.5 rounded-full">
+                    Completa
+                  </span>
+                </div>
+                <div className="p-2">
+                  {/* Encabezados */}
+                  <div className="grid grid-cols-12 gap-1 text-xs font-bold text-gray-600 border-b-2 border-gray-300 pb-1 mb-1">
+                    <div className="col-span-1 text-center">#</div>
+                    <div className="col-span-5">Nombre</div>
+                    <div className="col-span-4">Rol</div>
+                    <div className="col-span-2 text-center">Tab</div>
+                  </div>
+                  {/* Datos */}
+                  {mesa.catadores
+                    .sort((a, b) => (a.puesto || 0) - (b.puesto || 0))
+                    .map((cat) => (
+                      <div key={cat.id} className="grid grid-cols-12 gap-1 text-xs py-1 border-b border-gray-100 last:border-0 items-center">
+                        <div className="col-span-1 flex justify-center">
+                          <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-xs">
+                            {cat.puesto}
+                          </span>
+                        </div>
+                        <div className="col-span-5 font-medium text-gray-900 truncate" title={cat.nombre}>
+                          {cat.nombre}
+                        </div>
+                        <div className="col-span-4 text-gray-600 text-xs truncate" title={cat.rol || '-'}>
+                          {cat.rol || '-'}
+                        </div>
+                        <div className="col-span-2 text-center">
+                          <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded text-xs font-mono">
+                            {cat.tablet || '-'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sección de Mesas Pendientes */}
+      {getMesasInfo().mesasPendientes.length > 0 && (
+        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4">
+          <h3 className="text-lg font-bold text-orange-800 mb-3 flex items-center gap-2">
+            <span className="bg-orange-600 text-white px-3 py-1 rounded-full text-sm">
+              {getMesasInfo().mesasPendientes.length}
+            </span>
+            Mesas Pendientes de Completar
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {getMesasInfo().mesasPendientes.map((mesa) => (
+              <div key={mesa.numero} className="bg-white rounded-lg border-2 border-orange-400 overflow-hidden">
+                <div className="bg-orange-600 text-white px-3 py-2 font-bold flex items-center justify-between">
+                  <span>MESA {mesa.numero}</span>
+                  <span className="text-xs bg-orange-500 px-2 py-0.5 rounded-full">
+                    {mesa.puestosOcupados}/{mesa.totalPuestos}
+                  </span>
+                </div>
+                <div className="p-2">
+                  {/* Encabezados */}
+                  <div className="grid grid-cols-12 gap-1 text-xs font-bold text-gray-600 border-b-2 border-gray-300 pb-1 mb-1">
+                    <div className="col-span-1 text-center">#</div>
+                    <div className="col-span-5">Nombre</div>
+                    <div className="col-span-4">Rol</div>
+                    <div className="col-span-2 text-center">Tab</div>
+                  </div>
+                  {/* Datos */}
+                  {[1, 2, 3, 4, 5].map((puestoNum) => {
+                    const cat = mesa.catadores.find(c => c.puesto === puestoNum);
+                    return (
+                      <div key={puestoNum} className={`grid grid-cols-12 gap-1 text-xs py-1 border-b border-gray-100 last:border-0 items-center ${!cat ? 'opacity-50' : ''}`}>
+                        <div className="col-span-1 flex justify-center">
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs ${
+                            cat ? 'bg-orange-600 text-white' : 'bg-gray-300 text-gray-600'
+                          }`}>
+                            {puestoNum}
+                          </span>
+                        </div>
+                        {cat ? (
+                          <>
+                            <div className="col-span-5 font-medium text-gray-900 truncate" title={cat.nombre}>
+                              {cat.nombre}
+                            </div>
+                            <div className="col-span-4 text-gray-600 text-xs truncate" title={cat.rol || '-'}>
+                              {cat.rol || '-'}
+                            </div>
+                            <div className="col-span-2 text-center">
+                              <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded text-xs font-mono">
+                                {cat.tablet || '-'}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="col-span-11 italic text-gray-400 text-xs">
+                            Puesto vacío
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tabla completa de todos los catadores */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-gray-100 px-4 py-3 border-b-2 border-gray-300">
+          <h3 className="text-lg font-bold text-gray-800">Todos los Catadores - Gestión Completa</h3>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+          <table className="w-full border-collapse">
+            <thead className="bg-gray-50 border-b-2 border-gray-300">
               <tr>
-                <th className="px-2 py-2 text-left text-sm font-semibold">
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
                   <SortButton field="codigocatador" label="Código" />
                 </th>
-                <th className="px-2 py-2 text-left text-sm font-semibold">
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
                   <SortButton field="nombre" label="Nombre" />
                 </th>
-                <th className="px-2 py-2 text-left text-sm font-semibold">
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
+                  Email
+                </th>
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
                   <SortButton field="pais" label="País" />
                 </th>
-                <th className="px-2 py-2 text-left text-sm font-semibold">
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
                   <SortButton field="rol" label="Rol" />
                 </th>
-                <th className="px-2 py-2 text-left text-sm font-semibold">
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
                   <SortButton field="mesa" label="Mesa" />
                 </th>
-                <th className="px-2 py-2 text-left text-sm font-semibold">
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
                   <SortButton field="puesto" label="Puesto" />
                 </th>
-                <th className="px-2 py-2 text-left text-sm font-semibold">
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
                   <SortButton field="tablet" label="Tablet" />
                 </th>
-                <th className="px-2 py-2 text-left text-sm font-semibold">Acciones</th>
+                <th className="px-2 py-2 text-left text-xs font-semibold border-r border-gray-200">
+                  Activo
+                </th>
+                <th className="px-2 py-2 text-left text-xs font-semibold">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody>
               {getSortedCatadores().map((catador) => (
-                <tr key={catador.id} className={`${getMesaBg(catador.mesa)} hover:opacity-95`}>
-                  <td className="px-2 py-1 text-sm">
+                <tr key={catador.id} className={`${getMesaBg(catador.mesa)} hover:opacity-95 border-b border-gray-200`}>
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <input
                       type="text"
                       value={(catador as any).codigocatador || ''}
                       onChange={(e) => handleFieldChange(catador.id, 'codigocatador', e.target.value || null)}
                       onBlur={(e) => handleFieldUpdate(catador.id, 'codigocatador', e.target.value || null)}
-                      className="w-16 p-1 border rounded text-sm"
+                      className="w-16 p-1 border rounded text-xs"
                       placeholder="-"
                       maxLength={7}
                       disabled={saving}
                     />
                   </td>
-                  <td className="px-2 py-1 text-sm">
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <input
                       type="text"
                       value={catador.nombre}
                       onChange={(e) => handleFieldChange(catador.id, 'nombre', e.target.value)}
                       onBlur={(e) => handleFieldUpdate(catador.id, 'nombre', e.target.value)}
-                      className="w-full p-1 border rounded text-sm font-medium"
+                      className="w-full min-w-[120px] p-1 border rounded text-xs font-medium"
                       disabled={saving}
                     />
                   </td>
-                  <td className="px-2 py-1 text-sm">
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <input
-                      type="text"
-                      value={catador.pais || ''}
-                      onChange={(e) => handleFieldChange(catador.id, 'pais', e.target.value || null)}
-                      onBlur={(e) => handleFieldUpdate(catador.id, 'pais', e.target.value || null)}
-                      className="w-24 p-1 border rounded text-sm"
+                      type="email"
+                      value={catador.email || ''}
+                      onChange={(e) => handleFieldChange(catador.id, 'email', e.target.value || null)}
+                      onBlur={(e) => handleFieldUpdate(catador.id, 'email', e.target.value || null)}
+                      className="w-full min-w-[150px] p-1 border rounded text-xs"
                       placeholder="-"
                       disabled={saving}
                     />
                   </td>
-                  <td className="px-2 py-1 text-sm">
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{getCountryFlag(catador.pais)}</span>
+                      <input
+                        type="text"
+                        value={catador.pais || ''}
+                        onChange={(e) => handleFieldChange(catador.id, 'pais', e.target.value || null)}
+                        onBlur={(e) => handleFieldUpdate(catador.id, 'pais', e.target.value || null)}
+                        className="w-24 p-1 border rounded text-xs"
+                        placeholder="-"
+                        disabled={saving}
+                      />
+                    </div>
+                  </td>
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <select
                       value={catador.rol || ''}
                       onChange={(e) => handleFieldUpdate(catador.id, 'rol', e.target.value || null)}
-                      className="w-36 p-1 border rounded bg-white text-sm"
+                      className="w-28 p-1 border rounded bg-white text-xs"
                       disabled={saving}
                     >
                       <option value="">-</option>
@@ -591,61 +873,79 @@ export default function CatadoresManager() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-2 py-1 text-sm">
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <select
                       value={catador.mesa ?? ''}
                       onChange={(e) => handleFieldUpdate(catador.id, 'mesa', e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-24 p-1 border rounded bg-white text-center text-sm"
+                      className="w-20 p-1 border rounded bg-white text-center text-xs"
                       disabled={saving}
                     >
                       <option value="">-</option>
                       {mesasDisponibles.map((m) => (
-                        <option key={m} value={String(m)}>Mesa {m}</option>
+                        <option key={m} value={String(m)}>M {m}</option>
                       ))}
                     </select>
                   </td>
-                  <td className="px-2 py-1 text-sm">
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <select
                       value={catador.puesto ?? ''}
                       onChange={(e) => handleFieldUpdate(catador.id, 'puesto', e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-24 p-1 border rounded bg-white text-center text-sm"
+                      className="w-20 p-1 border rounded bg-white text-center text-xs"
                       disabled={saving}
                     >
                       <option value="">-</option>
-                      {PUESTOS.map((p) => (
-                        <option key={p} value={String(p)}>Puesto {p}</option>
+                      {/* Mostrar el puesto actual aunque esté "ocupado" */}
+                      {catador.puesto !== null && !getPuestosDisponibles(catador.mesa, catador.id).includes(catador.puesto) && (
+                        <option value={String(catador.puesto)}>P {catador.puesto}</option>
+                      )}
+                      {/* Mostrar solo puestos disponibles */}
+                      {getPuestosDisponibles(catador.mesa, catador.id).map((p) => (
+                        <option key={p} value={String(p)}>P {p}</option>
                       ))}
                     </select>
                   </td>
-                  <td className="px-2 py-1 text-sm">
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <select
                       value={catador.tablet || ''}
                       onChange={(e) => handleFieldUpdate(catador.id, 'tablet', e.target.value || null)}
-                      className="w-28 p-1 border rounded bg-white text-sm"
+                      className="w-16 p-1 border rounded bg-white text-center text-xs"
                       disabled={saving}
                     >
                       <option value="">-</option>
-                      {tabletsDisponibles.map((t) => (
+                      {/* Mostrar la tablet actual aunque esté "ocupada" */}
+                      {catador.tablet && !getTabletsDisponibles(catador.id).includes(catador.tablet) && (
+                        <option value={catador.tablet}>{catador.tablet}</option>
+                      )}
+                      {/* Mostrar solo tablets disponibles */}
+                      {getTabletsDisponibles(catador.id).map((t) => (
                         <option key={t} value={t}>{t}</option>
                       ))}
                     </select>
                   </td>
-                  <td className="px-2 py-1 text-sm">
-                    <div className="flex items-center gap-2">
+                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={catador.activo !== false}
+                      onChange={(e) => handleFieldUpdate(catador.id, 'activo', e.target.checked)}
+                      className="w-4 h-4"
+                      disabled={saving}
+                    />
+                  </td>
+                  <td className="px-2 py-1.5 text-xs">
+                    <div className="flex gap-1">
                       <button
                         onClick={() => handleEdit(catador)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                         title="Editar"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(catador.id, catador.nombre)}
-                        className="text-red-600 hover:text-red-800"
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
                         title="Eliminar"
-                        disabled={saving}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>

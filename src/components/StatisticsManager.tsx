@@ -17,7 +17,11 @@ type CountsEmpresasMuestras = {
   cnt_vino_sin_alcohol?: number;
 };
 
-export default function StatisticsManager() {
+interface StatisticsManagerProps {
+  onNavigateToSamples?: (category: string) => void;
+}
+
+export default function StatisticsManager({ onNavigateToSamples }: StatisticsManagerProps) {
   const [countsEM, setCountsEM] = useState<CountsEmpresasMuestras | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -93,13 +97,25 @@ export default function StatisticsManager() {
     label,
     count,
     color,
+    category,
   }: {
     label: string;
     count: number;
     color: string;
+    category?: string;
   }) => {
+    const isClickable = category && onNavigateToSamples;
+    
     return (
-      <div className={`${color} rounded-lg p-4 shadow-md`}>
+      <div 
+        className={`${color} rounded-lg p-4 shadow-md ${isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+        onClick={() => {
+          if (isClickable) {
+            onNavigateToSamples(category);
+          }
+        }}
+        title={isClickable ? `Ver muestras de ${label}` : undefined}
+      >
         <div className="text-[11px] font-bold text-white uppercase tracking-wide mb-2 text-center leading-tight">
           {label}
         </div>
@@ -163,21 +179,25 @@ export default function StatisticsManager() {
             label="TINTOS"
             count={countsEM?.cnt_vino_tinto ?? 0}
             color="bg-gradient-to-br from-red-600 to-red-700"
+            category="VINO TINTO"
           />
           <StatCard
             label="BLANCOS"
             count={countsEM?.cnt_vino_blanco ?? 0}
             color="bg-gradient-to-br from-yellow-600 to-yellow-700"
+            category="VINO BLANCO"
           />
           <StatCard
             label="ROSADOS"
             count={countsEM?.cnt_vino_rosado ?? 0}
             color="bg-gradient-to-br from-pink-600 to-pink-700"
+            category="VINO ROSADO"
           />
           <StatCard
             label="SIN ALCOHOL"
             count={countsEM?.cnt_vino_sin_alcohol ?? 0}
             color="bg-gradient-to-br from-gray-600 to-gray-700"
+            category="VINO SIN ALCOHOL"
           />
         </div>
       </div>
@@ -190,11 +210,13 @@ export default function StatisticsManager() {
             label="ESPUMOSOS"
             count={countsEM?.cnt_espumoso ?? 0}
             color="bg-gradient-to-br from-purple-600 to-purple-700"
+            category="ESPUMOSO"
           />
           <StatCard
             label="GENEROSOS SECOS"
             count={countsEM?.cnt_generoso_seco ?? 0}
             color="bg-gradient-to-br from-orange-600 to-orange-700"
+            category="GENEROSO SECO"
           />
         </div>
       </div>
@@ -207,11 +229,13 @@ export default function StatisticsManager() {
             label="ESPIRITUOSOS VÍNICOS"
             count={countsEM?.cnt_espirituoso_vinico ?? 0}
             color="bg-gradient-to-br from-indigo-600 to-indigo-700"
+            category="ESPIRITUOSO VÍNICO"
           />
           <StatCard
             label="ESPIRITUOSOS NO VÍNICOS"
             count={countsEM?.cnt_espirituoso_no_vinico ?? 0}
             color="bg-gradient-to-br from-slate-600 to-slate-700"
+            category="ESPIRITUOSO NO VÍNICO"
           />
         </div>
       </div>
@@ -224,11 +248,13 @@ export default function StatisticsManager() {
             label="VIRGEN EXTRA"
             count={countsEM?.cnt_aceite_oliva_virgen_extra ?? 0}
             color="bg-gradient-to-br from-green-600 to-green-700"
+            category="ACEITE OLIVA VIRGEN EXTRA"
           />
           <StatCard
             label="VIRGEN EXTRA ORGÁNICO"
             count={countsEM?.cnt_aceite_oliva_virgen_extra_organico ?? 0}
             color="bg-gradient-to-br from-lime-600 to-lime-700"
+            category="ACEITE OLIVA VIRGEN EXTRA ORGÁNICO"
           />
         </div>
       </div>
