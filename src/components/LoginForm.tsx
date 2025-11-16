@@ -13,6 +13,35 @@ export default function LoginForm({ onLogin, onBack }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Safe error message function to prevent information leakage
+  const getSafeErrorMessage = (error: any): string => {
+    const message = error?.message || '';
+
+    if (message.includes('Invalid login credentials') ||
+        message.includes('invalid_credentials') ||
+        message.includes('Wrong password')) {
+      return 'Email o contraseña incorrectos';
+    }
+
+    if (message.includes('Email not confirmed') ||
+        message.includes('email_not_confirmed')) {
+      return 'Por favor confirma tu email antes de iniciar sesión';
+    }
+
+    if (message.includes('Too many requests') ||
+        message.includes('rate_limit')) {
+      return 'Demasiados intentos. Inténtalo más tarde';
+    }
+
+    if (message.includes('User not found') ||
+        message.includes('user_not_found')) {
+      return 'Usuario no encontrado';
+    }
+
+    // Generic error for any other case
+    return 'Error al iniciar sesión. Verifica tus credenciales e intenta de nuevo';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -27,7 +56,9 @@ export default function LoginForm({ onLogin, onBack }: Props) {
       if (error) throw error;
       onLogin(true);
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      // Sanitize error messages to prevent information leakage
+      const safeErrorMessage = getSafeErrorMessage(err);
+      setError(safeErrorMessage);
     } finally {
       setLoading(false);
     }

@@ -3,31 +3,23 @@
  */
 
 interface DeviceInfo {
-  userAgent: string;
-  language: string;
   platform: string;
   screenResolution: string;
   colorDepth: number;
-  timezone: string;
   touchSupport: boolean;
-  hardwareConcurrency: number;
-  deviceMemory?: number;
+  // Removed sensitive fields: userAgent, language, timezone, hardwareConcurrency, deviceMemory
 }
 
 /**
- * Recopila información del dispositivo
+ * Recopila información del dispositivo (versión reducida para privacidad)
  */
 export function getDeviceInfo(): DeviceInfo {
   return {
-    userAgent: navigator.userAgent,
-    language: navigator.language,
     platform: navigator.platform,
     screenResolution: `${screen.width}x${screen.height}`,
     colorDepth: screen.colorDepth,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     touchSupport: 'ontouchstart' in window,
-    hardwareConcurrency: navigator.hardwareConcurrency || 0,
-    deviceMemory: (navigator as any).deviceMemory,
+    // Removed sensitive data collection for privacy
   };
 }
 
@@ -74,14 +66,12 @@ export async function generateDeviceFingerprint(): Promise<string> {
   try {
     const info = getDeviceInfo();
     
-    // Combinar características importantes
+    // Combinar características no sensibles (reducidas por privacidad)
     const fingerprintData = [
-      info.userAgent,
       info.platform,
       info.screenResolution,
-      info.colorDepth,
-      info.timezone,
-      info.hardwareConcurrency,
+      info.colorDepth.toString(),
+      info.touchSupport.toString(),
     ].join('|');
     
     console.log('Generando fingerprint con datos:', fingerprintData.substring(0, 50) + '...');

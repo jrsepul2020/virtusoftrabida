@@ -17,7 +17,7 @@ export type Company = {
   telefono?: string;
   address?: string;
   contact_person?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'pagado';
   totalinscripciones: number;
   created_at: string;
   updated_at: string;
@@ -47,6 +47,7 @@ export type Sample = {
   empresa_nombre?: string; // Nombre de la empresa (del JOIN con empresas)
   empresa_pedido?: number; // Pedido de la empresa (del JOIN con empresas)
   codigotexto?: string;
+  codigobarras?: string; // Código de barras (visible en gestión muestras)
   origen?: string;
   igp?: string;
   pais?: string;

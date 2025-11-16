@@ -3,6 +3,16 @@
     "filesystem": {
       "command": "npx",
       "args": ["@modelcontextprotocol/server-filesystem"]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "mcp-supabase-db"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://cfpawqoegitgtsjygbqp.supabase.co",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmcGF3cW9lZ2l0Z3RzanlnYnFwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTU5OTA1MSwiZXhwIjoyMDc1MTc1MDUxfQ.K1CbCr9A2KJOlqLpWUTu99345pNVfmdH3Oaewtn_Xik"
+      }
     }
   }
 }

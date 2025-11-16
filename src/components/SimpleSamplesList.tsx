@@ -17,8 +17,8 @@ export default function SimpleSamplesList({ onNavigateToPrint, initialCategoryFi
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<SortField>('codigotexto');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [editingSample, setEditingSample] = useState<Sample | null>(null);
   const [viewingSample, setViewingSample] = useState<Sample | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
@@ -37,6 +37,7 @@ export default function SimpleSamplesList({ onNavigateToPrint, initialCategoryFi
 
   const fetchSamples = async () => {
     setLoading(true);
+    console.log('🔍 SimpleSamplesList: Iniciando fetchSamples...');
     try {
       const { data: samplesData, error } = await supabase
         .from('muestras')
@@ -47,9 +48,27 @@ export default function SimpleSamplesList({ onNavigateToPrint, initialCategoryFi
             pedido
           )
         `)
-        .order('codigotexto', { ascending: true });
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('📊 Supabase response:', { 
+        dataCount: samplesData?.length, 
+        error: error,
+        firstSample: samplesData?.[0] 
+      });
+
+      if (error) {
+        console.error('❌ Supabase fetch error:', error);
+        alert('Error cargando muestras: ' + error.message + '\nCódigo: ' + error.code);
+        throw error;
+      }
+
+      if (!samplesData || samplesData.length === 0) {
+        console.warn('⚠️ No hay muestras en la base de datos');
+        setSamples([]);
+        setAvailableCategories([]);
+        setLoading(false);
+        return;
+      }
 
       // Mapear los datos para incluir el nombre de la empresa y pedido
       const samplesWithEmpresa = samplesData?.map(sample => ({
@@ -58,16 +77,20 @@ export default function SimpleSamplesList({ onNavigateToPrint, initialCategoryFi
         empresa_pedido: sample.empresas?.pedido || null
       })) || [];
 
+      console.log('✅ Muestras procesadas:', samplesWithEmpresa.length);
       setSamples(samplesWithEmpresa);
 
       const uniqueCategories = Array.from(
         new Set(samplesWithEmpresa?.map(s => s.categoria).filter(Boolean) as string[])
       ).sort();
       setAvailableCategories(uniqueCategories);
+      console.log('📁 Categorías únicas:', uniqueCategories);
     } catch (error) {
-      console.error('Error fetching samples:', error);
+      console.error('💥 Error fetching samples:', error);
+      alert('Error inesperado cargando muestras. Ver consola para detalles.');
     } finally {
       setLoading(false);
+      console.log('🏁 fetchSamples completado');
     }
   };
 
@@ -121,8 +144,8 @@ export default function SimpleSamplesList({ onNavigateToPrint, initialCategoryFi
           bValue = b.pais?.toLowerCase() || '';
           break;
         case 'created_at':
-          aValue = a.created_at || '';
-          bValue = b.created_at || '';
+          aValue = new Date(a.created_at || 0);
+          bValue = new Date(b.created_at || 0);
           break;
         default:
           return 0;
@@ -141,7 +164,8 @@ export default function SimpleSamplesList({ onNavigateToPrint, initialCategoryFi
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      // Para created_at, empezar con descendente (más reciente primero)
+      setSortDirection(field === 'created_at' ? 'desc' : 'asc');
     }
   };
 

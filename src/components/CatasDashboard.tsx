@@ -34,7 +34,7 @@ export default function CatasDashboard({ catador, onLogout }: Props) {
       const { data, error } = await supabase
         .from('muestras')
         .select('*')
-        .order('codigo', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error cargando muestras:', error);
