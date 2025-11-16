@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, Wine } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, Wine, FileText, Smartphone, Settings } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
@@ -11,10 +11,12 @@ import MesasManager from './MesasManager';
 import EmailTest from './EmailTest';
 import CatadoresManager from './CatadoresManager';
 import GestionTandas from './GestionTandas';
+import ListadoEmpresas from './ListadoEmpresas';
+import DispositivosManager from './DispositivosManager';
+import SettingsManager from './SettingsManager';
 // import PagosPaypalManager from './PagosPaypalManager';
-// import ConfiguracionManager from './ConfiguracionManager';
 
-type Tab = 'statistics' | 'companies' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
+type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
 
 interface MenuItem {
   id: string;
@@ -30,11 +32,27 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+
+  const handleNavigateToSamplesByCategory = (category: string) => {
+    setCategoryFilter(category);
+    setActiveTab('simpleList');
+  };
+
+  const handleTabChange = (tab: Tab) => {
+    // Si cambiamos de pestaña manualmente, limpiamos el filtro
+    if (tab !== 'simpleList') {
+      setCategoryFilter(undefined);
+    }
+    setActiveTab(tab);
+    setShowMobileMenu(false);
+  };
 
   const menuItems: MenuItem[] = [
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
     { id: 'separator1', label: '', icon: null, isSeparator: true },
     { id: 'companies', label: 'Empresas', icon: Building2 },
+    { id: 'listadoEmpresas', label: 'Listado Empresas', icon: FileText },
     { id: 'samples', label: 'Muestras', icon: Wine },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'separator2', label: '', icon: null, isSeparator: true },
@@ -43,18 +61,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'separator3', label: '', icon: null, isSeparator: true },
     { id: 'catadores', label: 'Catadores', icon: Users },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
+    { id: 'dispositivos', label: 'Dispositivos', icon: Smartphone },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
-    // { id: 'separator6', label: '', icon: null, isSeparator: true },
-    // { id: 'paypal', label: 'Pagos PayPal', icon: CreditCard },
-    // { id: 'configuracion', label: 'Configuración', icon: Settings },
+    { id: 'configuracion', label: 'Configuración', icon: Settings },
   ];
-
-  const handleTabChange = (tab: Tab) => {
-    setActiveTab(tab);
-    setShowMobileMenu(false);
-  };
 
   return (
     <div className="flex flex-1 bg-gray-100 min-h-screen">
@@ -219,18 +231,21 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="p-4">
-            {activeTab === 'statistics' && <StatisticsManager />}
+          <div className={activeTab === 'listadoEmpresas' ? 'p-2' : 'p-4'}>
+            {activeTab === 'statistics' && <StatisticsManager onNavigateToSamples={handleNavigateToSamplesByCategory} />}
             {activeTab === 'companies' && <CompaniesManager />}
+            {activeTab === 'listadoEmpresas' && <ListadoEmpresas />}
             {activeTab === 'samples' && <SamplesManager onNavigateToPrint={() => setActiveTab('print')} />}
-            {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} />}
+            {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} initialCategoryFilter={categoryFilter} />}
             {activeTab === 'crearTandas' && <TandasManager />}
             {activeTab === 'gestionTandas' && <GestionTandas />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
+            {activeTab === 'dispositivos' && <DispositivosManager />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
+            {activeTab === 'configuracion' && <SettingsManager />}
           </div>
         </div>
       </div>

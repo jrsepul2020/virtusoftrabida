@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Settings, Plus, Edit2, Save, Trash2, RotateCw, Smartphone } from 'lucide-react';
+import { Settings, Plus, Edit2, Save, Trash2, Activity } from 'lucide-react';
+import DiagnosticoSupabase from './DiagnosticoSupabase';
 
 interface StatusConfig {
   id: string;
@@ -17,7 +18,7 @@ export default function SettingsManager() {
   const [editingStatus, setEditingStatus] = useState<StatusConfig | null>(null);
   const [newStatus, setNewStatus] = useState<Partial<StatusConfig> | null>(null);
   const [saving, setSaving] = useState(false);
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico'>('estados');
 
   // Estados por defecto
   const defaultStatuses: StatusConfig[] = [
@@ -49,64 +50,7 @@ export default function SettingsManager() {
 
   useEffect(() => {
     loadStatuses();
-    loadOrientation();
   }, []);
-
-  const loadOrientation = () => {
-    const savedOrientation = localStorage.getItem('app-orientation') as 'portrait' | 'landscape' | null;
-    if (savedOrientation) {
-      setOrientation(savedOrientation);
-      applyOrientation(savedOrientation);
-    }
-  };
-
-  const applyOrientation = (newOrientation: 'portrait' | 'landscape') => {
-    const body = document.body;
-    const root = document.documentElement;
-    
-    // Remover clases anteriores
-    body.classList.remove('force-landscape', 'force-portrait');
-    root.classList.remove('force-landscape', 'force-portrait');
-    
-    if (newOrientation === 'landscape') {
-      // Forzar orientación horizontal - modo landscape simulado
-      body.classList.add('force-landscape');
-      root.classList.add('force-landscape');
-      
-      // Ajustar viewport para simular landscape
-      let viewportMeta = document.querySelector('meta[name="viewport"]');
-      if (viewportMeta) {
-        // Forzar dimensiones landscape
-        viewportMeta.setAttribute('content', 'width=device-height, height=device-width, initial-scale=1.0, user-scalable=no');
-      }
-      
-      // Forzar recalculo del layout
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 100);
-    } else {
-      // Orientación vertical (normal)
-      body.classList.add('force-portrait');
-      
-      // Restaurar viewport normal
-      let viewportMeta = document.querySelector('meta[name="viewport"]');
-      if (viewportMeta) {
-        viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no');
-      }
-      
-      // Forzar recalculo del layout
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 100);
-    }
-  };
-
-  const toggleOrientation = () => {
-    const newOrientation = orientation === 'portrait' ? 'landscape' : 'portrait';
-    setOrientation(newOrientation);
-    applyOrientation(newOrientation);
-    localStorage.setItem('app-orientation', newOrientation);
-  };
 
   const loadStatuses = async () => {
     setLoading(true);
@@ -254,53 +198,47 @@ export default function SettingsManager() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Settings className="w-6 h-6 text-gray-600" />
-          <h2 className="text-xl font-semibold text-gray-800">Configuración del Sistema</h2>
+    <div className="max-w-6xl mx-auto">
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        {/* Header con Tabs */}
+        <div className="border-b border-gray-200">
+          <div className="flex items-center gap-3 px-6 py-4">
+            <Settings className="w-6 h-6 text-gray-600" />
+            <h2 className="text-xl font-semibold text-gray-800">Configuración del Sistema</h2>
+          </div>
+          
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('estados')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeTab === 'estados'
+                  ? 'border-b-2 border-red-600 text-red-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Estados de Empresa
+            </button>
+            <button
+              onClick={() => setActiveTab('diagnostico')}
+              className={`px-6 py-3 font-medium text-sm transition-colors flex items-center gap-2 ${
+                activeTab === 'diagnostico'
+                  ? 'border-b-2 border-red-600 text-red-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              Diagnóstico
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-8">
-          {/* Control de Orientación */}
-          <div className="border-b border-gray-200 pb-6">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Orientación de Pantalla</h3>
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <Smartphone className={`w-12 h-12 text-blue-600 transition-transform duration-500 ${orientation === 'landscape' ? 'rotate-90' : ''}`} />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    {orientation === 'portrait' ? 'Modo Vertical' : 'Modo Horizontal'}
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    {orientation === 'portrait' 
-                      ? 'La aplicación está en modo vertical. Pulsa el botón para forzar rotación a horizontal.'
-                      : 'La aplicación está en modo horizontal. Pulsa el botón para volver a modo vertical.'}
-                  </p>
-                  <button
-                    onClick={toggleOrientation}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
-                  >
-                    <RotateCw className={`w-5 h-5 transition-transform ${orientation === 'landscape' ? 'rotate-180' : ''}`} />
-                    <span className="font-medium">
-                      Rotar a {orientation === 'portrait' ? 'Horizontal' : 'Vertical'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-blue-200">
-                <p className="text-xs text-blue-800">
-                  💡 <strong>Tip:</strong> Este control es especialmente útil en tablets que no rotan automáticamente. 
-                  El cambio se aplicará inmediatamente y se recordará en tus próximas visitas.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Gestión de Estados */}
-          <div>
+        {/* Contenido */}
+        <div className="p-6">
+          {activeTab === 'estados' && (
+            <div className="space-y-8">
+              {/* Gestión de Estados */}
+              <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-700">Estados de Empresa</h3>
               <button
@@ -345,6 +283,12 @@ export default function SettingsManager() {
               ))}
             </div>
           </div>
+            </div>
+          )}
+
+          {activeTab === 'diagnostico' && (
+            <DiagnosticoSupabase />
+          )}
         </div>
       </div>
 

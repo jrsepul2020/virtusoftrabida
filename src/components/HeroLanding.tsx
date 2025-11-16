@@ -37,25 +37,26 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
       </div>
 
       <div className="relative z-10 h-full flex flex-col items-center justify-start md:justify-center text-center px-4 pt-20 md:pt-0">
-        {/* Título principal - responsive con Playfair Display */}
+        {/* Título principal - responsive con Cormorant */}
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-6xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
             <span className="text-white drop-shadow-3xl">
               INTERNATIONAL VIRTUS AWARDS
             </span>
           </h1>
         </div>
+        
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight" >
+           <h2 className="text-lg sm:text-5xl md:text-6xl lg:text-7xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Lato', serif" }}>
             <span className="text-white drop-shadow-3xl">
-              IBEROAMERICANO
+              LA RABIDA 2026
             </span>          
           </h2>
         </div>
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="text-xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-3xl font-black tracking-tight leading-tight" >
             <span className="text-white drop-shadow-3xl">
-              LA RABIDA 2026
+              IBEROAMERICANO
             </span>          
           </h2>
         </div>

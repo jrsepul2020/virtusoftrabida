@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand, Printer, FileSpreadsheet } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, Trash2, X, ChevronDown, Hand, Printer, FileSpreadsheet, Wine, Beer, Droplet } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
 import * as XLSX from 'xlsx';
 
@@ -9,9 +9,10 @@ type SortDirection = 'asc' | 'desc';
 
 interface SimpleSamplesListProps {
   onNavigateToPrint?: () => void;
+  initialCategoryFilter?: string;
 }
 
-export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesListProps) {
+export default function SimpleSamplesList({ onNavigateToPrint, initialCategoryFilter }: SimpleSamplesListProps) {
   const [samples, setSamples] = useState<Sample[]>([]);
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +21,9 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [editingSample, setEditingSample] = useState<Sample | null>(null);
   const [viewingSample, setViewingSample] = useState<Sample | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    initialCategoryFilter ? [initialCategoryFilter] : []
+  );
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
@@ -329,12 +332,11 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
             <thead className="bg-gray-800 border-b border-gray-200">
               <tr>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 w-20"
                   onClick={() => handleSort('codigotexto')}
-                  style={{ width: '80px' }}
                 >
                   <div className="flex items-center gap-1">
-                    Código
+                    Cód
                     {getSortIcon('codigotexto')}
                   </div>
                 </th>
@@ -356,20 +358,20 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                     {getSortIcon('empresa')}
                   </div>
                 </th>
-                <th className="px-2 py-1.5 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Pedido
+                <th className="px-2 py-1.5 text-center text-xs font-medium text-white uppercase tracking-wider w-16">
+                  Ped
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 w-32"
                   onClick={() => handleSort('categoria')}
                 >
                   <div className="flex items-center gap-1">
-                    Categoría
+                    Cat
                     {getSortIcon('categoria')}
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 w-32"
                   onClick={() => handleSort('categoriadecata')}
                 >
                   <div className="flex items-center gap-1">
@@ -378,7 +380,7 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 w-28"
                   onClick={() => handleSort('pais')}
                 >
                   <div className="flex items-center gap-1">
@@ -387,25 +389,25 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                   </div>
                 </th>
                 <th
-                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                  className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 w-24"
                   onClick={() => handleSort('created_at')}
                 >
                   <div className="flex items-center gap-1">
-                    F. Inscripción
+                    Fecha
                     {getSortIcon('created_at')}
                   </div>
                 </th>
-                <th className="px-2 py-1.5 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Acciones
+                <th className="px-2 py-1.5 text-center text-xs font-medium text-white uppercase tracking-wider w-20">
+                  Acción
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
+            <tbody className="bg-white">
               {filteredSamples.map((sample, index) => (
                 <tr
                   key={sample.id}
                   onClick={() => setEditingSample(sample)}
-                  className={`cursor-pointer transition-colors ${
+                  className={`cursor-pointer transition-colors border-b border-gray-200 ${
                     sample.manual
                       ? 'bg-red-50 hover:bg-red-100'
                       : index % 2 === 0
@@ -416,60 +418,66 @@ export default function SimpleSamplesList({ onNavigateToPrint }: SimpleSamplesLi
                   <td className="px-2 py-1.5 whitespace-nowrap">
                     <div className="flex items-center gap-1">
                       {sample.manual && <Hand className="w-3 h-3 text-red-600 flex-shrink-0" />}
+                      {sample.categoriadecata === 'vinos_tranquilos' && <Wine className="w-3 h-3 text-primary-600 flex-shrink-0" />}
+                      {sample.categoriadecata === 'generosos_espirituosos' && <Beer className="w-3 h-3 text-amber-600 flex-shrink-0" />}
+                      {sample.categoriadecata === 'aoves_cata' && <Droplet className="w-3 h-3 text-green-600 flex-shrink-0" />}
                       <span 
-                        className={`text-sm font-mono font-bold ${
+                        className={`text-xs font-mono font-bold ${
                           sample.manual ? 'text-red-700' : 'text-gray-900'
                         }`}
-                        style={{ minWidth: '60px', display: 'inline-block' }}
                       >
-                        {(sample.codigotexto || sample.codigo?.toString() || '').padStart(6, ' ')}
+                        {sample.codigotexto || sample.codigo?.toString() || '-'}
                       </span>
                     </div>
                   </td>
-                  <td className="px-2 py-1.5">
-                    <div className={`text-sm font-medium ${
+                  <td className="px-2 py-1.5 border-l border-gray-200">
+                    <div className={`text-xs font-medium ${
                       sample.manual ? 'text-red-700' : 'text-gray-900'
                     }`}>
                       {sample.nombre}
                     </div>
                   </td>
-                  <td className="px-2 py-1.5">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                  <td className="px-2 py-1.5 border-l border-gray-200">
+                    <span className={`text-xs ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
                       {sample.empresa_nombre || '-'}
                     </span>
                   </td>
-                  <td className="px-2 py-1.5 text-center">
+                  <td className="px-2 py-1.5 text-center border-l border-gray-200">
                     {sample.empresa_pedido ? (
-                      <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        sample.manual ? 'bg-red-100 text-red-700' : 'bg-primary-100 text-primary-700'
+                      <span className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded font-semibold text-xs ${
+                        sample.manual ? 'bg-red-100 text-red-700' : 'bg-transparent text-gray-900'
                       }`}>
                         {sample.empresa_pedido}
                       </span>
                     ) : (
-                      <span className="text-gray-400 text-sm">-</span>
+                      <span className="text-gray-400 text-xs">-</span>
                     )}
                   </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                  <td className="px-2 py-1.5 whitespace-nowrap border-l border-gray-200">
+                    <span className={`text-xs ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
                       {sample.categoria || '-'}
                     </span>
                   </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                  <td className="px-2 py-1.5 whitespace-nowrap border-l border-gray-200">
+                    <span className={`text-xs ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
                       {sample.categoriadecata || '-'}
                     </span>
                   </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                  <td className="px-2 py-1.5 whitespace-nowrap border-l border-gray-200">
+                    <span className={`text-xs ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
                       {sample.pais || '-'}
                     </span>
                   </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap">
-                    <span className={`text-sm ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
-                      {sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES') : '-'}
+                  <td className="px-2 py-1.5 whitespace-nowrap border-l border-gray-200">
+                    <span className={`text-xs ${sample.manual ? 'text-red-700' : 'text-gray-900'}`}>
+                      {sample.created_at ? new Date(sample.created_at).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: '2-digit'
+                      }) : '-'}
                     </span>
                   </td>
-                  <td className="px-2 py-1.5">
+                  <td className="px-2 py-1.5 border-l border-gray-200 text-center">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

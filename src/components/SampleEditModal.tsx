@@ -46,7 +46,6 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
           manual: editingSample.manual,
           categoriaoiv: editingSample.categoriaoiv,
           categoriadecata: editingSample.categoriadecata,
-          pagada: editingSample.pagada,
         })
         .eq('id', editingSample.id);
 
@@ -247,7 +246,7 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
                 />
               </div>
 
-              {/* Fila 5: Existencias, Categoría de Cata, Pagada */}
+              {/* Fila 5: Existencias, Categoría de Cata */}
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Existencias</label>
                 <input
@@ -258,25 +257,18 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
                 />
               </div>
 
-              <div>
+              <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-700 mb-1">Categoría de Cata</label>
-                <input
-                  type="text"
+                <select
                   value={editingSample.categoriadecata || ''}
                   onChange={(e) => setEditingSample({ ...editingSample, categoriadecata: e.target.value })}
                   className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Estado de Pago</label>
-                <select
-                  value={editingSample.pagada ? 'true' : 'false'}
-                  onChange={(e) => setEditingSample({ ...editingSample, pagada: e.target.value === 'true' })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="false">No Pagada</option>
-                  <option value="true">Pagada</option>
+                  <option value="">Seleccionar...</option>
+                  <option value="vinos_tranquilos">Vinos Tranquilos</option>
+                  <option value="generosos_espirituosos">Generosos y Espirituosos</option>
+                  <option value="espumosos_cata">Espumosos</option>
+                  <option value="aoves_cata">AOVEs</option>
                 </select>
               </div>
             </div>

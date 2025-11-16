@@ -1,0 +1,5 @@
+{
+  "success": true,
+  "message": "Email simulado (mock) - solo funciona en Vercel",
+  "note": "Este es un mock para desarrollo local. En producción se usa la API real de Vercel."
+}
