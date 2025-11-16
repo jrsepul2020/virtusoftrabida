@@ -347,19 +347,32 @@ export default function Chequeo() {
         </div>
       </div>
 
-      {/* Scanner modal area (hidden video element used for camera) */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="bg-white rounded-lg shadow p-2">
-          {scanning && (
-            <div className="flex items-center gap-2">
-              <video ref={videoRef} className="w-48 h-28 rounded bg-black" playsInline muted autoPlay />
-              <div className="text-sm">
-                {message ?? 'Escaneando...'}
-              </div>
+      {/* Scanner modal area: fullscreen overlay on mobile for camera preview */}
+      {scanning && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/75 p-4">
+          <div className="relative w-full max-w-3xl h-[80vh] bg-black rounded-lg overflow-hidden">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              playsInline
+              muted
+              autoPlay
+            />
+
+            <div className="absolute top-3 left-3 bg-white/20 backdrop-blur rounded px-3 py-1 text-sm text-white">
+              {message ?? 'Escaneando...'}
             </div>
-          )}
+
+            <button
+              onClick={() => stopScanner()}
+              className="absolute top-3 right-3 bg-white bg-opacity-80 text-gray-900 rounded-full w-9 h-9 flex items-center justify-center shadow"
+              aria-label="Cerrar cámara"
+            >
+              ✕
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
