@@ -36,6 +36,7 @@ export default function Chequeo() {
   const [loading, setLoading] = useState(true);
   const [term, setTerm] = useState('');
   const [scanning, setScanning] = useState(false);
+  const scanningRef = useRef(false);
   const [message, setMessage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const currentReaderRef = useRef<any>(null);
@@ -45,6 +46,10 @@ export default function Chequeo() {
   useEffect(() => {
     fetchSamples();
   }, []);
+
+  useEffect(() => {
+    scanningRef.current = scanning;
+  }, [scanning]);
 
   useEffect(() => {
     const q = term.toLowerCase();
@@ -163,9 +168,22 @@ export default function Chequeo() {
       if ((window as any).BarcodeDetector) {
         try {
           const Detector = (window as any).BarcodeDetector;
-          const detector = new Detector({ formats: ['ean_13'] });
+          // Ensure we use correct format names (MDN uses hyphen, e.g., 'ean-13')
+          const desired = ['ean-13', 'ean-8', 'upc-a', 'upc-e', 'code-128'];
+          let formats = desired;
+          try {
+            if (typeof Detector.getSupportedFormats === 'function') {
+              const supported: string[] = await Detector.getSupportedFormats();
+              // keep only supported ones
+              formats = desired.filter(f => supported.includes(f));
+              if (!formats.length) formats = supported; // fallback to all supported
+            }
+          } catch (e) {
+            // ignore capabilities check errors
+          }
+          const detector = new Detector({ formats });
           const loop = async () => {
-            if (!scanning) return;
+            if (!scanningRef.current) return;
             try {
               if (!videoRef.current) return;
               const detections = await detector.detect(videoRef.current);
@@ -190,7 +208,24 @@ export default function Chequeo() {
       // Fallback: ZXing browser
       try {
         const ZXing = await import('@zxing/browser');
-        const codeReader = new (ZXing as any).BrowserMultiFormatReader();
+        // Prefer EAN/UPC and Code128
+        const formats = [
+          (ZXing as any).BarcodeFormat?.EAN_13,
+          (ZXing as any).BarcodeFormat?.EAN_8,
+          (ZXing as any).BarcodeFormat?.UPC_A,
+          (ZXing as any).BarcodeFormat?.UPC_E,
+          (ZXing as any).BarcodeFormat?.CODE_128,
+        ].filter(Boolean);
+        let codeReader: any;
+        try {
+          const hints = new Map();
+          if ((ZXing as any).DecodeHintType && formats.length) {
+            hints.set((ZXing as any).DecodeHintType.POSSIBLE_FORMATS, formats);
+          }
+          codeReader = new (ZXing as any).BrowserMultiFormatReader(hints);
+        } catch {
+          codeReader = new (ZXing as any).BrowserMultiFormatReader();
+        }
         currentReaderRef.current = codeReader;
         codeReader.decodeFromVideoDevice(undefined, videoRef.current as any, async (result: any, err: any) => {
           if (result) {
