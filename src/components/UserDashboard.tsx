@@ -82,7 +82,7 @@ export default function UserDashboard({ onLogout }: Props) {
           .from('muestras')
           .select('*')
           .eq('empresa_id', companyData.id)
-          .order('codigo', { ascending: true });
+          .order('created_at', { ascending: false });
 
         if (samplesError) throw samplesError;
         setSamples(samplesData || []);

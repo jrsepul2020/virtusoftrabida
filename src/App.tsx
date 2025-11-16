@@ -96,6 +96,8 @@ function App() {
         <Normativa />
       )}
 
+      {/* test page removed */}
+
       {/* PWA Install Banner */}
       <PWAInstallBanner />
       

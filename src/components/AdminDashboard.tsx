@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, Wine, FileText, Smartphone, Settings } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
-import SamplesManager from './SamplesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
 import PrintSamples from './PrintSamples';
@@ -14,9 +13,11 @@ import GestionTandas from './GestionTandas';
 import ListadoEmpresas from './ListadoEmpresas';
 import DispositivosManager from './DispositivosManager';
 import SettingsManager from './SettingsManager';
+import ManageSamples from './ManageSamples';
+import Chequeo from './Chequeo';
 // import PagosPaypalManager from './PagosPaypalManager';
 
-type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'samples' | 'simpleList' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
+type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
 
 interface MenuItem {
   id: string;
@@ -50,11 +51,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const menuItems: MenuItem[] = [
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
-    { id: 'separator1', label: '', icon: null, isSeparator: true },
+    
     { id: 'companies', label: 'Empresas', icon: Building2 },
     { id: 'listadoEmpresas', label: 'Listado Empresas', icon: FileText },
-    { id: 'samples', label: 'Muestras', icon: Wine },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
+    { id: 'gestionMuestras', label: 'Gestión Muestras', icon: List },
+    { id: 'chequeo', label: 'Chequeo', icon: List },
     { id: 'separator2', label: '', icon: null, isSeparator: true },
     { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
     { id: 'gestionTandas', label: 'Gestión Tandas', icon: FolderTree },
@@ -235,8 +237,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'statistics' && <StatisticsManager onNavigateToSamples={handleNavigateToSamplesByCategory} />}
             {activeTab === 'companies' && <CompaniesManager />}
             {activeTab === 'listadoEmpresas' && <ListadoEmpresas />}
-            {activeTab === 'samples' && <SamplesManager onNavigateToPrint={() => setActiveTab('print')} />}
             {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} initialCategoryFilter={categoryFilter} />}
+            {activeTab === 'gestionMuestras' && <ManageSamples />}
+            {activeTab === 'chequeo' && <Chequeo />}
             {activeTab === 'crearTandas' && <TandasManager />}
             {activeTab === 'gestionTandas' && <GestionTandas />}
             {activeTab === 'mesas' && <MesasManager />}

@@ -27,7 +27,7 @@ export default function GestionTandas() {
         .from('muestras')
         .select('*')
         .eq('tanda', tanda)
-        .order('codigo', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setSamples(data || []);

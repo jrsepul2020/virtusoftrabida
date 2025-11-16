@@ -33,7 +33,7 @@ export default function TandasManager() {
       const { data: samplesData, error } = await supabase
         .from('muestras')
         .select('*')
-        .order('codigo', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setSamples(samplesData || []);

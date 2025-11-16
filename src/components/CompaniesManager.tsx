@@ -60,6 +60,7 @@ export default function CompaniesManager() {
           { value: 'pending', label: 'Pendiente', bg_color: 'bg-yellow-100', text_color: 'text-yellow-800' },
           { value: 'approved', label: 'Aprobada', bg_color: 'bg-green-100', text_color: 'text-green-800' },
           { value: 'rejected', label: 'Rechazada', bg_color: 'bg-red-100', text_color: 'text-red-800' },
+          { value: 'pagado', label: 'Pagado', bg_color: 'bg-indigo-100', text_color: 'text-indigo-800' },
         ]);
       }
     } catch (error) {
@@ -68,6 +69,7 @@ export default function CompaniesManager() {
         { value: 'pending', label: 'Pendiente', bg_color: 'bg-yellow-100', text_color: 'text-yellow-800' },
         { value: 'approved', label: 'Aprobada', bg_color: 'bg-green-100', text_color: 'text-green-800' },
         { value: 'rejected', label: 'Rechazada', bg_color: 'bg-red-100', text_color: 'text-red-800' },
+        { value: 'pagado', label: 'Pagado', bg_color: 'bg-indigo-100', text_color: 'text-indigo-800' },
       ]);
     }
   };
@@ -240,25 +242,45 @@ export default function CompaniesManager() {
 
   const handleStatusChange = async (companyId: string, newStatus: string) => {
     try {
-      // Asegurar que newStatus es del tipo correcto
-      const validStatus = newStatus as 'pending' | 'approved' | 'rejected';
-      
-      const { error } = await supabase
+      // Determinar los estados válidos desde la configuración cargada
+      const allowed = statusConfigs.map((c) => c.value);
+
+      if (allowed.length > 0 && !allowed.includes(newStatus)) {
+        alert(`Estado no válido: ${newStatus}`);
+        return;
+      }
+
+      // Ejecutar la actualización y solicitar la fila actualizada
+      const { data: updatedRows, error } = await supabase
         .from('empresas')
-        .update({ status: validStatus })
-        .eq('id', companyId);
+        .update({ status: newStatus })
+        .eq('id', companyId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error updating status:', error);
+        // Mostrar mensaje más descriptivo para depuración del cliente
+        alert('Error al cambiar el estado: ' + (error.message || JSON.stringify(error)) + '\nVerifica permisos/RLS si aplica.');
+        return;
+      }
 
-      // Actualizar la lista local
-      setCompanies(companies.map(company => 
-        company.id === companyId ? { ...company, status: validStatus } : company
-      ));
-      
+      // Si Supabase devolvió la fila actualizada, actualizar el estado local desde ella
+      if (updatedRows && updatedRows.length > 0) {
+        const updated = updatedRows[0];
+        setCompanies((prev) => prev.map((company) =>
+          company.id === companyId ? { ...company, status: updated.status } : company
+        ));
+      } else {
+        // Fallback: actualizar localmente con el valor solicitado
+        setCompanies((prev) => prev.map((company) =>
+          company.id === companyId ? { ...company, status: newStatus } : company
+        ));
+      }
+
       setChangingStatus(null);
     } catch (error) {
-      console.error('Error updating status:', error);
-      alert('Error al cambiar el estado');
+      console.error('Unexpected error updating status:', error);
+      alert('Error inesperado al cambiar el estado: ' + (error as Error).message);
     }
   };
 
@@ -1516,7 +1538,7 @@ export default function CompaniesManager() {
                   </label>
                   <select
                     value={editingCompany.status}
-                    onChange={(e) => setEditingCompany({ ...editingCompany, status: e.target.value as 'pending' | 'approved' | 'rejected' })}
+                    onChange={(e) => setEditingCompany({ ...editingCompany, status: e.target.value as string })}
                     className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   >
                     {statusConfigs.map((config) => (
