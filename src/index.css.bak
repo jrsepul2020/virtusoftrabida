@@ -33,11 +33,11 @@
 .bg-primary-500 { background-color: #ef4444; }
 .bg-primary-600 { background-color: #dc2626; }
 .bg-primary-700 { background-color: #b91c1c; }
-.bg-primary-800 { background-color: #000; }
+.bg-primary-800 { background-color: #991b1b; }
 
 .text-primary-600 { color: #dc2626; }
 .text-primary-700 { color: #b91c1c; }
-.text-primary-800 { color: #000; }
+.text-primary-800 { color: #991b1b; }
 
 .border-primary-100 { border-color: #fee2e2; }
 .border-primary-200 { border-color: #fecaca; }
