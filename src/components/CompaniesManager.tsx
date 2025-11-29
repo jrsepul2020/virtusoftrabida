@@ -76,6 +76,8 @@ export default function CompaniesManager() {
 
   useEffect(() => {
     filterCompanies();
+  // filterCompanies is intentionally omitted as it would cause infinite re-renders.
+  // The effect should only run when the filter criteria change.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, statusFilter, companies, sortField, sortDirection]);
 
