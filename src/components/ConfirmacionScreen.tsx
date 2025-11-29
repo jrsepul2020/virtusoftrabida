@@ -378,7 +378,7 @@ export function ConfirmacionScreen({
         onClose={() => setShowPayPalModal(false)}
         amount={precio.total}
         companyName={company.nombre_empresa}
-        numSamples={company.num_muestras}
+        numSamples={typeof company.num_muestras === 'string' ? parseInt(company.num_muestras, 10) || 0 : company.num_muestras}
         onSuccess={(details) => {
           console.log('Pago de PayPal exitoso:', details);
           if (onPayPalSuccess) {

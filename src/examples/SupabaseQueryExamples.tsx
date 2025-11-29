@@ -5,15 +5,18 @@
  * en diferentes escenarios de tu aplicación.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   useCompanies, 
   useSamples, 
-  useMyCompany,
   useCompanySamples,
-  useGeneralStats 
-} from './lib/useSupabaseQuery';
-import * as queries from './lib/supabaseQueries';
+  useGeneralStats,
+  useSearchCompanies,
+  useCompany
+} from '../lib/useSupabaseQuery';
+import * as queries from '../lib/supabaseQueries';
+import { supabase } from '../lib/supabase';
+import type { Company, Sample } from '../lib/supabase';
 
 // ============================================
 // EJEMPLO 1: Usar hooks en componentes
@@ -30,7 +33,7 @@ function CompaniesListComponent() {
       <h2>Empresas ({companies?.length})</h2>
       <button onClick={refetch}>Recargar</button>
       
-      {companies?.map(company => (
+      {companies?.map((company: Company) => (
         <div key={company.id}>
           <h3>{company.name}</h3>
           <p>{company.email}</p>
@@ -59,7 +62,7 @@ function CompanySearchComponent() {
       
       {loading && <p>Buscando...</p>}
       
-      {results?.map(company => (
+      {results?.map((company: Company) => (
         <div key={company.id}>{company.name}</div>
       ))}
     </div>
@@ -135,7 +138,7 @@ function CompanyDetailComponent({ companyId }: { companyId: string }) {
       <p>Email: {company?.email}</p>
       
       <h3>Muestras ({samples?.length})</h3>
-      {samples?.map(sample => (
+      {samples?.map((sample: Sample) => (
         <div key={sample.id}>
           <p>{sample.nombre} - Código: {sample.codigotexto}</p>
         </div>
@@ -206,9 +209,6 @@ function CreateSampleForm({ companyId }: { companyId: string }) {
 // EJEMPLO 7: Realtime subscriptions
 // ============================================
 
-import { useEffect } from 'react';
-import { supabase } from './lib/supabase';
-
 function RealtimeSamplesComponent() {
   const { data: samples, refetch } = useSamples();
 
@@ -223,8 +223,7 @@ function RealtimeSamplesComponent() {
           schema: 'public',
           table: 'muestras'
         },
-        (payload) => {
-          console.log('Cambio detectado:', payload);
+        () => {
           refetch(); // Recargar datos
         }
       )
@@ -239,18 +238,22 @@ function RealtimeSamplesComponent() {
   return (
     <div>
       <h2>Muestras en Tiempo Real</h2>
-      {samples?.map(sample => (
+      {samples?.map((sample: Sample) => (
         <div key={sample.id}>{sample.nombre}</div>
       ))}
     </div>
   );
 }
 
+// Note: handleCreateCompany and handleUpdateCompany are example functions
+// They are exported to avoid unused variable warnings
 export {
   CompaniesListComponent,
   CompanySearchComponent,
   DashboardComponent,
   CompanyDetailComponent,
   CreateSampleForm,
-  RealtimeSamplesComponent
+  RealtimeSamplesComponent,
+  handleCreateCompany,
+  handleUpdateCompany
 };
