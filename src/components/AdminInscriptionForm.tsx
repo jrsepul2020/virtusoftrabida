@@ -124,6 +124,12 @@ export default function AdminInscriptionForm() {
     ));
   };
 
+  const handleImageChange = (index: number, imageUrl: string) => {
+    setSamples(prev => prev.map((sample, i) => 
+      i === index ? { ...sample, foto_botella: imageUrl } : sample
+    ));
+  };
+
   const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPayment(e.target.value as PaymentMethod);
   };
@@ -348,7 +354,7 @@ export default function AdminInscriptionForm() {
           company={company}
           onChange={handleCompanyChange}
           onNext={handleCompanyNext}
-          precio={calculatePrice(company.num_muestras)}
+          precio={calculatePrice(typeof company.num_muestras === 'string' ? parseInt(company.num_muestras, 10) || 1 : company.num_muestras)}
         />
       )}
 
@@ -356,6 +362,7 @@ export default function AdminInscriptionForm() {
         <MuestrasScreen
           samples={samples}
           onChange={handleSampleChange}
+          onImageChange={handleImageChange}
           onNext={handleMuestrasNext}
           onPrev={handleMuestrasPrev}
         />
@@ -367,7 +374,7 @@ export default function AdminInscriptionForm() {
           samples={samples}
           payment={payment}
           onPaymentChange={handlePaymentChange}
-          precio={calculatePrice(company.num_muestras)}
+          precio={calculatePrice(typeof company.num_muestras === 'string' ? parseInt(company.num_muestras, 10) || 1 : company.num_muestras)}
           onPrev={handleConfirmacionPrev}
           onSubmit={handleSubmit}
           success={success}

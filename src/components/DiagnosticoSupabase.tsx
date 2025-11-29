@@ -29,14 +29,15 @@ export default function DiagnosticoSupabase() {
 
     // Test 2: Tabla usuarios
     try {
-      const { data, error } = await supabase.from('usuarios').select('id').limit(1);
+      const { error } = await supabase.from('usuarios').select('id').limit(1);
       if (error) throw error;
       const { count } = await supabase.from('usuarios').select('*', { count: 'exact', head: true });
+      const countValue = count ?? 0;
       tests.push({ 
         name: 'Tabla usuarios (catadores)', 
-        status: count === 0 ? 'warning' : 'success', 
-        message: count === 0 ? 'Tabla existe pero vacía' : `${count} registros encontrados`,
-        count
+        status: countValue === 0 ? 'warning' : 'success', 
+        message: countValue === 0 ? 'Tabla existe pero vacía' : `${countValue} registros encontrados`,
+        count: countValue
       });
     } catch (e: any) {
       tests.push({ name: 'Tabla usuarios', status: 'error', message: e.message, error: e });
@@ -44,14 +45,15 @@ export default function DiagnosticoSupabase() {
 
     // Test 3: Tabla muestras
     try {
-      const { data, error } = await supabase.from('muestras').select('id').limit(1);
+      const { error } = await supabase.from('muestras').select('id').limit(1);
       if (error) throw error;
       const { count } = await supabase.from('muestras').select('*', { count: 'exact', head: true });
+      const countValue = count ?? 0;
       tests.push({ 
         name: 'Tabla muestras', 
-        status: count === 0 ? 'warning' : 'success', 
-        message: count === 0 ? 'Tabla existe pero vacía' : `${count} registros encontrados`,
-        count
+        status: countValue === 0 ? 'warning' : 'success', 
+        message: countValue === 0 ? 'Tabla existe pero vacía' : `${countValue} registros encontrados`,
+        count: countValue
       });
     } catch (e: any) {
       tests.push({ name: 'Tabla muestras', status: 'error', message: e.message, error: e });
@@ -59,14 +61,15 @@ export default function DiagnosticoSupabase() {
 
     // Test 4: Tabla dispositivos
     try {
-      const { data, error } = await supabase.from('dispositivos').select('id').limit(1);
+      const { error } = await supabase.from('dispositivos').select('id').limit(1);
       if (error) throw error;
       const { count } = await supabase.from('dispositivos').select('*', { count: 'exact', head: true });
+      const countValue = count ?? 0;
       tests.push({ 
         name: 'Tabla dispositivos', 
-        status: count === 0 ? 'warning' : 'success', 
-        message: count === 0 ? 'Tabla existe pero vacía' : `${count} registros encontrados`,
-        count
+        status: countValue === 0 ? 'warning' : 'success', 
+        message: countValue === 0 ? 'Tabla existe pero vacía' : `${countValue} registros encontrados`,
+        count: countValue
       });
     } catch (e: any) {
       tests.push({ 
@@ -79,14 +82,15 @@ export default function DiagnosticoSupabase() {
 
     // Test 5: Tabla empresas
     try {
-      const { data, error } = await supabase.from('empresas').select('id').limit(1);
+      const { error } = await supabase.from('empresas').select('id').limit(1);
       if (error) throw error;
       const { count } = await supabase.from('empresas').select('*', { count: 'exact', head: true });
+      const countValue = count ?? 0;
       tests.push({ 
         name: 'Tabla empresas', 
-        status: count === 0 ? 'warning' : 'success', 
-        message: count === 0 ? 'Tabla existe pero vacía' : `${count} registros encontrados`,
-        count
+        status: countValue === 0 ? 'warning' : 'success', 
+        message: countValue === 0 ? 'Tabla existe pero vacía' : `${countValue} registros encontrados`,
+        count: countValue
       });
     } catch (e: any) {
       tests.push({ name: 'Tabla empresas', status: 'error', message: e.message, error: e });

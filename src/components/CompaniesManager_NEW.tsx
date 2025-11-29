@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer, FileSpreadsheet, Settings } from 'lucide-react';
+import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, FileSpreadsheet, Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { type CompanyWithSamples, type Company } from '../lib/supabase';
+import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase';
 import { useCompanies } from '../lib/useSupabaseQuery';
 import * as queries from '../lib/supabaseQueries';
 
@@ -75,7 +75,7 @@ export default function CompaniesManager() {
 
   const loadStatusConfigs = async () => {
     try {
-      const { data: configs } = await queries.supabase
+      const { data: configs } = await supabase
         .from('status_configs')
         .select('*')
         .order('is_default', { ascending: false });
