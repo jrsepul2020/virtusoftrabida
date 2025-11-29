@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, MapPin, Calendar, Droplet, Wine, Grape, Trash2, X, Hand, Printer, FileSpreadsheet, Database, Check, X as XIcon } from 'lucide-react';
+import { Search, Trash2, X, Hand, Printer, FileSpreadsheet, Database } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
 import * as XLSX from 'xlsx';
 
@@ -233,7 +233,6 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
 
   const renderEditableCell = (sample: Sample, field: string, displayValue: string, inputType: 'text' | 'select' = 'text', options?: string[]) => {
     const isEditing = editingCell?.id === sample.id && editingCell?.field === field;
-    const cellKey = `${sample.id}-${field}`;
 
     if (isEditing) {
       return (
@@ -485,7 +484,7 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
       <SampleEditModal
         sample={editingSample}
         onClose={() => setEditingSample(null)}
-        onSave={refetch}
+        onSave={fetchSamples}
       />
 
       {/* Modal de detalles */}

@@ -3,7 +3,7 @@ import { supabase, type CompanyWithSamples, type Company } from '../lib/supabase
 import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer, FileSpreadsheet, Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-type SortField = 'name' | 'email' | 'created_at' | 'pais' | 'totalinscripciones' | 'pedido';
+type SortField = 'name' | 'email' | 'created_at' | 'pais' | 'totalinscripciones' | 'pedido' | 'telefono' | 'movil';
 type SortDirection = 'asc' | 'desc';
 
 type ColumnConfig = {
@@ -63,7 +63,7 @@ export default function CompaniesManager() {
           { value: 'pagado', label: 'Pagado', bg_color: 'bg-indigo-100', text_color: 'text-indigo-800' },
         ]);
       }
-    } catch (error) {
+    } catch {
       console.log('Status configs not available, using defaults');
       setStatusConfigs([
         { value: 'pending', label: 'Pendiente', bg_color: 'bg-yellow-100', text_color: 'text-yellow-800' },
@@ -76,6 +76,9 @@ export default function CompaniesManager() {
 
   useEffect(() => {
     filterCompanies();
+  // filterCompanies is intentionally omitted as it would cause infinite re-renders.
+  // The effect should only run when the filter criteria change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, statusFilter, companies, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
@@ -205,6 +208,14 @@ export default function CompaniesManager() {
           aValue = a.pedido || 0;
           bValue = b.pedido || 0;
           break;
+        case 'telefono':
+          aValue = (a.telefono || '').toLowerCase();
+          bValue = (b.telefono || '').toLowerCase();
+          break;
+        case 'movil':
+          aValue = (a.movil || '').toLowerCase();
+          bValue = (b.movil || '').toLowerCase();
+          break;
         default:
           return 0;
       }
@@ -268,12 +279,12 @@ export default function CompaniesManager() {
       if (updatedRows && updatedRows.length > 0) {
         const updated = updatedRows[0];
         setCompanies((prev) => prev.map((company) =>
-          company.id === companyId ? { ...company, status: updated.status } : company
+          company.id === companyId ? { ...company, status: updated.status as Company['status'] } : company
         ));
       } else {
         // Fallback: actualizar localmente con el valor solicitado
         setCompanies((prev) => prev.map((company) =>
-          company.id === companyId ? { ...company, status: newStatus } : company
+          company.id === companyId ? { ...company, status: newStatus as Company['status'] } : company
         ));
       }
 
@@ -1538,7 +1549,7 @@ export default function CompaniesManager() {
                   </label>
                   <select
                     value={editingCompany.status}
-                    onChange={(e) => setEditingCompany({ ...editingCompany, status: e.target.value as string })}
+                    onChange={(e) => setEditingCompany({ ...editingCompany, status: e.target.value as Company['status'] })}
                     className="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white"
                   >
                     {statusConfigs.map((config) => (
