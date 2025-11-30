@@ -105,7 +105,7 @@ function App() {
       <UpdateNotification />
       
       {/* Version Badge */}
-      <VersionBadge />
+      <VersionBadge currentView={view} />
     </MainLayout>
   );
 }
