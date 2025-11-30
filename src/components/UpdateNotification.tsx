@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 
 export default function UpdateNotification() {
   const [showUpdate, setShowUpdate] = useState(false);
