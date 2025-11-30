@@ -95,17 +95,18 @@ export function MuestrasScreen({
                 />
               </div>
               <div>
-                <label className="block text-primary-800 font-medium mb-1">Año</label>
-                <input 
-                  type="number" 
+                <label className="block text-primary-800 font-medium mb-1">Año / Añada</label>
+                <select 
                   name="anio" 
                   value={sample.anio} 
                   onChange={e => onChange(idx, e)} 
-                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
-                  placeholder="2024"
-                  min="1900"
-                  max={new Date().getFullYear()}
-                />
+                  className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors"
+                >
+                  <option value="">-</option>
+                  {Array.from({ length: 2025 - 2000 + 1 }, (_, i) => 2025 - i).map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
               </div>
             </div>
             

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
@@ -15,9 +15,9 @@ import DispositivosManager from './DispositivosManager';
 import SettingsManager from './SettingsManager';
 import ManageSamples from './ManageSamples';
 import Chequeo from './Chequeo';
-// import PagosPaypalManager from './PagosPaypalManager';
+import PantallasManager from './PantallasManager';
 
-type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion';
+type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas';
 
 interface MenuItem {
   id: string;
@@ -68,6 +68,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
+    { id: 'pantallas', label: 'Pantallas', icon: Monitor },
   ];
 
   return (
@@ -249,6 +250,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
             {activeTab === 'configuracion' && <SettingsManager />}
+            {activeTab === 'pantallas' && <PantallasManager />}
           </div>
         </div>
       </div>
