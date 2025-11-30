@@ -103,10 +103,27 @@ export default function UpdateNotification() {
 }
 
 // Componente para mostrar la versión actual
-export function VersionBadge() {
+export function VersionBadge({ currentView }: { currentView?: string }) {
+  const viewNames: Record<string, string> = {
+    home: 'Inicio',
+    adminLogin: 'Login Admin',
+    admin: 'Panel Admin',
+    inscripcion: 'Inscripción',
+    reglamento: 'Reglamento',
+    normativa: 'Normativa',
+  };
+
+  const viewName = currentView ? viewNames[currentView] || currentView : '';
+
   return (
-    <div className="fixed bottom-4 right-4 bg-black/80 text-white px-3 py-1.5 rounded-full text-xs font-mono z-40 hidden md:block">
-      v{APP_VERSION}
+    <div className="fixed bottom-4 right-4 bg-black/80 text-white px-3 py-1.5 rounded-full text-xs font-mono z-40 hidden md:flex items-center gap-2">
+      <span>v{APP_VERSION}</span>
+      {viewName && (
+        <>
+          <span className="text-white/50">•</span>
+          <span className="text-white/80">{viewName}</span>
+        </>
+      )}
     </div>
   );
 }
