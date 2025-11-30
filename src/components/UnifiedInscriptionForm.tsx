@@ -240,6 +240,7 @@ export default function UnifiedInscriptionForm({
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
+    console.log('🚀 Iniciando proceso de inscripción...');
 
     try {
       // Mapear los datos del formulario a los nombres de columnas de la BD
@@ -265,7 +266,7 @@ export default function UnifiedInscriptionForm({
         created_at: new Date().toISOString(),
       };
 
-      console.log('Datos que se van a insertar en empresas:', empresaData);
+      console.log('📝 Datos que se van a insertar en empresas:', empresaData);
 
       const { data: empresa, error: empresaError } = await supabase
         .from('empresas')
@@ -274,9 +275,11 @@ export default function UnifiedInscriptionForm({
         .single();
 
       if (empresaError) {
-        console.error('Error al insertar empresa:', empresaError);
+        console.error('❌ Error al insertar empresa:', empresaError);
         throw empresaError;
       }
+      
+      console.log('✅ Empresa insertada correctamente:', empresa);
 
       // Preparar muestras para insertar
       const samplesWithEmpresaId = [];
@@ -380,9 +383,12 @@ export default function UnifiedInscriptionForm({
       }
 
       // Cambiar a la pantalla de éxito
+      console.log('✅ Inscripción completada, cambiando a pantalla de éxito...');
+      console.log('Número de pedido:', empresa.pedido);
       setPedidoNumero(empresa.pedido); // Guardar el número de pedido
       setSuccess(true);
       setCurrentStep('exitosa');
+      console.log('✅ Estado actualizado a exitosa');
       
       // Si es admin y manual, mostrar los códigos generados
       if (isAdmin && isManualInscription) {
@@ -431,7 +437,16 @@ export default function UnifiedInscriptionForm({
 
   // Si está en la pantalla de éxito, mostrarla
   if (currentStep === 'exitosa') {
-    return <InscripcionExitosa onClose={handleReset} pedido={pedidoNumero} />;
+    return (
+      <InscripcionExitosa 
+        onClose={handleReset} 
+        pedido={pedidoNumero}
+        company={company}
+        samples={samples}
+        precio={calculatePrice(company.num_muestras)}
+        metodoPago={payment}
+      />
+    );
   }
 
   return (

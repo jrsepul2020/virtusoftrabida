@@ -46,7 +46,6 @@ export default function Chequeo() {
   const [showOnlyRecibidos, setShowOnlyRecibidos] = useState(false);
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [sortBy, setSortBy] = useState<'codigo'|'nombre'|'fecha'|'recibida'|null>(null);
   const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc');
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
