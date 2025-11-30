@@ -159,7 +159,7 @@ export function ConfirmacionScreen({
                       )}
                       {sample.anio && (
                         <div>
-                          <span className="font-medium text-gray-600">Año:</span>
+                          <span className="font-medium text-gray-600">Año/Añada:</span>
                           <span className="ml-1 text-gray-800">{sample.anio}</span>
                         </div>
                       )}

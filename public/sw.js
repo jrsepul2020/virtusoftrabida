@@ -1,4 +1,4 @@
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 const CACHE_NAME = `virtus-cata-v${APP_VERSION}`;
 const STATIC_ASSETS = [
   '/',
@@ -65,29 +65,45 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para HTML: Network First (siempre intentar red primero)
-  if (event.request.destination === 'document') {
+  // Para HTML y JS/CSS: Network First (siempre intentar red primero)
+  if (event.request.destination === 'document' || 
+      event.request.destination === 'script' || 
+      event.request.destination === 'style') {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, {
+        cache: 'no-cache' // Forzar bypass de caché HTTP
+      })
         .then((response) => {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          // Solo cachear si es una respuesta válida
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
           return response;
         })
         .catch(() => {
+          // Si falla la red, usar caché como fallback
           return caches.match(event.request);
         })
     );
     return;
   }
 
-  // Para otros recursos: Cache First
+  // Para imágenes y otros recursos: Cache First (son más estáticos)
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
         if (response) {
+          // Verificar en background si hay versión nueva
+          fetch(event.request).then((freshResponse) => {
+            if (freshResponse && freshResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, freshResponse);
+              });
+            }
+          }).catch(() => {});
           return response;
         }
 

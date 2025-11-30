@@ -536,7 +536,7 @@ export default function CompaniesManager() {
             }
             .status-pending { background: #fef3c7; color: #92400e; }
             .status-approved { background: #d1fae5; color: #065f46; }
-            .status-rejected { background: #fee2e2; color: #991b1b; }
+            .status-rejected { background: #fee2e2; color: #000; }
             .info-grid {
               display: grid;
               grid-template-columns: repeat(2, 1fr);

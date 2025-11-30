@@ -1,7 +1,7 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,22 +11,13 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
-    "@modelcontextprotocol/server-github": "^2025.4.8",
     "@paypal/react-paypal-js": "^8.9.2",
     "@supabase/supabase-js": "^2.75.0",
-    "@vercel/speed-insights": "^1.2.0",
     "@zxing/browser": "^0.1.5",
-    "enhanced-postgres-mcp-server": "^1.0.1",
-    "formidable": "^3.5.4",
     "jsbarcode": "^3.12.1",
     "lucide-react": "^0.344.0",
-    "mcp-supabase-db": "^3.2.5",
-    "pg": "^8.16.3",
-    "querystring": "^0.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.9.4",
-    "superagent": "^10.2.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
