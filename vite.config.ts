@@ -12,6 +12,10 @@ export default defineConfig({
     // Optimize for PWA
     rollupOptions: {
       output: {
+        // Forzar hash en archivos para evitar caché
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: {
           vendor: ['react', 'react-dom'],
           supabase: ['@supabase/supabase-js'],
@@ -29,7 +33,13 @@ export default defineConfig({
   // Development server configuration
   server: {
     host: true,
-    port: 3000
+    port: 3000,
+    headers: {
+      // Headers para evitar caché en desarrollo
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
   },
   preview: {
     host: true,
