@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, Printer, FileSpreadsheet, Settings } from 'lucide-react';
+import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, FileSpreadsheet, Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { type CompanyWithSamples, type Company } from '../lib/supabase';
 import { useCompanies } from '../lib/useSupabaseQuery';

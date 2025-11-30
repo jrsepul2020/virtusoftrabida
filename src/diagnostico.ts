@@ -5,7 +5,7 @@ async function diagnostico() {
 
   // Verificar conexión
   try {
-    const { data: healthCheck, error: healthError } = await supabase
+    const { error: healthError } = await supabase
       .from('empresas')
       .select('count')
       .limit(1);

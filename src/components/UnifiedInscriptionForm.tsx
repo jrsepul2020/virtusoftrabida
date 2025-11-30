@@ -234,12 +234,18 @@ export default function UnifiedInscriptionForm({
     if (isAdmin) {
       setIsManualInscription(true);
     }
+    
+    // Llamar callback de éxito cuando el usuario cierra la pantalla de éxito
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   // Envío final del formulario
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
+    console.log('🚀 Iniciando proceso de inscripción...');
 
     try {
       // Mapear los datos del formulario a los nombres de columnas de la BD
@@ -265,7 +271,7 @@ export default function UnifiedInscriptionForm({
         created_at: new Date().toISOString(),
       };
 
-      console.log('Datos que se van a insertar en empresas:', empresaData);
+      console.log('📝 Datos que se van a insertar en empresas:', empresaData);
 
       const { data: empresa, error: empresaError } = await supabase
         .from('empresas')
@@ -274,9 +280,11 @@ export default function UnifiedInscriptionForm({
         .single();
 
       if (empresaError) {
-        console.error('Error al insertar empresa:', empresaError);
+        console.error('❌ Error al insertar empresa:', empresaError);
         throw empresaError;
       }
+      
+      console.log('✅ Empresa insertada correctamente:', empresa);
 
       // Preparar muestras para insertar
       const samplesWithEmpresaId = [];
@@ -380,19 +388,24 @@ export default function UnifiedInscriptionForm({
       }
 
       // Cambiar a la pantalla de éxito
+      console.log('✅ Inscripción completada, cambiando a pantalla de éxito...');
+      console.log('Número de pedido:', empresa.pedido);
+      
+      // IMPORTANTE: Cambiar el step ANTES de setSuccess para evitar que se muestre
+      // el mensaje de éxito en ConfirmacionScreen
+      setCurrentStep('exitosa');
       setPedidoNumero(empresa.pedido); // Guardar el número de pedido
       setSuccess(true);
-      setCurrentStep('exitosa');
+      console.log('✅ Estado actualizado a exitosa');
       
       // Si es admin y manual, mostrar los códigos generados
       if (isAdmin && isManualInscription) {
         console.log('Códigos de muestra asignados:', samplesWithEmpresaId.map(s => s.codigo));
       }
       
-      // Llamar callback si existe
-      if (onSuccess) {
-        onSuccess();
-      }
+      // NO llamar onSuccess aquí para evitar que el componente padre cambie la vista
+      // antes de mostrar la pantalla de éxito. El callback se llamará cuando el usuario
+      // cierre la pantalla de éxito (en handleReset)
 
     } catch (err: any) {
       console.error('Error completo en inscripción:', err);
@@ -431,7 +444,16 @@ export default function UnifiedInscriptionForm({
 
   // Si está en la pantalla de éxito, mostrarla
   if (currentStep === 'exitosa') {
-    return <InscripcionExitosa onClose={handleReset} pedido={pedidoNumero} />;
+    return (
+      <InscripcionExitosa 
+        onClose={handleReset} 
+        pedido={pedidoNumero}
+        company={company}
+        samples={samples}
+        precio={calculatePrice(company.num_muestras)}
+        metodoPago={payment}
+      />
+    );
   }
 
   return (

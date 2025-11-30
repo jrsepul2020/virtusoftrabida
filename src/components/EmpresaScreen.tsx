@@ -19,7 +19,18 @@ export function EmpresaScreen({
   return (
     <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100">
       <h2 className="text-xl sm:text-2xl font-bold text-primary-800 mb-4 text-center">Datos de la Empresa / Bodega</h2>
-        
+        <div className="company-note mt-2">
+ <div className="company-note mt-2 text-center">
+          <p className="text-sm text-gray-700 mb-1">
+            Realice su inscripción sin límite de muestras.
+           Cada muestra tiene un coste de <strong>150 €</strong>. Envíe <strong>3 botellas</strong> por muestra.
+          </p>
+          <p className="text-sm text-gray-700 font-semibold">
+            Por cada 5 muestras inscritas, <span className="text-green-600">una es GRATIS</span>.
+          </p>
+          
+        </div>
+</div>
         {/* Primera fila - NIF, Nombre Empresa, Persona Contacto */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-2">
