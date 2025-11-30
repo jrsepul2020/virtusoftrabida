@@ -390,9 +390,12 @@ export default function UnifiedInscriptionForm({
       // Cambiar a la pantalla de éxito
       console.log('✅ Inscripción completada, cambiando a pantalla de éxito...');
       console.log('Número de pedido:', empresa.pedido);
+      
+      // IMPORTANTE: Cambiar el step ANTES de setSuccess para evitar que se muestre
+      // el mensaje de éxito en ConfirmacionScreen
+      setCurrentStep('exitosa');
       setPedidoNumero(empresa.pedido); // Guardar el número de pedido
       setSuccess(true);
-      setCurrentStep('exitosa');
       console.log('✅ Estado actualizado a exitosa');
       
       // Si es admin y manual, mostrar los códigos generados
