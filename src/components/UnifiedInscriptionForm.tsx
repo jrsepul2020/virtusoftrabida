@@ -234,6 +234,11 @@ export default function UnifiedInscriptionForm({
     if (isAdmin) {
       setIsManualInscription(true);
     }
+    
+    // Llamar callback de éxito cuando el usuario cierra la pantalla de éxito
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   // Envío final del formulario
@@ -395,10 +400,9 @@ export default function UnifiedInscriptionForm({
         console.log('Códigos de muestra asignados:', samplesWithEmpresaId.map(s => s.codigo));
       }
       
-      // Llamar callback si existe
-      if (onSuccess) {
-        onSuccess();
-      }
+      // NO llamar onSuccess aquí para evitar que el componente padre cambie la vista
+      // antes de mostrar la pantalla de éxito. El callback se llamará cuando el usuario
+      // cierre la pantalla de éxito (en handleReset)
 
     } catch (err: any) {
       console.error('Error completo en inscripción:', err);
