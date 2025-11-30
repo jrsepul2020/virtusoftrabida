@@ -144,9 +144,16 @@ export function MuestrasScreen({
                   type="text" 
                   name="azucar" 
                   value={sample.azucar} 
-                  onChange={e => onChange(idx, e)} 
+                  onChange={(e) => {
+                    // Permitir solo números, punto y coma (normalizar al guardar)
+                    const value = e.target.value;
+                    if (value === '' || /^[0-9]+([.,][0-9]*)?$/.test(value)) {
+                      onChange(idx, e);
+                    }
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
-                  placeholder="g/l"
+                  placeholder="Ej: 12.5 o 12,5"
+                  title="Ingrese solo números con punto o coma decimal"
                 />
               </div>
               <div>
@@ -155,9 +162,16 @@ export function MuestrasScreen({
                   type="text" 
                   name="grado_alcoholico" 
                   value={sample.grado_alcoholico} 
-                  onChange={e => onChange(idx, e)} 
+                  onChange={(e) => {
+                    // Permitir solo números, punto y coma (normalizar al guardar)
+                    const value = e.target.value;
+                    if (value === '' || /^[0-9]+([.,][0-9]*)?$/.test(value)) {
+                      onChange(idx, e);
+                    }
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
-                  placeholder="% vol."
+                  placeholder="Ej: 13.5 o 13,5"
+                  title="Ingrese solo números con punto o coma decimal"
                 />
               </div>
             </div>

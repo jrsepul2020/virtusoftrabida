@@ -306,8 +306,8 @@ export default function UnifiedInscriptionForm({
           origen: sample.origen,
           igp: sample.igp,
           pais: sample.pais,
-          azucar: sample.azucar ? parseFloat(sample.azucar) : null,
-          grado: sample.grado_alcoholico ? parseFloat(sample.grado_alcoholico) : null,  // grado_alcoholico -> grado
+          azucar: sample.azucar ? parseFloat(sample.azucar.replace(',', '.')) : null,  // Normalizar coma a punto antes de convertir
+          grado: sample.grado_alcoholico ? parseFloat(sample.grado_alcoholico.replace(',', '.')) : null,  // grado_alcoholico -> grado (también normalizar)
           existencias: sample.existencias ? parseInt(sample.existencias) : 0,
           anio: sample.anio ? parseInt(sample.anio) : null,  // anio campo en DB
           tipouva: sample.tipo_uva,  // tipo_uva -> tipouva
