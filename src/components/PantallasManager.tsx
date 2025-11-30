@@ -1,5 +1,5 @@
 import { useState, useMemo, Suspense, ComponentType } from 'react';
-import { Search, FileCode, Layout, Monitor, Folder, Eye, ChevronDown, ChevronRight, Play, ArrowLeft } from 'lucide-react';
+import { Search, FileCode, Monitor, Folder, Eye, ChevronDown, ChevronRight, Play, ArrowLeft } from 'lucide-react';
 
 // Importar componentes que se pueden previsualizar
 import StatisticsManager from './StatisticsManager';
