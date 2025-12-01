@@ -48,6 +48,8 @@ export default function Chequeo() {
   const [dateTo, setDateTo] = useState<string>('');
   const [sortBy, setSortBy] = useState<'codigo'|'nombre'|'fecha'|'recibida'|null>(null);
   const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
 
   const formatDate = (d?: string | null) => {
@@ -132,6 +134,8 @@ export default function Chequeo() {
     // Keep selectedIds only for currently visible rows
     const visibleIds = newFiltered.map(s => String(s.id));
     setSelectedIds(prev => prev.filter(id => visibleIds.includes(id)));
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
   }, [term, samples, showOnlyRecibidos, dateFrom, dateTo]);
 
   const fetchSamples = async () => {
@@ -145,6 +149,7 @@ export default function Chequeo() {
       const rows = (data || []).map((r: any) => ({ ...r, empresa_nombre: r.empresas?.name || r.empresa || 'Sin empresa' }));
       setSamples(rows);
       setFiltered(rows);
+      setCurrentPage(1); // Reset to first page on load
     } catch (err) {
       console.error('Error cargando muestras:', err);
     } finally {
@@ -519,7 +524,9 @@ export default function Chequeo() {
             >
               {showOnlyRecibidos ? 'Mostrando: Recibidos' : 'Filtrar: Recibidos'}
             </button>
-            <div className="text-sm text-gray-600">Mostrando {filtered.length} / {samples.length}</div>
+            <div className="text-sm text-gray-600">
+              Mostrando {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filtered.length)} de {filtered.length}
+            </div>
           </div>
         </div>
       </div>
@@ -564,7 +571,7 @@ export default function Chequeo() {
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={6} className="p-6 text-center text-gray-500">No se encontraron muestras</td></tr>
               ) : (
-                filtered.map((s) => (
+                filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((s) => (
                   <tr key={s.id} className="border-b border-gray-100">
                     <td className="px-3 py-2 text-center">
                       <input
@@ -628,6 +635,29 @@ export default function Chequeo() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {filtered.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            <span className="text-sm text-gray-700">
+              Página {currentPage} de {Math.ceil(filtered.length / itemsPerPage)}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filtered.length / itemsPerPage), prev + 1))}
+              disabled={currentPage >= Math.ceil(filtered.length / itemsPerPage)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Siguiente
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Scanner modal area: fullscreen overlay on mobile for camera preview */}

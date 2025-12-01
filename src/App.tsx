@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import AdminDashboard from './components/AdminDashboard';
+import CatadorDashboard from './components/CatadorDashboard';
 import LoginForm from './components/LoginForm';
 import MainLayout from './components/MainLayout';
 import UnifiedInscriptionForm from './components/UnifiedInscriptionForm';
@@ -8,35 +10,57 @@ import PWAInstallBanner from './components/PWAInstallBanner';
 import UpdateNotification, { VersionBadge } from './components/UpdateNotification';
 import Reglamento from './components/Reglamento';
 import Normativa from './components/Normativa';
+import ResultadosPublicos from './components/ResultadosPublicos';
+import DiplomasPublicos from './components/DiplomasPublicos';
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'normativa';
+type View = 'home' | 'adminLogin' | 'admin' | 'catador' | 'inscripcion' | 'reglamento' | 'normativa' | 'resultados' | 'diplomas';
 
 function App() {
   const [view, setView] = useState<View>('home');
   const [loading, setLoading] = useState(true);
   const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     // Verificar estado de admin en localStorage
     const adminSession = localStorage.getItem('adminLoggedIn');
+    const savedRole = localStorage.getItem('userRole');
     if (adminSession === 'true') {
       setAdminLoggedIn(true);
-      setView('admin');
+      setUserRole(savedRole);
+      
+      // Restaurar vista según rol
+      if (savedRole === 'Catador') {
+        setView('catador');
+      } else {
+        setView('admin');
+      }
     }
     setLoading(false);
   }, []);
 
-  const handleAdminLogin = (success: boolean) => {
+  const handleAdminLogin = (success: boolean, role?: string) => {
     if (success) {
       setAdminLoggedIn(true);
+      setUserRole(role || 'admin');
       localStorage.setItem('adminLoggedIn', 'true');
-      setView('admin');
+      localStorage.setItem('userRole', role || 'admin');
+      
+      // Redirigir según rol
+      if (role === 'Catador') {
+        setView('catador');
+      } else {
+        setView('admin');
+      }
     }
   };
 
-  const handleAdminLogout = () => {
+  const handleAdminLogout = async () => {
+    await supabase.auth.signOut();
     setAdminLoggedIn(false);
+    setUserRole(null);
     localStorage.removeItem('adminLoggedIn');
+    localStorage.removeItem('userRole');
     setView('home');
   };
 
@@ -78,6 +102,11 @@ function App() {
         </div>
       )}
 
+      {/* Panel de catador */}
+      {view === 'catador' && adminLoggedIn && (
+        <CatadorDashboard onLogout={handleAdminLogout} />
+      )}
+
       {/* Formulario de inscripción unificado */}
       {view === 'inscripcion' && (
         <UnifiedInscriptionForm 
@@ -94,6 +123,16 @@ function App() {
       {/* Normativa */}
       {view === 'normativa' && (
         <Normativa />
+      )}
+
+      {/* Resultados Públicos */}
+      {view === 'resultados' && (
+        <ResultadosPublicos />
+      )}
+
+      {/* Diplomas Públicos */}
+      {view === 'diplomas' && (
+        <DiplomasPublicos />
       )}
 
       {/* test page removed */}

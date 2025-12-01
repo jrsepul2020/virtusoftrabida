@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, Trash2, X, Hand, Printer, FileSpreadsheet, Database } from 'lucide-react';
+import { Search, Trash2, X, Hand, Printer, FileSpreadsheet, Database, Camera } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
+import BottlePhotosGallery from './BottlePhotosGallery';
 import * as XLSX from 'xlsx';
 
 interface SamplesManagerProps {
@@ -15,6 +16,12 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
   const [searchTerm, setSearchTerm] = useState('');
   const [editingSample, setEditingSample] = useState<Sample | null>(null);
   const [viewingSample, setViewingSample] = useState<Sample | null>(null);
+  const [showPhotosGallery, setShowPhotosGallery] = useState(false);
+
+  // Si estamos viendo la galería de fotos, mostrarla
+  if (showPhotosGallery) {
+    return <BottlePhotosGallery onBack={() => setShowPhotosGallery(false)} />;
+  }
 
   useEffect(() => {
     fetchSamples();
@@ -353,6 +360,15 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
             >
               <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="text-sm sm:text-base">Exportar Excel</span>
+            </button>
+            <button
+              onClick={() => setShowPhotosGallery(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium whitespace-nowrap"
+              title="Ver galería de fotos de botellas"
+            >
+              <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base hidden sm:inline">Fotos Botellas</span>
+              <span className="text-sm sm:text-base sm:hidden">Fotos</span>
             </button>
             <button
               onClick={handleGetCategoriaOIV}

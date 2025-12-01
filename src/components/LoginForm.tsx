@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Lock, Mail, X, Shield } from 'lucide-react';
 
 type Props = {
-  onLogin: (success: boolean) => void;
+  onLogin: (success: boolean, userRole?: string) => void;
   onBack: () => void;
 };
 
@@ -48,13 +48,26 @@ export default function LoginForm({ onLogin, onBack }: Props) {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
-      onLogin(true);
+      if (authError) throw authError;
+
+      // Obtener rol del usuario
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('rol')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (userError) {
+        console.error('Error fetching user role:', userError);
+        onLogin(true, 'admin'); // Fallback a admin si no se encuentra rol
+      } else {
+        onLogin(true, userData.rol);
+      }
     } catch (err: any) {
       // Sanitize error messages to prevent information leakage
       const safeErrorMessage = getSafeErrorMessage(err);

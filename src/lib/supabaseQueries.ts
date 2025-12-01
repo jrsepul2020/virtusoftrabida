@@ -11,6 +11,9 @@
 import { supabase } from './supabase';
 import type { Company, Sample, Catador } from './supabase';
 
+// Re-exportar supabase para uso directo
+export { supabase };
+
 // ============================================
 // EMPRESAS (Companies) Queries
 // ============================================

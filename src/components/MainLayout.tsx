@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import Header from './Header';
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'normativa';
+type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'normativa' | 'resultados' | 'diplomas';
 
 type Props = {
   children: React.ReactNode;

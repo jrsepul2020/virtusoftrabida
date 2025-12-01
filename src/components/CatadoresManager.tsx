@@ -42,6 +42,8 @@ export default function CatadoresManager() {
   const [formData, setFormData] = useState({
     codigocatador: '',
     nombre: '',
+    email: '',
+    password: '',
     pais: '',
     rol: '',
     mesa: '',
@@ -285,27 +287,71 @@ export default function CatadoresManager() {
       return;
     }
 
+    // Validar email y password para nuevos usuarios
+    if (!editingId) {
+      if (!formData.email?.trim() || !formData.email.includes('@')) {
+        alert('El email es obligatorio y debe ser válido');
+        return;
+      }
+      if (!formData.password || formData.password.length < 6) {
+        alert('La contraseña es obligatoria y debe tener al menos 6 caracteres');
+        return;
+      }
+    }
+
     try {
       setSaving(true);
+
+      let userId = editingId;
+
+      // Si es un nuevo catador, crear usuario en Supabase Auth primero
+      if (!editingId) {
+        console.log('Creando usuario en Supabase Auth...');
+        
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email.trim(),
+          password: formData.password,
+          options: {
+            data: {
+              nombre: formData.nombre.trim(),
+              rol: formData.rol || 'Catador'
+            },
+            emailRedirectTo: undefined // No enviar email de confirmación
+          }
+        });
+
+        if (authError) {
+          console.error('Error en Auth signUp:', authError);
+          throw new Error(`Error al crear usuario en Auth: ${authError.message}`);
+        }
+
+        if (!authData.user) {
+          throw new Error('No se pudo crear el usuario en Auth');
+        }
+
+        userId = authData.user.id;
+        console.log('Usuario creado en Auth con ID:', userId);
+
+        // Confirmar el email automáticamente (solo admin puede hacer esto)
+        // Nota: Esto requiere que el admin tenga permisos service_role en producción
+        // Por ahora, el usuario podrá hacer login directamente sin confirmar email
+      }
 
       const dataToSave: any = {
         codigocatador: formData.codigocatador?.trim() || null,
         nombre: formData.nombre.trim(),
+        email: formData.email?.trim() || null,
         pais: formData.pais?.trim() || null,
-        rol: formData.rol || null,
+        rol: formData.rol || 'Catador',
         mesa: formData.mesa ? parseInt(formData.mesa) : null,
         puesto: formData.puesto ? parseInt(formData.puesto) : null,
         tablet: formData.tablet || null
       };
 
-      // Si es una inserción nueva, generar un UUID explícito
-      if (!editingId) {
-        dataToSave.id = crypto.randomUUID();
-      }
-
-      console.log('Guardando catador:', dataToSave);
+      console.log('Guardando en tabla usuarios:', dataToSave);
 
       if (editingId) {
+        // Actualizar usuario existente
         const { error } = await supabase
           .from('usuarios')
           .update(dataToSave)
@@ -317,6 +363,8 @@ export default function CatadoresManager() {
         }
         console.log('Catador actualizado exitosamente');
       } else {
+        // Insertar nuevo usuario con el ID de Auth
+        dataToSave.id = userId;
         const { error } = await supabase
           .from('usuarios')
           .insert([dataToSave]);
@@ -325,14 +373,14 @@ export default function CatadoresManager() {
           console.error('Error en insert:', error);
           throw error;
         }
-        console.log('Catador creado exitosamente');
+        console.log('Catador creado exitosamente en tabla usuarios');
       }
 
       await fetchCatadores();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar:', error);
-      alert(`Error al guardar el catador: ${(error as any)?.message || 'Error desconocido'}`);
+      alert(`Error al guardar el catador: ${error?.message || 'Error desconocido'}`);
     } finally {
       setSaving(false);
     }
@@ -343,6 +391,8 @@ export default function CatadoresManager() {
     setFormData({
       codigocatador: (catador as any).codigocatador || '',
       nombre: catador.nombre,
+      email: catador.email || '',
+      password: '', // No mostrar password en edición
       pais: catador.pais || '',
       rol: catador.rol || '',
       mesa: catador.mesa?.toString() || '',
@@ -383,6 +433,8 @@ export default function CatadoresManager() {
     setFormData({
       codigocatador: '',
       nombre: '',
+      email: '',
+      password: '',
       pais: '',
       rol: '',
       mesa: '',
@@ -540,6 +592,33 @@ export default function CatadoresManager() {
                 placeholder="Nombre completo"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Email {!editingId && '*'}
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full p-2 border rounded"
+                placeholder="email@ejemplo.com"
+                disabled={!!editingId}
+                title={editingId ? 'No se puede cambiar el email de un usuario existente' : ''}
+              />
+            </div>
+            {!editingId && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Contraseña *</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full p-2 border rounded"
+                  placeholder="Mínimo 6 caracteres"
+                  minLength={6}
+                />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium mb-1">País</label>
               <input

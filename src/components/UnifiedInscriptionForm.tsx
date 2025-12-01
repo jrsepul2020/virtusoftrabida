@@ -313,6 +313,7 @@ export default function UnifiedInscriptionForm({
           tipouva: sample.tipo_uva,  // tipo_uva -> tipouva
           tipoaceituna: sample.tipo_aceituna,  // tipo_aceituna -> tipoaceituna
           destilado: sample.destilado,
+          foto_botella: sample.foto_botella || null,  // URL de la imagen subida
           empresa_id: empresa.id,  // Relación con tabla empresas
           manual: esManual,
         };
