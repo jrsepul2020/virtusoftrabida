@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { X } from 'lucide-react';
+import { X, Camera, Upload, Loader2, Trash2 } from 'lucide-react';
 
 interface SampleEditModalProps {
   sample: Sample | null;
@@ -11,14 +11,84 @@ interface SampleEditModalProps {
 export default function SampleEditModal({ sample, onClose, onSave }: SampleEditModalProps) {
   const [editingSample, setEditingSample] = useState<Sample | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (sample) {
       setEditingSample({ ...sample });
+      setImagePreview((sample as any).foto_botella || null);
     }
   }, [sample]);
 
   if (!sample || !editingSample) return null;
+
+  // Función para subir imagen
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tamaño (máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no debe superar 5MB');
+      return;
+    }
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      alert('Solo se permiten imágenes');
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      // Preview local
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Subir a Supabase Storage
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${file.name}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('bottle-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Obtener URL pública
+      const { data: urlData } = supabase.storage
+        .from('bottle-images')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+      setEditingSample({ ...editingSample, foto_botella: publicUrl } as any);
+      setImagePreview(publicUrl);
+
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      alert('Error al subir la imagen');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setEditingSample({ ...editingSample, foto_botella: null } as any);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSaveSample = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +116,12 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
           manual: editingSample.manual,
           categoriaoiv: editingSample.categoriaoiv,
           categoriadecata: editingSample.categoriadecata,
+          foto_botella: (editingSample as any).foto_botella || null,
         })
         .eq('id', editingSample.id);
 
       if (error) throw error;
 
-      alert('Muestra actualizada correctamente');
       onSave();
       onClose();
     } catch (error) {
@@ -65,7 +135,7 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl max-w-6xl w-full max-h-[95vh] flex flex-col">
-        {/* Header compacto con código y código texto */}
+        {/* Header compacto con código, código texto y nombre */}
         <div className="px-6 py-3 flex justify-between items-center border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-6">
             <div>
@@ -75,6 +145,10 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
             <div>
               <span className="text-xs font-medium text-gray-500">Código:</span>
               <div className="text-xl font-bold text-primary-600">{editingSample.codigotexto || '-'}</div>
+            </div>
+            <div className="border-l border-gray-300 pl-6">
+              <span className="text-xs font-medium text-gray-500">Nombre</span>
+              <div className="text-xl font-bold text-gray-800 max-w-md truncate" title={editingSample.nombre}>{editingSample.nombre}</div>
             </div>
           </div>
           <button
@@ -270,6 +344,76 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
                   <option value="espumosos_cata">Espumosos</option>
                   <option value="aoves_cata">AOVEs</option>
                 </select>
+              </div>
+
+              {/* Foto de Botella - ocupa 3 columnas */}
+              <div className="col-span-3 mt-4 pt-4 border-t border-gray-200">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  <Camera className="inline w-4 h-4 mr-1" />
+                  Foto de la Botella
+                </label>
+                <div className="flex items-start gap-4">
+                  {/* Preview de imagen */}
+                  <div className="flex-shrink-0">
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img 
+                          src={imagePreview} 
+                          alt="Vista previa" 
+                          className="w-32 h-40 object-contain border border-gray-200 rounded-lg bg-gray-50"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md"
+                          title="Eliminar imagen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-32 h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                        <Camera className="w-8 h-8 mb-2" />
+                        <span className="text-xs">Sin foto</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botones de upload */}
+                  <div className="flex flex-col gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="foto-botella-input"
+                    />
+                    <label
+                      htmlFor="foto-botella-input"
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors text-sm ${
+                        uploading 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                      }`}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Subiendo...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Subir imagen
+                        </>
+                      )}
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Formatos: JPG, PNG, WEBP (máx. 5MB)
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

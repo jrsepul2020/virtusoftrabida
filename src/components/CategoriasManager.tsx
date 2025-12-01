@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileSpreadsheet, Printer, Save, X, Pencil } from 'lucide-react';
+import { Search, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileSpreadsheet, Pencil, Save, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import SampleEditModal from './SampleEditModal';
 
-type SortField = 'codigotexto' | 'nombre' | 'empresa' | 'categoria' | 'grado' | 'azucar' | 'created_at';
+type SortField = 'codigotexto' | 'nombre' | 'categoriadecata' | 'categoria' | 'categoriaoiv';
 type SortDirection = 'asc' | 'desc';
 
 interface EditableCell {
@@ -13,19 +13,21 @@ interface EditableCell {
   value: string;
 }
 
-export default function ManageSamples() {
+export default function CategoriasManager() {
   const [samples, setSamples] = useState<Sample[]>([]);
   const [filteredSamples, setFilteredSamples] = useState<Sample[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<SortField>('created_at');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortField, setSortField] = useState<SortField>('codigotexto');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [editingCell, setEditingCell] = useState<EditableCell | null>(null);
   const [editedRows, setEditedRows] = useState<Map<string, Partial<Sample>>>(new Map());
   const [saving, setSaving] = useState(false);
   const [editModalSample, setEditModalSample] = useState<Sample | null>(null);
+  const [filterCategoria, setFilterCategoria] = useState<string>('');
+  const [filterCategoriaCata, setFilterCategoriaCata] = useState<string>('');
 
-  const CATEGORIES = [
+  const CATEGORIAS = [
     'VINO BLANCO',
     'VINO TINTO',
     'VINO ROSADO',
@@ -39,7 +41,6 @@ export default function ManageSamples() {
     'ACEITE OLIVA VIRGEN EXTRA',
     'ACEITE OLIVA VIRGEN EXTRA ORGÁNICO',
   ];
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
   useEffect(() => {
     fetchSamples();
@@ -47,31 +48,18 @@ export default function ManageSamples() {
 
   useEffect(() => {
     filterAndSortSamples();
-  }, [samples, searchTerm, sortField, sortDirection, categoryFilter]);
+  }, [samples, searchTerm, sortField, sortDirection, filterCategoria, filterCategoriaCata]);
 
   const fetchSamples = async () => {
     setLoading(true);
     try {
       const { data: samplesData, error } = await supabase
         .from('muestras')
-        .select(`
-          *,
-          empresas:empresa_id (
-            name,
-            pedido
-          )
-        `)
-        .order('created_at', { ascending: false });
+        .select('*')
+        .order('codigotexto', { ascending: true });
 
       if (error) throw error;
-
-      const samplesWithEmpresa = samplesData?.map(sample => ({
-        ...sample,
-        empresa_nombre: sample.empresas?.name || sample.empresa || 'Sin empresa',
-        empresa_pedido: sample.empresas?.pedido || null
-      })) || [];
-
-      setSamples(samplesWithEmpresa);
+      setSamples(samplesData || []);
     } catch (err) {
       console.error('Error cargando muestras:', err);
       alert('Error cargando muestras');
@@ -80,51 +68,106 @@ export default function ManageSamples() {
     }
   };
 
+  // Extraer categorías de cata únicas
+  const categoriasCataUnicas = [...new Set(samples.map(s => s.categoriadecata).filter(Boolean))].sort();
+
+  // Colores para cada categoría de cata
+  const getCategoriaCataColor = (categoriaCata: string | null | undefined): string => {
+    if (!categoriaCata) return '';
+    
+    const colorsMap: Record<string, string> = {
+      // Vinos
+      'VINOS BLANCOS': 'bg-yellow-100 hover:bg-yellow-200',
+      'VINOS TINTOS': 'bg-red-100 hover:bg-red-200',
+      'VINOS ROSADOS': 'bg-pink-100 hover:bg-pink-200',
+      'VINOS ESPUMOSOS': 'bg-amber-100 hover:bg-amber-200',
+      'VINOS GENEROSOS': 'bg-orange-100 hover:bg-orange-200',
+      'VINOS SIN ALCOHOL': 'bg-cyan-100 hover:bg-cyan-200',
+      // Espirituosos
+      'ESPIRITUOSOS': 'bg-violet-100 hover:bg-violet-200',
+      'ESPIRITUOSOS VÍNICO': 'bg-purple-100 hover:bg-purple-200',
+      'ESPIRITUOSOS NO VÍNICO': 'bg-fuchsia-100 hover:bg-fuchsia-200',
+      // Aceites
+      'ACEITES': 'bg-lime-100 hover:bg-lime-200',
+      'ACEITE OLIVA': 'bg-green-100 hover:bg-green-200',
+      // Otros comunes
+      'AROMATIZADOS': 'bg-teal-100 hover:bg-teal-200',
+      'GENEROSOS': 'bg-amber-100 hover:bg-amber-200',
+    };
+
+    // Buscar coincidencia exacta primero
+    if (colorsMap[categoriaCata.toUpperCase()]) {
+      return colorsMap[categoriaCata.toUpperCase()];
+    }
+
+    // Buscar coincidencia parcial
+    const upperCat = categoriaCata.toUpperCase();
+    if (upperCat.includes('BLANCO')) return 'bg-yellow-100 hover:bg-yellow-200';
+    if (upperCat.includes('TINTO')) return 'bg-red-100 hover:bg-red-200';
+    if (upperCat.includes('ROSADO') || upperCat.includes('ROSA')) return 'bg-pink-100 hover:bg-pink-200';
+    if (upperCat.includes('ESPUMOSO')) return 'bg-amber-100 hover:bg-amber-200';
+    if (upperCat.includes('GENEROSO')) return 'bg-orange-100 hover:bg-orange-200';
+    if (upperCat.includes('ESPIRITUOSO')) return 'bg-violet-100 hover:bg-violet-200';
+    if (upperCat.includes('ACEITE')) return 'bg-lime-100 hover:bg-lime-200';
+    if (upperCat.includes('AROMATIZADO')) return 'bg-teal-100 hover:bg-teal-200';
+    if (upperCat.includes('SIN ALCOHOL')) return 'bg-cyan-100 hover:bg-cyan-200';
+
+    // Color por defecto basado en hash del nombre
+    const hash = categoriaCata.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colors = [
+      'bg-blue-100 hover:bg-blue-200',
+      'bg-indigo-100 hover:bg-indigo-200',
+      'bg-sky-100 hover:bg-sky-200',
+      'bg-emerald-100 hover:bg-emerald-200',
+      'bg-stone-100 hover:bg-stone-200',
+      'bg-slate-100 hover:bg-slate-200',
+    ];
+    return colors[hash % colors.length];
+  };
+
   const filterAndSortSamples = () => {
     const term = searchTerm.toLowerCase();
     let data = samples.filter(s => {
       const matchesSearch =
+        (s.codigotexto || '').toLowerCase().includes(term) ||
         s.nombre.toLowerCase().includes(term) ||
-        (s.codigotexto || s.codigo?.toString() || '').toLowerCase().includes(term) ||
-        (s.empresa_nombre || '').toLowerCase().includes(term) ||
-        (s.categoria || '').toLowerCase().includes(term);
-      const matchesCategory = categoryFilter ? (s.categoria || '').toUpperCase() === categoryFilter : true;
-      return matchesSearch && matchesCategory;
+        (s.categoriadecata || '').toLowerCase().includes(term) ||
+        (s.categoria || '').toLowerCase().includes(term) ||
+        (s.categoriaoiv || '').toLowerCase().includes(term);
+      
+      const matchesCategoria = filterCategoria ? (s.categoria || '').toUpperCase() === filterCategoria : true;
+      const matchesCategoriaCata = filterCategoriaCata ? s.categoriadecata === filterCategoriaCata : true;
+      
+      return matchesSearch && matchesCategoria && matchesCategoriaCata;
     });
 
     data.sort((a, b) => {
-      let aVal: any;
-      let bVal: any;
+      let aVal: string;
+      let bVal: string;
       switch (sortField) {
         case 'codigotexto':
-          aVal = (a.codigotexto || a.codigo?.toString() || '').toLowerCase();
-          bVal = (b.codigotexto || b.codigo?.toString() || '').toLowerCase();
+          aVal = (a.codigotexto || '').toLowerCase();
+          bVal = (b.codigotexto || '').toLowerCase();
           break;
         case 'nombre':
           aVal = a.nombre.toLowerCase();
           bVal = b.nombre.toLowerCase();
           break;
-        case 'empresa':
-          aVal = (a.empresa_nombre || '').toLowerCase();
-          bVal = (b.empresa_nombre || '').toLowerCase();
+        case 'categoriadecata':
+          aVal = (a.categoriadecata || '').toLowerCase();
+          bVal = (b.categoriadecata || '').toLowerCase();
           break;
         case 'categoria':
           aVal = (a.categoria || '').toLowerCase();
           bVal = (b.categoria || '').toLowerCase();
           break;
-        case 'grado':
-          aVal = parseFloat(a.grado?.toString() || '0') || 0;
-          bVal = parseFloat(b.grado?.toString() || '0') || 0;
+        case 'categoriaoiv':
+          aVal = (a.categoriaoiv || '').toLowerCase();
+          bVal = (b.categoriaoiv || '').toLowerCase();
           break;
-        case 'azucar':
-          aVal = parseFloat(a.azucar?.toString() || '0') || 0;
-          bVal = parseFloat(b.azucar?.toString() || '0') || 0;
-          break;
-        case 'created_at':
         default:
-          aVal = new Date(a.created_at || 0).getTime();
-          bVal = new Date(b.created_at || 0).getTime();
-          break;
+          aVal = '';
+          bVal = '';
       }
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
@@ -139,7 +182,7 @@ export default function ManageSamples() {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection(field === 'created_at' ? 'desc' : 'asc');
+      setSortDirection('asc');
     }
   };
 
@@ -228,27 +271,18 @@ export default function ManageSamples() {
 
   const handleExportToExcel = () => {
     const rows = filteredSamples.map(s => ({
-      'Código': s.codigotexto || s.codigo,
+      'Código': s.codigotexto || '',
       'Nombre': s.nombre,
-      'Empresa': s.empresa_nombre || '',
+      'Categoría de Cata': s.categoriadecata || '',
       'Categoría': s.categoria || '',
-      'Grado': s.grado ?? '',
-      'Azúcar (g/L)': s.azucar ?? '',
-      'Año': s.anio ?? '',
-      'Tipo Uva': s.tipouva || '',
-      'IGP': s.igp || '',
-      'Fecha': s.created_at ? new Date(s.created_at).toLocaleDateString('es-ES') : ''
+      'Categoría OIV': s.categoriaoiv || ''
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Gestión Muestras');
-    ws['!cols'] = Array(10).fill({ wch: 18 });
+    XLSX.utils.book_append_sheet(wb, ws, 'Categorías');
+    ws['!cols'] = [{ wch: 12 }, { wch: 30 }, { wch: 20 }, { wch: 25 }, { wch: 20 }];
     const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
-    XLSX.writeFile(wb, `gestion_muestras_${fecha}.xlsx`);
-  };
-
-  const handlePrint = () => {
-    window.print();
+    XLSX.writeFile(wb, `categorias_muestras_${fecha}.xlsx`);
   };
 
   const handleDelete = async (sample: Sample) => {
@@ -263,14 +297,48 @@ export default function ManageSamples() {
     }
   };
 
-  const renderEditableCell = (sample: Sample, field: string, value: any, type: 'text' | 'number' = 'text', width: string = 'w-full') => {
+  const renderEditableCell = (sample: Sample, field: string, value: any, width: string = 'w-full') => {
     const isEditing = editingCell?.sampleId === sample.id && editingCell?.field === field;
     const isModified = editedRows.get(sample.id)?.[field as keyof Sample] !== undefined;
 
     if (isEditing) {
+      // Para categoria, mostrar select
+      if (field === 'categoria') {
+        return (
+          <select
+            value={editingCell.value}
+            onChange={(e) => handleCellChange(e.target.value)}
+            onBlur={handleCellBlur}
+            autoFocus
+            className="w-full px-1 py-0.5 text-xs border-2 border-blue-500 rounded outline-none bg-blue-50"
+          >
+            <option value="">Sin categoría</option>
+            {CATEGORIAS.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        );
+      }
+
+      // Para categoriadecata, mostrar select con opciones existentes + input
+      if (field === 'categoriadecata') {
+        return (
+          <input
+            type="text"
+            value={editingCell.value}
+            onChange={(e) => handleCellChange(e.target.value)}
+            onBlur={handleCellBlur}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            list="categorias-cata-list"
+            className={`${width} px-1 py-0.5 text-xs border-2 border-blue-500 rounded outline-none bg-blue-50`}
+          />
+        );
+      }
+
       return (
         <input
-          type={type}
+          type="text"
           value={editingCell.value}
           onChange={(e) => handleCellChange(e.target.value)}
           onBlur={handleCellBlur}
@@ -304,6 +372,13 @@ export default function ManageSamples() {
 
   return (
     <div>
+      {/* Datalist para autocompletado */}
+      <datalist id="categorias-cata-list">
+        {categoriasCataUnicas.map(cat => (
+          <option key={cat} value={cat} />
+        ))}
+      </datalist>
+
       {/* Barra superior */}
       <div className="bg-white rounded-xl shadow-md p-3 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -317,13 +392,27 @@ export default function ManageSamples() {
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+          
           <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            value={filterCategoria}
+            onChange={(e) => setFilterCategoria(e.target.value)}
             className="px-2 py-1.5 text-sm border border-gray-300 rounded-lg bg-white"
+            title="Filtrar por Categoría"
           >
-            <option value="">Todas</option>
-            {CATEGORIES.map(cat => (
+            <option value="">Todas Categorías</option>
+            {CATEGORIAS.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterCategoriaCata}
+            onChange={(e) => setFilterCategoriaCata(e.target.value)}
+            className="px-2 py-1.5 text-sm border border-gray-300 rounded-lg bg-white"
+            title="Filtrar por Categoría de Cata"
+          >
+            <option value="">Todas Cat. Cata</option>
+            {categoriasCataUnicas.map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
@@ -355,13 +444,6 @@ export default function ManageSamples() {
           >
             <FileSpreadsheet className="w-4 h-4" />
           </button>
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1 px-2 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700"
-            title="Imprimir"
-          >
-            <Printer className="w-4 h-4" />
-          </button>
           <div className="bg-blue-50 px-2 py-1.5 rounded-lg">
             <span className="text-xs text-blue-600 font-medium">{filteredSamples.length}/{samples.length}</span>
           </div>
@@ -375,99 +457,73 @@ export default function ManageSamples() {
             <thead className="bg-gray-700 sticky top-0">
               <tr>
                 <th 
-                  className="px-2 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
+                  className="px-3 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
                   onClick={() => handleSort('codigotexto')}
-                  style={{ width: '70px' }}
+                  style={{ width: '100px' }}
                 >
-                  <div className="flex items-center gap-1">Cód {getSortIcon('codigotexto')}</div>
+                  <div className="flex items-center gap-1">Código {getSortIcon('codigotexto')}</div>
                 </th>
                 <th 
-                  className="px-2 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
+                  className="px-3 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
                   onClick={() => handleSort('nombre')}
-                  style={{ minWidth: '150px' }}
+                  style={{ minWidth: '200px' }}
                 >
                   <div className="flex items-center gap-1">Nombre {getSortIcon('nombre')}</div>
                 </th>
                 <th 
-                  className="px-2 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
-                  onClick={() => handleSort('empresa')}
-                  style={{ minWidth: '120px' }}
+                  className="px-3 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600 bg-purple-700"
+                  onClick={() => handleSort('categoriadecata')}
+                  style={{ minWidth: '150px' }}
+                  title="Categoría de Cata"
                 >
-                  <div className="flex items-center gap-1">Empresa {getSortIcon('empresa')}</div>
+                  <div className="flex items-center gap-1">Cat. Cata {getSortIcon('categoriadecata')}</div>
                 </th>
                 <th 
-                  className="px-2 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
+                  className="px-3 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600 bg-emerald-700"
                   onClick={() => handleSort('categoria')}
-                  style={{ minWidth: '100px' }}
+                  style={{ minWidth: '180px' }}
                 >
                   <div className="flex items-center gap-1">Categoría {getSortIcon('categoria')}</div>
                 </th>
                 <th 
-                  className="px-2 py-2 text-center font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600 bg-amber-700"
-                  onClick={() => handleSort('grado')}
-                  style={{ width: '70px' }}
-                  title="Ordenar por Grado"
+                  className="px-3 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600 bg-orange-700"
+                  onClick={() => handleSort('categoriaoiv')}
+                  style={{ minWidth: '150px' }}
+                  title="Categoría OIV"
                 >
-                  <div className="flex items-center justify-center gap-1">Grado {getSortIcon('grado')}</div>
+                  <div className="flex items-center gap-1">Cat. OIV {getSortIcon('categoriaoiv')}</div>
                 </th>
-                <th 
-                  className="px-2 py-2 text-center font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600 bg-amber-700"
-                  onClick={() => handleSort('azucar')}
-                  style={{ width: '80px' }}
-                  title="Ordenar por Azúcar"
-                >
-                  <div className="flex items-center justify-center gap-1">Azúcar {getSortIcon('azucar')}</div>
-                </th>
-                <th className="px-2 py-2 text-center font-medium text-white uppercase border-r border-gray-600" style={{ width: '60px' }}>
-                  Año
-                </th>
-                <th className="px-2 py-2 text-left font-medium text-white uppercase border-r border-gray-600" style={{ minWidth: '100px' }}>
-                  Tipo Uva
-                </th>
-                <th className="px-2 py-2 text-left font-medium text-white uppercase border-r border-gray-600" style={{ minWidth: '80px' }}>
-                  IGP
-                </th>
-                <th className="px-2 py-2 text-center font-medium text-white uppercase" style={{ width: '50px' }}>
-                  
+                <th className="px-2 py-2 text-center font-medium text-white uppercase" style={{ width: '70px' }}>
+                  Acción
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filteredSamples.map((sample, index) => (
+              {filteredSamples.map((sample) => {
+                const isEdited = editedRows.has(sample.id);
+                const rowColor = isEdited ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-blue-50';
+                const cellCataColor = getCategoriaCataColor(sample.categoriadecata);
+                return (
                 <tr 
                   key={sample.id} 
-                  className={`border-b border-gray-200 hover:bg-blue-50 ${
-                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                  } ${editedRows.has(sample.id) ? 'bg-yellow-50' : ''}`}
+                  className={`border-b border-gray-200 ${rowColor}`}
                 >
-                  <td className="px-2 py-1 border-r border-gray-200 font-mono">
-                    {renderEditableCell(sample, 'codigotexto', sample.codigotexto || sample.codigo, 'text', 'w-16')}
+                  <td className="px-3 py-1.5 border-r border-gray-200 font-mono">
+                    {renderEditableCell(sample, 'codigotexto', sample.codigotexto, 'w-20')}
                   </td>
-                  <td className="px-2 py-1 border-r border-gray-200">
+                  <td className="px-3 py-1.5 border-r border-gray-200">
                     {renderEditableCell(sample, 'nombre', sample.nombre)}
                   </td>
-                  <td className="px-2 py-1 border-r border-gray-200 text-gray-600">
-                    {sample.empresa_nombre || '-'}
+                  <td className={`px-3 py-1.5 border-r border-gray-200 font-medium ${cellCataColor}`}>
+                    {renderEditableCell(sample, 'categoriadecata', sample.categoriadecata)}
                   </td>
-                  <td className="px-2 py-1 border-r border-gray-200">
+                  <td className="px-3 py-1.5 border-r border-gray-200">
                     {renderEditableCell(sample, 'categoria', sample.categoria)}
                   </td>
-                  <td className="px-2 py-1 border-r border-gray-200 text-center bg-amber-50">
-                    {renderEditableCell(sample, 'grado', sample.grado, 'number', 'w-14 text-center')}
+                  <td className="px-3 py-1.5 border-r border-gray-200">
+                    {renderEditableCell(sample, 'categoriaoiv', sample.categoriaoiv)}
                   </td>
-                  <td className="px-2 py-1 border-r border-gray-200 text-center bg-amber-50">
-                    {renderEditableCell(sample, 'azucar', sample.azucar, 'number', 'w-16 text-center')}
-                  </td>
-                  <td className="px-2 py-1 border-r border-gray-200 text-center">
-                    {renderEditableCell(sample, 'anio', sample.anio, 'number', 'w-14 text-center')}
-                  </td>
-                  <td className="px-2 py-1 border-r border-gray-200">
-                    {renderEditableCell(sample, 'tipouva', sample.tipouva)}
-                  </td>
-                  <td className="px-2 py-1 border-r border-gray-200">
-                    {renderEditableCell(sample, 'igp', sample.igp)}
-                  </td>
-                  <td className="px-2 py-1 text-center">
+                  <td className="px-2 py-1.5 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => setEditModalSample(sample)}
@@ -486,7 +542,8 @@ export default function ManageSamples() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>
@@ -505,8 +562,16 @@ export default function ManageSamples() {
             Modificado
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 bg-amber-50 border border-amber-200 rounded"></span>
-            Ordenable
+            <span className="w-3 h-3 bg-purple-50 border border-purple-200 rounded"></span>
+            Cat. Cata
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-emerald-50 border border-emerald-200 rounded"></span>
+            Categoría
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-orange-50 border border-orange-200 rounded"></span>
+            Cat. OIV
           </span>
         </div>
       </div>

@@ -288,7 +288,7 @@ export default function AdminInscriptionForm() {
               className="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
             />
             <label htmlFor="manual-inscription" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
-              Muestra Manual
+              Muestra Manual 1 al 999
             </label>
           </div>
         </div>

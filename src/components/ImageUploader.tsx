@@ -36,12 +36,13 @@ export default function ImageUploader({
         throw new Error('Solo se permiten imágenes');
       }
 
-      // Generar nombre único
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      // Usar el nombre original del archivo con timestamp para evitar duplicados
+      const timestamp = Date.now();
+      const originalName = file.name;
+      const fileName = `${timestamp}_${originalName}`;
       const filePath = `${fileName}`;
 
-      console.log('📤 Subiendo imagen:', filePath);
+      console.log('📤 Subiendo imagen:', filePath, '(original:', originalName, ')');
 
       // Subir a Supabase Storage
       const { data, error: uploadError } = await supabase.storage

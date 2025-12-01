@@ -66,6 +66,11 @@ export type Sample = {
   categoriadecata?: string;
   created_at: string;
   tanda?: number;
+  // Scoring fields (added 2025-11-30)
+  puntuacion_total?: number;
+  medalla?: string;
+  num_puntuaciones?: number;
+  catada?: boolean;
 };
 
 export type CompanyWithSamples = Company & {
@@ -80,4 +85,27 @@ export type Catador = {
   especialidad?: string;
   activo: boolean;
   created_at: string;
+};
+
+export type PuntuacionCatador = {
+  id: string;
+  muestra_id: number;
+  catador_id: string;
+  mesa_id?: number;
+  puntuacion: number;
+  notas?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MedalConfig = {
+  id: number;
+  medalla: string;
+  puntuacion_minima: number;
+  puntuacion_maxima: number;
+  color_hex: string;
+  orden: number;
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
 };

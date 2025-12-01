@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
@@ -16,14 +16,20 @@ import SettingsManager from './SettingsManager';
 import ManageSamples from './ManageSamples';
 import Chequeo from './Chequeo';
 import PantallasManager from './PantallasManager';
+import BottlePhotosGallery from './BottlePhotosGallery';
+import ResultadosCatas from './ResultadosCatas';
+import PuntuacionesManager from './PuntuacionesManager';
+import PayPalConfigManager from './PayPalConfigManager';
+import CategoriasManager from './CategoriasManager';
 
-type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas';
+type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados';
 
 interface MenuItem {
   id: string;
   label: string;
   icon: LucideIcon | null;
   isSeparator?: boolean;
+  highlight?: boolean;
 }
 
 interface AdminDashboardProps {
@@ -56,16 +62,21 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'listadoEmpresas', label: 'Listado Empresas', icon: FileText },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'gestionMuestras', label: 'Gestión Muestras', icon: List },
+    { id: 'categorias', label: 'Categorías', icon: Tag },
+    { id: 'fotosBotellas', label: 'Fotos Botellas', icon: Camera },
     { id: 'chequeo', label: 'Chequeo', icon: List },
+    { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle, highlight: true },
     { id: 'separator2', label: '', icon: null, isSeparator: true },
     { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
     { id: 'gestionTandas', label: 'Gestión Tandas', icon: FolderTree },
     { id: 'separator3', label: '', icon: null, isSeparator: true },
+    { id: 'resultados', label: 'Resultados Catas', icon: Trophy },
+    { id: 'puntuaciones', label: 'Puntuaciones', icon: BarChart3 },
     { id: 'catadores', label: 'Catadores', icon: Users },
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'dispositivos', label: 'Dispositivos', icon: Smartphone },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
-    { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle },
+    { id: 'paypal', label: 'PayPal', icon: CreditCard },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
     { id: 'pantallas', label: 'Pantallas', icon: Monitor },
@@ -85,12 +96,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
           
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
             {menuItems.map((item) => {
               // Renderizar separador
               if (item.isSeparator) {
                 return (
-                  <div key={item.id} className="py-2">
+                  <div key={item.id} className="py-1">
                     <div className="border-t border-white/20"></div>
                   </div>
                 );
@@ -98,18 +109,23 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
               const Icon = item.icon!;
               const isActive = activeTab === item.id;
+              const isHighlight = item.highlight;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleTabChange(item.id as Tab)}
                   title={item.label}
-                  className={`w-full group flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-white/10 text-white shadow-lg border-l-4 border-white/50'
-                      : 'text-white/80 hover:bg-white/5 hover:text-white'
+                  className={`w-full group flex items-center gap-2 px-2 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                    isHighlight
+                      ? isActive
+                        ? 'bg-red-700 text-white shadow-lg border-l-4 border-red-300'
+                        : 'bg-red-600 text-white hover:bg-red-700'
+                      : isActive
+                        ? 'bg-white/10 text-white shadow-lg border-l-4 border-white/50'
+                        : 'text-white/80 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isHighlight ? 'text-white' : isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
                   <span className="truncate">{item.label}</span>
                   {isActive && (
                     <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -120,15 +136,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </nav>
           
           {/* Footer */}
-          <div className="p-3 border-t border-white/10 flex-shrink-0">
-            <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">J</span>
+          <div className="p-2 border-t border-white/10 flex-shrink-0">
+            <div className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-xs">J</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">José Ramón Sepúlveda</p>
-                  <p className="text-xs text-white/60 truncate">jrsepu2000@gmail.com</p>
+                  <p className="text-xs font-semibold text-white truncate">José Ramón Sepúlveda</p>
+                  <p className="text-[10px] text-white/60 truncate">jrsepu2000@gmail.com</p>
                 </div>
               </div>
             </div>
@@ -240,12 +256,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'listadoEmpresas' && <ListadoEmpresas />}
             {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} initialCategoryFilter={categoryFilter} />}
             {activeTab === 'gestionMuestras' && <ManageSamples />}
+            {activeTab === 'categorias' && <CategoriasManager />}
+            {activeTab === 'fotosBotellas' && <BottlePhotosGallery onBack={() => setActiveTab('gestionMuestras')} />}
             {activeTab === 'chequeo' && <Chequeo />}
             {activeTab === 'crearTandas' && <TandasManager />}
             {activeTab === 'gestionTandas' && <GestionTandas />}
+            {activeTab === 'resultados' && <ResultadosCatas />}
+            {activeTab === 'puntuaciones' && <PuntuacionesManager />}
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
             {activeTab === 'dispositivos' && <DispositivosManager />}
+            {activeTab === 'paypal' && <PayPalConfigManager />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
