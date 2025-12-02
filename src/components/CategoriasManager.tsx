@@ -3,6 +3,7 @@ import { supabase, type Sample } from '../lib/supabase';
 import { Search, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileSpreadsheet, Pencil, Save, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import SampleEditModal from './SampleEditModal';
+import { showError } from '../lib/toast';
 
 type SortField = 'codigotexto' | 'nombre' | 'categoriadecata' | 'categoria' | 'categoriaoiv';
 type SortDirection = 'asc' | 'desc';
@@ -62,7 +63,7 @@ export default function CategoriasManager() {
       setSamples(samplesData || []);
     } catch (err) {
       console.error('Error cargando muestras:', err);
-      alert('Error cargando muestras');
+      showError('Error cargando muestras');
     } finally {
       setLoading(false);
     }
@@ -256,7 +257,7 @@ export default function CategoriasManager() {
       setEditedRows(new Map());
     } catch (err) {
       console.error('Error guardando cambios:', err);
-      alert('Error guardando cambios');
+      showError('Error guardando cambios');
     } finally {
       setSaving(false);
     }
@@ -293,7 +294,7 @@ export default function CategoriasManager() {
       await fetchSamples();
     } catch (err) {
       console.error('Error al eliminar', err);
-      alert('Error al eliminar la muestra');
+      showError('Error al eliminar la muestra');
     }
   };
 

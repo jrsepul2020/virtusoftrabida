@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
@@ -21,8 +21,9 @@ import ResultadosCatas from './ResultadosCatas';
 import PuntuacionesManager from './PuntuacionesManager';
 import PayPalConfigManager from './PayPalConfigManager';
 import CategoriasManager from './CategoriasManager';
+import BackupManager from './BackupManager';
 
-type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados';
+type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup';
 
 interface MenuItem {
   id: string;
@@ -79,6 +80,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'paypal', label: 'PayPal', icon: CreditCard },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
+    { id: 'backup', label: 'Respaldos', icon: Database },
     { id: 'pantallas', label: 'Pantallas', icon: Monitor },
   ];
 
@@ -271,6 +273,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
             {activeTab === 'configuracion' && <SettingsManager />}
+            {activeTab === 'backup' && <BackupManager />}
             {activeTab === 'pantallas' && <PantallasManager />}
           </div>
         </div>

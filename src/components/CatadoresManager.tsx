@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Users, Plus, Save, X, ChevronDown, ChevronUp, Edit2, Trash2 } from 'lucide-react';
+import { showError, showWarning } from '../lib/toast';
 
 interface Catador {
   id: string;
@@ -96,7 +97,7 @@ export default function CatadoresManager() {
       setCatadores(data || []);
     } catch (error) {
       console.error('Error crítico en catadores:', error);
-      alert('Error al cargar catadores');
+      showError('Error al cargar catadores');
     } finally {
       setLoading(false);
     }
@@ -231,7 +232,7 @@ export default function CatadoresManager() {
         );
         
         if (duplicado) {
-          alert(`El puesto ${puestoActual} de la mesa ${mesaActual} ya está ocupado por ${duplicado.nombre}`);
+          showWarning(`El puesto ${puestoActual} de la mesa ${mesaActual} ya está ocupado por ${duplicado.nombre}`);
           await fetchCatadores(); // Recargar para revertir
           return;
         }
@@ -246,7 +247,7 @@ export default function CatadoresManager() {
       );
       
       if (duplicado) {
-        alert(`La tablet ${value} ya está asignada a ${duplicado.nombre}`);
+        showWarning(`La tablet ${value} ya está asignada a ${duplicado.nombre}`);
         await fetchCatadores(); // Recargar para revertir
         return;
       }
@@ -273,7 +274,7 @@ export default function CatadoresManager() {
       ));
     } catch (error) {
       console.error('Error al actualizar:', error);
-      alert('Error al actualizar el campo');
+      showError('Error al actualizar el campo');
       // Recargar para revertir el cambio
       await fetchCatadores();
     } finally {
@@ -283,18 +284,18 @@ export default function CatadoresManager() {
 
   const handleSave = async () => {
     if (!formData.nombre.trim()) {
-      alert('El nombre es obligatorio');
+      showWarning('El nombre es obligatorio');
       return;
     }
 
     // Validar email y password para nuevos usuarios
     if (!editingId) {
       if (!formData.email?.trim() || !formData.email.includes('@')) {
-        alert('El email es obligatorio y debe ser válido');
+        showWarning('El email es obligatorio y debe ser válido');
         return;
       }
       if (!formData.password || formData.password.length < 6) {
-        alert('La contraseña es obligatoria y debe tener al menos 6 caracteres');
+        showWarning('La contraseña es obligatoria y debe tener al menos 6 caracteres');
         return;
       }
     }
@@ -380,7 +381,7 @@ export default function CatadoresManager() {
       resetForm();
     } catch (error: any) {
       console.error('Error al guardar:', error);
-      alert(`Error al guardar el catador: ${error?.message || 'Error desconocido'}`);
+      showError(`Error al guardar el catador: ${error?.message || 'Error desconocido'}`);
     } finally {
       setSaving(false);
     }
@@ -423,7 +424,7 @@ export default function CatadoresManager() {
       console.log('Catador eliminado exitosamente');
     } catch (error) {
       console.error('Error al eliminar:', error);
-      alert(`Error al eliminar el catador: ${(error as any)?.message || 'Error desconocido'}`);
+      showError(`Error al eliminar el catador: ${(error as any)?.message || 'Error desconocido'}`);
     } finally {
       setSaving(false);
     }
@@ -475,7 +476,7 @@ export default function CatadoresManager() {
       console.log(`${campo} vaciados exitosamente`);
     } catch (error) {
       console.error(`Error al vaciar ${campo}:`, error);
-      alert(`Error al vaciar ${mensajes[campo]}: ${(error as any)?.message || 'Error desconocido'}`);
+      showError(`Error al vaciar ${mensajes[campo]}: ${(error as any)?.message || 'Error desconocido'}`);
     } finally {
       setSaving(false);
     }

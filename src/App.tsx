@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { supabase } from './lib/supabase';
 import AdminDashboard from './components/AdminDashboard';
 import CatadorDashboard from './components/CatadorDashboard';
@@ -145,6 +146,9 @@ function App() {
       
       {/* Version Badge */}
       <VersionBadge currentView={view} />
+
+      {/* Toast Notifications */}
+      <Toaster position="top-right" />
     </MainLayout>
   );
 }
