@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
 import { X, Camera, Upload, Loader2, Trash2 } from 'lucide-react';
+import { showError } from '../lib/toast';
+import { useEscapeKey, useSaveShortcut } from '../hooks/useKeyboardShortcuts';
 
 interface SampleEditModalProps {
   sample: Sample | null;
@@ -14,6 +16,9 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Atajos de teclado
+  useEscapeKey(onClose, !!sample);
 
   useEffect(() => {
     if (sample) {
@@ -78,7 +83,7 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
 
     } catch (error) {
       console.error('Error al subir imagen:', error);
-      alert('Error al subir la imagen');
+      showError('Error al subir la imagen');
     } finally {
       setUploading(false);
     }
@@ -126,7 +131,7 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
       onClose();
     } catch (error) {
       console.error('Error updating sample:', error);
-      alert('Error al guardar los cambios');
+      showError('Error al guardar los cambios');
     } finally {
       setSaving(false);
     }
