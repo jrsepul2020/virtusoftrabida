@@ -1,18 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { supabase } from './lib/supabase';
-import AdminDashboard from './components/AdminDashboard';
-import CatadorDashboard from './components/CatadorDashboard';
 import LoginForm from './components/LoginForm';
 import MainLayout from './components/MainLayout';
-import UnifiedInscriptionForm from './components/UnifiedInscriptionForm';
 import HeroLanding from './components/HeroLanding';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import UpdateNotification, { VersionBadge } from './components/UpdateNotification';
-import Reglamento from './components/Reglamento';
-import Normativa from './components/Normativa';
-import ResultadosPublicos from './components/ResultadosPublicos';
-import DiplomasPublicos from './components/DiplomasPublicos';
+
+// Lazy loading de componentes pesados
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const CatadorDashboard = lazy(() => import('./components/CatadorDashboard'));
+const UnifiedInscriptionForm = lazy(() => import('./components/UnifiedInscriptionForm'));
+const Reglamento = lazy(() => import('./components/Reglamento'));
+const Normativa = lazy(() => import('./components/Normativa'));
+const ResultadosPublicos = lazy(() => import('./components/ResultadosPublicos'));
+const DiplomasPublicos = lazy(() => import('./components/DiplomasPublicos'));
+
+// Componente de carga
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-64">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
+      <p className="text-gray-500 text-sm">Cargando módulo...</p>
+    </div>
+  </div>
+);
 
 type View = 'home' | 'adminLogin' | 'admin' | 'catador' | 'inscripcion' | 'reglamento' | 'normativa' | 'resultados' | 'diplomas';
 
@@ -99,41 +111,55 @@ function App() {
       {/* Panel de administrador */}
       {view === 'admin' && adminLoggedIn && (
         <div className="flex flex-1 min-h-0">
-          <AdminDashboard onLogout={handleAdminLogout} />
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminDashboard onLogout={handleAdminLogout} />
+          </Suspense>
         </div>
       )}
 
       {/* Panel de catador */}
       {view === 'catador' && adminLoggedIn && (
-        <CatadorDashboard onLogout={handleAdminLogout} />
+        <Suspense fallback={<LoadingFallback />}>
+          <CatadorDashboard onLogout={handleAdminLogout} />
+        </Suspense>
       )}
 
       {/* Formulario de inscripción unificado */}
       {view === 'inscripcion' && (
-        <UnifiedInscriptionForm 
-          isAdmin={false}
-          onSuccess={() => setView('home')}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <UnifiedInscriptionForm 
+            isAdmin={false}
+            onSuccess={() => setView('home')}
+          />
+        </Suspense>
       )}
 
       {/* Reglamento */}
       {view === 'reglamento' && (
-        <Reglamento />
+        <Suspense fallback={<LoadingFallback />}>
+          <Reglamento />
+        </Suspense>
       )}
 
       {/* Normativa */}
       {view === 'normativa' && (
-        <Normativa />
+        <Suspense fallback={<LoadingFallback />}>
+          <Normativa />
+        </Suspense>
       )}
 
       {/* Resultados Públicos */}
       {view === 'resultados' && (
-        <ResultadosPublicos />
+        <Suspense fallback={<LoadingFallback />}>
+          <ResultadosPublicos />
+        </Suspense>
       )}
 
       {/* Diplomas Públicos */}
       {view === 'diplomas' && (
-        <DiplomasPublicos />
+        <Suspense fallback={<LoadingFallback />}>
+          <DiplomasPublicos />
+        </Suspense>
       )}
 
       {/* test page removed */}
