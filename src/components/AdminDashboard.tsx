@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Kanban, Send, Barcode } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
@@ -22,8 +22,12 @@ import PuntuacionesManager from './PuntuacionesManager';
 import PayPalConfigManager from './PayPalConfigManager';
 import CategoriasManager from './CategoriasManager';
 import BackupManager from './BackupManager';
+import InscripcionesKanban from './InscripcionesKanban';
+import PagosManager from './PagosManager';
+import ComunicacionesManager from './ComunicacionesManager';
+import EtiquetadoMuestras from './EtiquetadoMuestras';
 
-type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup';
+type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'kanban' | 'pagos' | 'comunicaciones' | 'etiquetado';
 
 interface MenuItem {
   id: string;
@@ -60,9 +64,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
     
     { id: 'companies', label: 'Empresas', icon: Building2 },
+    { id: 'kanban', label: 'Pipeline Inscripciones', icon: Kanban },
     { id: 'listadoEmpresas', label: 'Listado Empresas', icon: FileText },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'gestionMuestras', label: 'Gestión Muestras', icon: List },
+    { id: 'etiquetado', label: 'Etiquetado Muestras', icon: Barcode },
     { id: 'categorias', label: 'Categorías', icon: Tag },
     { id: 'fotosBotellas', label: 'Fotos Botellas', icon: Camera },
     { id: 'chequeo', label: 'Chequeo', icon: List },
@@ -77,6 +83,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'dispositivos', label: 'Dispositivos', icon: Smartphone },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
+    { id: 'pagos', label: 'Pagos', icon: CreditCard },
+    { id: 'comunicaciones', label: 'Comunicaciones', icon: Send },
     { id: 'paypal', label: 'PayPal', icon: CreditCard },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
@@ -255,9 +263,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className={activeTab === 'listadoEmpresas' ? 'p-2' : 'p-4'}>
             {activeTab === 'statistics' && <StatisticsManager onNavigateToSamples={handleNavigateToSamplesByCategory} />}
             {activeTab === 'companies' && <CompaniesManager />}
+            {activeTab === 'kanban' && <InscripcionesKanban />}
             {activeTab === 'listadoEmpresas' && <ListadoEmpresas />}
             {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} initialCategoryFilter={categoryFilter} />}
             {activeTab === 'gestionMuestras' && <ManageSamples />}
+            {activeTab === 'etiquetado' && <EtiquetadoMuestras />}
             {activeTab === 'categorias' && <CategoriasManager />}
             {activeTab === 'fotosBotellas' && <BottlePhotosGallery onBack={() => setActiveTab('gestionMuestras')} />}
             {activeTab === 'chequeo' && <Chequeo />}
@@ -268,6 +278,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
             {activeTab === 'dispositivos' && <DispositivosManager />}
+            {activeTab === 'pagos' && <PagosManager />}
+            {activeTab === 'comunicaciones' && <ComunicacionesManager />}
             {activeTab === 'paypal' && <PayPalConfigManager />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
