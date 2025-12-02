@@ -77,6 +77,8 @@ export default function EtiquetadoMuestras() {
   const fetchMuestras = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Query simple primero para evitar errores
       const { data, error } = await supabase
         .from('muestras')
         .select(`
@@ -86,17 +88,21 @@ export default function EtiquetadoMuestras() {
             pais
           )
         `)
-        .order('categoria')
-        .order('codigo_ciego');
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error Supabase:', error);
+        throw error;
+      }
+
+      console.log('Muestras cargadas:', data?.length);
 
       const muestrasData = (data || []).map((m, index) => ({
         ...m,
         nombre_empresa: m.empresas?.name || m.empresa || 'Sin empresa',
         pais: m.empresas?.pais || m.pais,
-        codigo: m.codigo || `M${String(index + 1).padStart(4, '0')}`,
-        codigo_ciego: m.codigo_ciego || String(index + 1).padStart(3, '0'),
+        codigo: m.codigo || m.codigotexto || `M${String(index + 1).padStart(4, '0')}`,
+        codigo_ciego: m.codigo_ciego || m.codigotexto || String(index + 1).padStart(3, '0'),
         orden: index + 1
       }));
 
