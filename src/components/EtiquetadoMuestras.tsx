@@ -81,7 +81,10 @@ export default function EtiquetadoMuestras() {
         .from('muestras')
         .select(`
           *,
-          empresas:empresa_id(nombre_empresa, pais)
+          empresas:empresa_id (
+            name,
+            pais
+          )
         `)
         .order('categoria')
         .order('codigo_ciego');
@@ -90,8 +93,8 @@ export default function EtiquetadoMuestras() {
 
       const muestrasData = (data || []).map((m, index) => ({
         ...m,
-        nombre_empresa: m.empresas?.nombre_empresa,
-        pais: m.empresas?.pais,
+        nombre_empresa: m.empresas?.name || m.empresa || 'Sin empresa',
+        pais: m.empresas?.pais || m.pais,
         codigo: m.codigo || `M${String(index + 1).padStart(4, '0')}`,
         codigo_ciego: m.codigo_ciego || String(index + 1).padStart(3, '0'),
         orden: index + 1
