@@ -92,7 +92,7 @@ export default function PagosManager() {
         .from('empresas')
         .select(`
           id,
-          nombre_empresa,
+          name,
           email,
           telefono,
           pais,
@@ -120,7 +120,7 @@ export default function PagosManager() {
         return {
           id: e.id,
           empresa_id: e.id,
-          nombre_empresa: e.nombre_empresa,
+          nombre_empresa: e.name || 'Sin nombre',
           email: e.email,
           telefono: e.telefono,
           pais: e.pais,

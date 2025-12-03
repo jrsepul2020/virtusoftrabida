@@ -178,10 +178,16 @@ export default function ComunicacionesManager() {
       // Cargar empresas
       const { data: empresasData } = await supabase
         .from('empresas')
-        .select('id, nombre_empresa, email, status, pago_confirmado')
-        .order('nombre_empresa');
+        .select('id, name, email, status, pago_confirmado')
+        .order('name');
       
-      setEmpresas(empresasData || []);
+      // Mapear name a nombre_empresa para mantener compatibilidad
+      const empresasMapeadas = (empresasData || []).map(e => ({
+        ...e,
+        nombre_empresa: e.name || 'Sin nombre'
+      }));
+      
+      setEmpresas(empresasMapeadas);
 
       // Cargar historial (desde localStorage)
       const savedHistorial = localStorage.getItem('email_historial');
