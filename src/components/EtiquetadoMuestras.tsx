@@ -1,5 +1,5 @@
 /**
- * Etiquetado de Muestras - Versión simplificada
+ * Etiquetado de Muestras
  * Genera etiquetas con código de barras + codigotexto
  * Sin marcos, solo color negro, medidas configurables
  */
@@ -10,12 +10,15 @@ import {
   Printer,
   Download,
   Search,
-  Filter,
   Settings,
   Eye,
   RefreshCw,
   Copy,
-  Ruler
+  Ruler,
+  FileText,
+  ArrowUpDown,
+  Check,
+  X
 } from 'lucide-react';
 import { showSuccess, showError } from '../lib/toast';
 import JsBarcode from 'jsbarcode';
@@ -35,6 +38,8 @@ interface Muestra {
   anada?: number;
   estado?: string;
   orden?: number;
+  recibida?: boolean;
+  recibida_at?: string;
 }
 
 // Modelos de etiqueta predefinidos (en mm)
@@ -59,16 +64,22 @@ const MODELOS_ETIQUETA: ModeloEtiqueta[] = [
   { id: 'custom', nombre: 'Personalizada', ancho: 50, alto: 25, columnas: 3, marginH: 4, marginV: 4, barcodeHeight: 35, fontSize: 12 },
 ];
 
+type SortField = 'codigotexto' | 'nombre' | 'empresa' | 'recibida' | 'recibida_at';
+type SortDir = 'asc' | 'desc';
+
 export default function EtiquetadoMuestras() {
   const [muestras, setMuestras] = useState<Muestra[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategoria, setFilterCategoria] = useState<string>('all');
-  const [categorias, setCategorias] = useState<string[]>([]);
+  const [filterRecibida, setFilterRecibida] = useState<'all' | 'si' | 'no'>('all');
   const [selectedMuestras, setSelectedMuestras] = useState<string[]>([]);
   const [showConfig, setShowConfig] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  
+  // Ordenamiento
+  const [sortField, setSortField] = useState<SortField>('codigotexto');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   
   // Configuración de etiqueta
   const [modeloId, setModeloId] = useState('mediana');
@@ -111,10 +122,6 @@ export default function EtiquetadoMuestras() {
       }));
 
       setMuestras(muestrasData);
-
-      // Extraer categorías únicas
-      const cats = [...new Set(muestrasData.map(m => m.categoria).filter(Boolean))];
-      setCategorias(cats.sort());
     } catch (error) {
       console.error('Error:', error);
       showError('Error al cargar muestras');
@@ -140,7 +147,7 @@ export default function EtiquetadoMuestras() {
                 format: 'CODE128',
                 width: 1.5,
                 height: modeloActual.barcodeHeight,
-                displayValue: false, // No mostrar valor debajo del barcode, lo ponemos nosotros
+                displayValue: false,
                 margin: 0,
                 background: 'transparent',
                 lineColor: '#000000',
@@ -154,18 +161,74 @@ export default function EtiquetadoMuestras() {
     }
   }, [showPreview, selectedMuestras, modeloActual.barcodeHeight]);
 
-  // Filtrar muestras
-  const muestrasFiltradas = muestras.filter(m => {
-    const matchSearch = !searchTerm ||
-      m.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.codigotexto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.codigo_ciego?.includes(searchTerm) ||
-      m.nombre_empresa?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Formatear fecha
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch {
+      return '-';
+    }
+  };
 
-    const matchCategoria = filterCategoria === 'all' || m.categoria === filterCategoria;
+  // Ordenar columna
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
 
-    return matchSearch && matchCategoria;
-  });
+  // Filtrar y ordenar muestras
+  const muestrasFiltradas = muestras
+    .filter(m => {
+      const matchSearch = !searchTerm ||
+        m.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.codigotexto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.nombre_empresa?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchRecibida = filterRecibida === 'all' || 
+        (filterRecibida === 'si' && m.recibida) ||
+        (filterRecibida === 'no' && !m.recibida);
+
+      return matchSearch && matchRecibida;
+    })
+    .sort((a, b) => {
+      let va: any, vb: any;
+      switch (sortField) {
+        case 'codigotexto':
+          va = a.codigotexto || '';
+          vb = b.codigotexto || '';
+          break;
+        case 'nombre':
+          va = a.nombre || '';
+          vb = b.nombre || '';
+          break;
+        case 'empresa':
+          va = a.nombre_empresa || '';
+          vb = b.nombre_empresa || '';
+          break;
+        case 'recibida':
+          va = a.recibida ? 1 : 0;
+          vb = b.recibida ? 1 : 0;
+          break;
+        case 'recibida_at':
+          va = a.recibida_at ? new Date(a.recibida_at).getTime() : 0;
+          vb = b.recibida_at ? new Date(b.recibida_at).getTime() : 0;
+          break;
+        default:
+          va = '';
+          vb = '';
+      }
+      
+      if (typeof va === 'string') {
+        return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+      }
+      return sortDir === 'asc' ? va - vb : vb - va;
+    });
 
   // Toggle selección
   const toggleSelectAll = () => {
@@ -182,9 +245,9 @@ export default function EtiquetadoMuestras() {
       '#': i + 1,
       'Código': m.codigotexto,
       'Nombre': m.nombre,
-      'Categoría': m.categoria,
       'Empresa': m.nombre_empresa,
-      'País': m.pais,
+      'Recibida': m.recibida ? 'Sí' : 'No',
+      'Fecha Recepción': formatDate(m.recibida_at),
     }));
 
     const ws = XLSX.utils.json_to_sheet(dataExport);
@@ -194,29 +257,23 @@ export default function EtiquetadoMuestras() {
     showSuccess('Excel exportado');
   };
 
-  // Imprimir etiquetas
-  const imprimirEtiquetas = () => {
-    const printContent = printRef.current;
-    if (!printContent) return;
-
+  // Generar PDF de etiquetas
+  const generarPDF = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    // Clonar el contenido para la impresión
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Etiquetas de Muestras</title>
+        <title>Etiquetas de Muestras - PDF</title>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
         <style>
           @page { 
             margin: 5mm;
             size: A4;
           }
-          * {
-            box-sizing: border-box;
-          }
+          * { box-sizing: border-box; }
           body { 
             font-family: Arial, sans-serif;
             margin: 0;
@@ -244,10 +301,7 @@ export default function EtiquetadoMuestras() {
             justify-content: center;
             width: 100%;
           }
-          .barcode-svg {
-            max-width: 100%;
-            height: auto;
-          }
+          .barcode-svg { max-width: 100%; height: auto; }
           .codigo-texto { 
             font-size: ${modeloActual.fontSize}pt;
             font-weight: bold;
@@ -256,9 +310,7 @@ export default function EtiquetadoMuestras() {
             margin-top: 1mm;
             font-family: 'Courier New', monospace;
           }
-          @media print {
-            body { -webkit-print-color-adjust: exact; }
-          }
+          @media print { body { -webkit-print-color-adjust: exact; } }
         </style>
       </head>
       <body>
@@ -288,9 +340,92 @@ export default function EtiquetadoMuestras() {
                   background: 'transparent',
                   lineColor: '#000000'
                 });
-              } catch (e) {
-                console.error('Error:', e);
-              }
+              } catch (e) { console.error('Error:', e); }
+            }
+          });
+        <\/script>
+        <p style="margin-top: 20px; font-size: 10pt; color: #666;">
+          Use Ctrl+P (o Cmd+P en Mac) y seleccione "Guardar como PDF" para exportar este documento.
+        </p>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    showSuccess('Ventana PDF abierta - Use Guardar como PDF en el diálogo de impresión');
+  };
+
+  // Imprimir etiquetas
+  const imprimirEtiquetas = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Etiquetas de Muestras</title>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+        <style>
+          @page { margin: 5mm; size: A4; }
+          * { box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #000; }
+          .etiqueta-grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: ${modeloActual.marginV}mm ${modeloActual.marginH}mm;
+            justify-content: flex-start;
+          }
+          .etiqueta { 
+            width: ${modeloActual.ancho}mm;
+            height: ${modeloActual.alto}mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            page-break-inside: avoid;
+            padding: 2mm;
+          }
+          .barcode-container { display: flex; justify-content: center; width: 100%; }
+          .barcode-svg { max-width: 100%; height: auto; }
+          .codigo-texto { 
+            font-size: ${modeloActual.fontSize}pt;
+            font-weight: bold;
+            text-align: center;
+            color: #000;
+            margin-top: 1mm;
+            font-family: 'Courier New', monospace;
+          }
+          @media print { body { -webkit-print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <div class="etiqueta-grid">
+          ${muestras
+            .filter(m => selectedMuestras.includes(m.id))
+            .map(muestra => `
+              <div class="etiqueta">
+                <div class="barcode-container">
+                  <svg class="barcode-svg" data-code="${muestra.codigotexto}"></svg>
+                </div>
+                <div class="codigo-texto">${muestra.codigotexto}</div>
+              </div>
+            `).join('')}
+        </div>
+        <script>
+          document.querySelectorAll('.barcode-svg').forEach(function(el) {
+            var code = el.getAttribute('data-code');
+            if (code) {
+              try {
+                JsBarcode(el, code, {
+                  format: 'CODE128',
+                  width: 1.5,
+                  height: ${modeloActual.barcodeHeight},
+                  displayValue: false,
+                  margin: 0,
+                  background: 'transparent',
+                  lineColor: '#000000'
+                });
+              } catch (e) { console.error('Error:', e); }
             }
           });
           setTimeout(function() { window.print(); }, 500);
@@ -309,6 +444,13 @@ export default function EtiquetadoMuestras() {
     showSuccess(`${seleccionadas.length} códigos copiados`);
   };
 
+  // Renderizar icono de orden
+  const SortIcon = ({ field }: { field: SortField }) => (
+    <span className={`ml-1 ${sortField === field ? 'text-gray-800' : 'text-gray-400'}`}>
+      {sortField === field ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
+    </span>
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -318,7 +460,7 @@ export default function EtiquetadoMuestras() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -395,8 +537,7 @@ export default function EtiquetadoMuestras() {
                   value={customConfig.ancho}
                   onChange={(e) => setCustomConfig({ ...customConfig, ancho: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  min="20"
-                  max="200"
+                  min="20" max="200"
                 />
               </div>
               <div>
@@ -406,133 +547,125 @@ export default function EtiquetadoMuestras() {
                   value={customConfig.alto}
                   onChange={(e) => setCustomConfig({ ...customConfig, alto: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  min="10"
-                  max="100"
+                  min="10" max="100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Altura código barras</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Altura barcode</label>
                 <input
                   type="number"
                   value={customConfig.barcodeHeight}
                   onChange={(e) => setCustomConfig({ ...customConfig, barcodeHeight: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  min="15"
-                  max="80"
+                  min="15" max="80"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Tamaño texto (pt)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Texto (pt)</label>
                 <input
                   type="number"
                   value={customConfig.fontSize}
                   onChange={(e) => setCustomConfig({ ...customConfig, fontSize: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  min="8"
-                  max="24"
+                  min="8" max="24"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Margen horizontal (mm)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Margen H (mm)</label>
                 <input
                   type="number"
                   value={customConfig.marginH}
                   onChange={(e) => setCustomConfig({ ...customConfig, marginH: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  min="0"
-                  max="20"
+                  min="0" max="20"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Margen vertical (mm)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Margen V (mm)</label>
                 <input
                   type="number"
                   value={customConfig.marginV}
                   onChange={(e) => setCustomConfig({ ...customConfig, marginV: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  min="0"
-                  max="20"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Columnas por fila</label>
-                <input
-                  type="number"
-                  value={customConfig.columnas}
-                  onChange={(e) => setCustomConfig({ ...customConfig, columnas: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  min="1"
-                  max="8"
+                  min="0" max="20"
                 />
               </div>
             </div>
           )}
 
           {/* Preview del tamaño actual */}
-          <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
-            <span className="font-medium">Tamaño actual:</span>
-            <span className="px-2 py-1 bg-gray-100 rounded">{modeloActual.ancho} × {modeloActual.alto} mm</span>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+            <span className="font-medium">Actual:</span>
+            <span className="px-2 py-1 bg-gray-100 rounded">{modeloActual.ancho}×{modeloActual.alto}mm</span>
             <span className="px-2 py-1 bg-gray-100 rounded">Barcode: {modeloActual.barcodeHeight}px</span>
             <span className="px-2 py-1 bg-gray-100 rounded">Texto: {modeloActual.fontSize}pt</span>
           </div>
         </div>
       )}
 
-      {/* Filtros */}
+      {/* Filtros y acciones */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Búsqueda */}
+          <div className="flex-1 min-w-[180px]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar por código, nombre o empresa..."
+                placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-gray-800"
+                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-800 focus:border-gray-800"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
-            <select
-              value={filterCategoria}
-              onChange={(e) => setFilterCategoria(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-800"
-            >
-              <option value="all">Todas las categorías</option>
-              {categorias.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
+          {/* Filtro recibida */}
+          <select
+            value={filterRecibida}
+            onChange={(e) => setFilterRecibida(e.target.value as any)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-800"
+          >
+            <option value="all">Todas</option>
+            <option value="si">Recibidas</option>
+            <option value="no">No recibidas</option>
+          </select>
 
+          {/* Acciones */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleSelectAll}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
             >
-              {selectedMuestras.length === muestrasFiltradas.length ? 'Deseleccionar' : 'Seleccionar'} todas
+              {selectedMuestras.length === muestrasFiltradas.length ? 'Ninguna' : 'Todas'}
             </button>
             <button
               onClick={copiarCodigos}
               disabled={selectedMuestras.length === 0}
-              className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
               title="Copiar códigos"
             >
               <Copy className="w-4 h-4" />
             </button>
             <button
               onClick={exportarExcel}
-              className="flex items-center gap-1 px-3 py-2 bg-gray-800 text-white rounded-lg text-sm hover:bg-gray-900 transition-colors"
+              className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
             >
               <Download className="w-4 h-4" />
               Excel
             </button>
             <button
+              onClick={generarPDF}
+              disabled={selectedMuestras.length === 0}
+              className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
+              title="Exportar a PDF"
+            >
+              <FileText className="w-4 h-4" />
+              PDF
+            </button>
+            <button
               onClick={fetchMuestras}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
               title="Recargar"
             >
               <RefreshCw className="w-4 h-4" />
@@ -547,7 +680,7 @@ export default function EtiquetadoMuestras() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left">
+                <th className="w-10 px-3 py-3">
                   <input
                     type="checkbox"
                     checked={selectedMuestras.length === muestrasFiltradas.length && muestrasFiltradas.length > 0}
@@ -555,11 +688,47 @@ export default function EtiquetadoMuestras() {
                     className="rounded border-gray-300 text-gray-800 focus:ring-gray-800"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">#</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Código</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nombre</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Categoría</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Empresa</th>
+                <th className="w-10 px-2 py-3 text-left text-xs font-semibold text-gray-600">#</th>
+                <th className="w-28 px-3 py-3 text-left">
+                  <button 
+                    onClick={() => handleSort('codigotexto')}
+                    className="flex items-center text-xs font-semibold text-gray-600 uppercase hover:text-gray-800"
+                  >
+                    Código<SortIcon field="codigotexto" />
+                  </button>
+                </th>
+                <th className="px-3 py-3 text-left" style={{ width: '35%' }}>
+                  <button 
+                    onClick={() => handleSort('nombre')}
+                    className="flex items-center text-xs font-semibold text-gray-600 uppercase hover:text-gray-800"
+                  >
+                    Nombre<SortIcon field="nombre" />
+                  </button>
+                </th>
+                <th className="px-3 py-3 text-left" style={{ width: '25%' }}>
+                  <button 
+                    onClick={() => handleSort('empresa')}
+                    className="flex items-center text-xs font-semibold text-gray-600 uppercase hover:text-gray-800"
+                  >
+                    Empresa<SortIcon field="empresa" />
+                  </button>
+                </th>
+                <th className="w-20 px-3 py-3 text-center">
+                  <button 
+                    onClick={() => handleSort('recibida')}
+                    className="flex items-center justify-center text-xs font-semibold text-gray-600 uppercase hover:text-gray-800 w-full"
+                  >
+                    Recibida<SortIcon field="recibida" />
+                  </button>
+                </th>
+                <th className="w-28 px-3 py-3 text-left">
+                  <button 
+                    onClick={() => handleSort('recibida_at')}
+                    className="flex items-center text-xs font-semibold text-gray-600 uppercase hover:text-gray-800"
+                  >
+                    Fecha<SortIcon field="recibida_at" />
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -568,7 +737,7 @@ export default function EtiquetadoMuestras() {
                   key={muestra.id} 
                   className={`hover:bg-gray-50 transition-colors ${selectedMuestras.includes(muestra.id) ? 'bg-gray-100' : ''}`}
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <input
                       type="checkbox"
                       checked={selectedMuestras.includes(muestra.id)}
@@ -582,19 +751,28 @@ export default function EtiquetadoMuestras() {
                       className="rounded border-gray-300 text-gray-800 focus:ring-gray-800"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{index + 1}</td>
-                  <td className="px-4 py-3">
-                    <span className="font-mono font-bold text-gray-900">
+                  <td className="px-2 py-2 text-xs text-gray-400">{index + 1}</td>
+                  <td className="px-3 py-2">
+                    <span className="font-mono font-bold text-gray-900 text-sm">
                       {muestra.codigotexto}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{muestra.nombre}</td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
-                      {muestra.categoria}
-                    </span>
+                  <td className="px-3 py-2 text-sm text-gray-900 truncate max-w-0" title={muestra.nombre}>
+                    {muestra.nombre}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{muestra.nombre_empresa}</td>
+                  <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-0" title={muestra.nombre_empresa}>
+                    {muestra.nombre_empresa}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {muestra.recibida ? (
+                      <Check className="w-5 h-5 text-green-600 mx-auto" />
+                    ) : (
+                      <X className="w-5 h-5 text-gray-300 mx-auto" />
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-gray-500 font-mono">
+                    {formatDate(muestra.recibida_at)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -614,24 +792,29 @@ export default function EtiquetadoMuestras() {
           <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-gray-800">
-                  Vista Previa de Etiquetas
-                </h3>
+                <h3 className="text-lg font-bold text-gray-800">Vista Previa de Etiquetas</h3>
                 <p className="text-sm text-gray-500">
                   {selectedMuestras.length} etiquetas · {modeloActual.ancho}×{modeloActual.alto}mm
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={generarPDF}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  <FileText className="w-4 h-4" />
+                  PDF
+                </button>
+                <button
                   onClick={imprimirEtiquetas}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
                 >
                   <Printer className="w-4 h-4" />
                   Imprimir
                 </button>
                 <button
                   onClick={() => setShowPreview(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                 >
                   Cerrar
                 </button>
