@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Kanban, Send, Barcode } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Send, Barcode } from 'lucide-react';
 import CompaniesManager from './CompaniesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
@@ -22,12 +22,11 @@ import PuntuacionesManager from './PuntuacionesManager';
 import PayPalConfigManager from './PayPalConfigManager';
 import CategoriasManager from './CategoriasManager';
 import BackupManager from './BackupManager';
-import InscripcionesKanban from './InscripcionesKanban';
 import PagosManager from './PagosManager';
 import ComunicacionesManager from './ComunicacionesManager';
 import EtiquetadoMuestras from './EtiquetadoMuestras';
 
-type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'kanban' | 'pagos' | 'comunicaciones' | 'etiquetado';
+type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'pagos' | 'comunicaciones' | 'etiquetado';
 
 interface MenuItem {
   id: string;
@@ -64,7 +63,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
     
     { id: 'companies', label: 'Empresas', icon: Building2 },
-    { id: 'kanban', label: 'Pipeline Inscripciones', icon: Kanban },
     { id: 'listadoEmpresas', label: 'Listado Empresas', icon: FileText },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
     { id: 'gestionMuestras', label: 'Gestión Muestras', icon: List },
