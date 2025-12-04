@@ -10,6 +10,7 @@ type CountsEmpresasMuestras = {
   cnt_vino_blanco?: number;
   cnt_espumoso?: number;
   cnt_generoso_seco?: number;
+  cnt_generoso_dulce?: number;
   cnt_aceite_oliva_virgen_extra?: number;
   cnt_aceite_oliva_virgen_extra_organico?: number;
   cnt_espirituoso_vinico?: number;
@@ -94,6 +95,7 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
         cnt_vino_blanco: 0,
         cnt_espumoso: 0,
         cnt_generoso_seco: 0,
+        cnt_generoso_dulce: 0,
         cnt_aceite_oliva_virgen_extra: 0,
         cnt_aceite_oliva_virgen_extra_organico: 0,
         cnt_espirituoso_vinico: 0,
@@ -198,7 +200,8 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
     { name: 'Blancos', value: countsEM?.cnt_vino_blanco ?? 0, color: '#CA8A04' },
     { name: 'Rosados', value: countsEM?.cnt_vino_rosado ?? 0, color: '#DB2777' },
     { name: 'Espumosos', value: countsEM?.cnt_espumoso ?? 0, color: '#9333EA' },
-    { name: 'Generosos', value: countsEM?.cnt_generoso_seco ?? 0, color: '#EA580C' },
+    { name: 'Generoso Seco', value: countsEM?.cnt_generoso_seco ?? 0, color: '#EA580C' },
+    { name: 'Generoso Dulce', value: countsEM?.cnt_generoso_dulce ?? 0, color: '#F59E0B' },
     { name: 'Espirit. Vínico', value: countsEM?.cnt_espirituoso_vinico ?? 0, color: '#4F46E5' },
     { name: 'Espirit. No Vínico', value: countsEM?.cnt_espirituoso_no_vinico ?? 0, color: '#475569' },
     { name: 'Aceite V.E.', value: countsEM?.cnt_aceite_oliva_virgen_extra ?? 0, color: '#16A34A' },
@@ -211,7 +214,8 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
     { categoria: 'Blancos', cantidad: countsEM?.cnt_vino_blanco ?? 0 },
     { categoria: 'Rosados', cantidad: countsEM?.cnt_vino_rosado ?? 0 },
     { categoria: 'Espumosos', cantidad: countsEM?.cnt_espumoso ?? 0 },
-    { categoria: 'Generosos', cantidad: countsEM?.cnt_generoso_seco ?? 0 },
+    { categoria: 'Gen. Seco', cantidad: countsEM?.cnt_generoso_seco ?? 0 },
+    { categoria: 'Gen. Dulce', cantidad: countsEM?.cnt_generoso_dulce ?? 0 },
     { categoria: 'Espirit.', cantidad: (countsEM?.cnt_espirituoso_vinico ?? 0) + (countsEM?.cnt_espirituoso_no_vinico ?? 0) },
     { categoria: 'Aceites', cantidad: (countsEM?.cnt_aceite_oliva_virgen_extra ?? 0) + (countsEM?.cnt_aceite_oliva_virgen_extra_organico ?? 0) },
   ];
@@ -375,7 +379,7 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
       {/* Espumosos y Generosos */}
       <div>
         <SectionTitle title="Espumosos y Generosos" icon={Sparkles} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl">
           <StatCard
             label="ESPUMOSOS"
             count={countsEM?.cnt_espumoso ?? 0}
@@ -387,6 +391,12 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
             count={countsEM?.cnt_generoso_seco ?? 0}
             color="bg-gradient-to-br from-orange-600 to-orange-700"
             category="GENEROSO SECO"
+          />
+          <StatCard
+            label="GENEROSOS DULCES"
+            count={countsEM?.cnt_generoso_dulce ?? 0}
+            color="bg-gradient-to-br from-amber-500 to-amber-600"
+            category="GENEROSO DULCE"
           />
         </div>
       </div>
