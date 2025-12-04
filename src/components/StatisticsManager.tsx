@@ -17,6 +17,7 @@ type CountsEmpresasMuestras = {
   cnt_espirituoso_no_vinico?: number;
   cnt_vino_rosado?: number;
   cnt_vino_sin_alcohol?: number;
+  cnt_aromatizado?: number;
 };
 
 interface InscripcionPorDia {
@@ -102,6 +103,7 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
         cnt_espirituoso_no_vinico: 0,
         cnt_vino_rosado: 0,
         cnt_vino_sin_alcohol: 0,
+        cnt_aromatizado: 0,
       });
     } finally {
       setLoading(false);
@@ -206,6 +208,7 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
     { name: 'Espirit. No Vínico', value: countsEM?.cnt_espirituoso_no_vinico ?? 0, color: '#475569' },
     { name: 'Aceite V.E.', value: countsEM?.cnt_aceite_oliva_virgen_extra ?? 0, color: '#16A34A' },
     { name: 'Aceite Org.', value: countsEM?.cnt_aceite_oliva_virgen_extra_organico ?? 0, color: '#65A30D' },
+    { name: 'Aromatizado', value: countsEM?.cnt_aromatizado ?? 0, color: '#EC4899' },
   ].filter(item => item.value > 0);
 
   // Datos para el gráfico de barras
@@ -218,6 +221,7 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
     { categoria: 'Gen. Dulce', cantidad: countsEM?.cnt_generoso_dulce ?? 0 },
     { categoria: 'Espirit.', cantidad: (countsEM?.cnt_espirituoso_vinico ?? 0) + (countsEM?.cnt_espirituoso_no_vinico ?? 0) },
     { categoria: 'Aceites', cantidad: (countsEM?.cnt_aceite_oliva_virgen_extra ?? 0) + (countsEM?.cnt_aceite_oliva_virgen_extra_organico ?? 0) },
+    { categoria: 'Aromatiz.', cantidad: countsEM?.cnt_aromatizado ?? 0 },
   ];
 
   return (
@@ -402,20 +406,27 @@ export default function StatisticsManager({ onNavigateToSamples }: StatisticsMan
       </div>
 
       {/* Espirituosos */}
+      {/* Espirituosos y Aromatizados */}
       <div>
-        <SectionTitle title="Espirituosos" icon={Wine} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl">
+        <SectionTitle title="Espirituosos y Aromatizados" icon={Wine} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl">
           <StatCard
-            label="ESPIRITUOSOS VÍNICOS"
+            label="ORIGEN VÍNICO"
             count={countsEM?.cnt_espirituoso_vinico ?? 0}
             color="bg-gradient-to-br from-indigo-600 to-indigo-700"
-            category="ESPIRITUOSO VÍNICO"
+            category="ESPIRITUOSO ORIGEN VÍNICO"
           />
           <StatCard
-            label="ESPIRITUOSOS NO VÍNICOS"
+            label="NO VÍNICOS"
             count={countsEM?.cnt_espirituoso_no_vinico ?? 0}
             color="bg-gradient-to-br from-slate-600 to-slate-700"
             category="ESPIRITUOSO NO VÍNICO"
+          />
+          <StatCard
+            label="AROMATIZADO"
+            count={countsEM?.cnt_aromatizado ?? 0}
+            color="bg-gradient-to-br from-pink-500 to-pink-600"
+            category="AROMATIZADO"
           />
         </div>
       </div>
