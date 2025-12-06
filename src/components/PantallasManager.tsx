@@ -66,81 +66,100 @@ const componentMap: Record<string, ComponentType<any>> = {
 // Lista de todos los componentes TSX del proyecto
 const allComponents: ComponentInfo[] = [
   // Core / App
-  { name: 'App', path: 'src/App.tsx', category: 'Core', description: 'Componente principal de la aplicación', canPreview: false },
-  { name: 'main', path: 'src/main.tsx', category: 'Core', description: 'Punto de entrada de la aplicación', canPreview: false },
+  { name: 'App', path: 'src/App.tsx', category: 'Core', description: '🔧 Componente raíz que gestiona rutas y estado global de la aplicación. No previsualizable.', canPreview: false },
+  { name: 'main', path: 'src/main.tsx', category: 'Core', description: '🚀 Punto de entrada que monta React en el DOM. Solo inicialización.', canPreview: false },
 
   // Admin
-  { name: 'AdminDashboard', path: 'src/components/AdminDashboard.tsx', category: 'Admin', description: 'Panel principal de administración', canPreview: false },
-  { name: 'AdminInscriptionForm', path: 'src/components/AdminInscriptionForm.tsx', category: 'Admin', description: 'Formulario de inscripción para admin', canPreview: false },
-  { name: 'StatisticsManager', path: 'src/components/StatisticsManager.tsx', category: 'Admin', description: 'Gestor de estadísticas', canPreview: true },
-  { name: 'SettingsManager', path: 'src/components/SettingsManager.tsx', category: 'Admin', description: 'Gestor de configuración', canPreview: true },
-  { name: 'ConfiguracionManager', path: 'src/components/ConfiguracionManager.tsx', category: 'Admin', description: 'Gestor de configuración avanzada', canPreview: false },
-  { name: 'DiagnosticoSupabase', path: 'src/components/DiagnosticoSupabase.tsx', category: 'Admin', description: 'Diagnóstico de conexión Supabase', canPreview: true },
+  { name: 'AdminDashboard', path: 'src/components/AdminDashboard.tsx', category: 'Admin', description: '🎛️ Panel principal con sidebar y navegación entre todas las secciones de administración.', canPreview: false },
+  { name: 'AdminInscriptionForm', path: 'src/components/AdminInscriptionForm.tsx', category: 'Admin', description: '📝 Formulario para que el admin registre inscripciones manualmente sin pasar por la web pública.', canPreview: false },
+  { name: 'StatisticsManager', path: 'src/components/StatisticsManager.tsx', category: 'Admin', description: '📊 Dashboard con gráficos y métricas: inscripciones por país, categorías, estados de pago, etc.', canPreview: true },
+  { name: 'SettingsManager', path: 'src/components/SettingsManager.tsx', category: 'Admin', description: '⚙️ Configuración general: fechas del concurso, textos, límites de inscripción y parámetros globales.', canPreview: true },
+  { name: 'ConfiguracionManager', path: 'src/components/ConfiguracionManager.tsx', category: 'Admin', description: '🔧 Configuración técnica avanzada: conexiones, APIs y parámetros del sistema.', canPreview: false },
+  { name: 'DiagnosticoSupabase', path: 'src/components/DiagnosticoSupabase.tsx', category: 'Admin', description: '🔍 Herramienta de diagnóstico para verificar conexión con Supabase y estado de las tablas.', canPreview: true },
+  { name: 'BackupManager', path: 'src/components/BackupManager.tsx', category: 'Admin', description: '💾 Exportar/importar datos del concurso. Crear respaldos y restaurar información.', canPreview: false },
+  { name: 'PantallasManager', path: 'src/components/PantallasManager.tsx', category: 'Admin', description: '🖥️ Este mismo explorador - catálogo visual de todos los componentes de la aplicación.', canPreview: false },
+  { name: 'InscripcionesManager', path: 'src/components/InscripcionesManager.tsx', category: 'Admin', description: '📋 Gestión de inscripciones: revisar, aprobar, marcar como pagadas, ver detalles y muestras.', canPreview: false },
+  { name: 'ImportManager', path: 'src/components/ImportManager.tsx', category: 'Admin', description: '📥 Importar datos masivos desde Excel/CSV: empresas, muestras, catadores.', canPreview: false },
 
   // Empresas
-  { name: 'CompaniesManager', path: 'src/components/CompaniesManager.tsx', category: 'Empresas', description: 'Gestor principal de empresas', canPreview: true },
-  { name: 'CompaniesManager_NEW', path: 'src/components/CompaniesManager_NEW.tsx', category: 'Empresas', description: 'Nueva versión del gestor de empresas', canPreview: false },
-  { name: 'ListadoEmpresas', path: 'src/components/ListadoEmpresas.tsx', category: 'Empresas', description: 'Listado de empresas inscritas', canPreview: true },
-  { name: 'EmpresaScreen', path: 'src/components/EmpresaScreen.tsx', category: 'Empresas', description: 'Pantalla de datos de empresa', canPreview: false },
+  { name: 'CompaniesManager', path: 'src/components/CompaniesManager.tsx', category: 'Empresas', description: '🏢 CRUD completo de empresas: crear, editar, eliminar, ver muestras asociadas y datos de contacto.', canPreview: true },
+  { name: 'CompaniesManager_NEW', path: 'src/components/CompaniesManager_NEW.tsx', category: 'Empresas', description: '🆕 Versión alternativa del gestor de empresas (en desarrollo).', canPreview: false },
+  { name: 'ListadoEmpresas', path: 'src/components/ListadoEmpresas.tsx', category: 'Empresas', description: '📄 Vista compacta tipo tabla de todas las empresas inscritas con filtros y exportación.', canPreview: true },
+  { name: 'EmpresaScreen', path: 'src/components/EmpresaScreen.tsx', category: 'Empresas', description: '👁️ Vista detallada de una empresa específica con todos sus datos y muestras. Requiere ID.', canPreview: false },
 
   // Muestras
-  { name: 'SamplesManager', path: 'src/components/SamplesManager.tsx', category: 'Muestras', description: 'Gestor de muestras', canPreview: false },
-  { name: 'SimpleSamplesList', path: 'src/components/SimpleSamplesList.tsx', category: 'Muestras', description: 'Lista simple de muestras', canPreview: true },
-  { name: 'ManageSamples', path: 'src/components/ManageSamples.tsx', category: 'Muestras', description: 'Gestión avanzada de muestras', canPreview: true },
-  { name: 'MuestrasScreen', path: 'src/components/MuestrasScreen.tsx', category: 'Muestras', description: 'Pantalla de muestras', canPreview: false },
-  { name: 'SampleEditModal', path: 'src/components/SampleEditModal.tsx', category: 'Muestras', description: 'Modal de edición de muestra', canPreview: false },
-  { name: 'PrintSamples', path: 'src/components/PrintSamples.tsx', category: 'Muestras', description: 'Impresión de etiquetas', canPreview: true },
-  { name: 'Chequeo', path: 'src/components/Chequeo.tsx', category: 'Muestras', description: 'Chequeo de recepción de muestras', canPreview: true },
+  { name: 'SamplesManager', path: 'src/components/SamplesManager.tsx', category: 'Muestras', description: '🍷 Gestor básico de muestras de vino con operaciones CRUD.', canPreview: false },
+  { name: 'SimpleSamplesList', path: 'src/components/SimpleSamplesList.tsx', category: 'Muestras', description: '📋 Lista filtrable de todas las muestras con búsqueda, ordenación y exportación a Excel.', canPreview: true },
+  { name: 'ManageSamples', path: 'src/components/ManageSamples.tsx', category: 'Muestras', description: '🔧 Gestión avanzada: editar múltiples muestras, cambiar categorías, asignar números.', canPreview: true },
+  { name: 'MuestrasScreen', path: 'src/components/MuestrasScreen.tsx', category: 'Muestras', description: '👁️ Vista detallada de una muestra específica. Requiere ID de muestra.', canPreview: false },
+  { name: 'SampleEditModal', path: 'src/components/SampleEditModal.tsx', category: 'Muestras', description: '✏️ Modal emergente para editar datos de una muestra. Componente auxiliar.', canPreview: false },
+  { name: 'PrintSamples', path: 'src/components/PrintSamples.tsx', category: 'Muestras', description: '🏷️ Generador de etiquetas para imprimir: códigos, números de muestra, categorías.', canPreview: true },
+  { name: 'Chequeo', path: 'src/components/Chequeo.tsx', category: 'Muestras', description: '✅ Pantalla de recepción física: marcar muestras como recibidas, anotar incidencias.', canPreview: true },
+  { name: 'EtiquetadoMuestras', path: 'src/components/EtiquetadoMuestras.tsx', category: 'Muestras', description: '🏷️ Sistema de etiquetado con códigos de barras/QR para identificar muestras.', canPreview: false },
+  { name: 'CategoriasManager', path: 'src/components/CategoriasManager.tsx', category: 'Muestras', description: '📂 Administrar categorías de vinos: crear, editar, ordenar (Tintos, Blancos, Rosados, etc.).', canPreview: false },
+  { name: 'BottlePhotosGallery', path: 'src/components/BottlePhotosGallery.tsx', category: 'Muestras', description: '📸 Galería de fotos de botellas subidas por las empresas. Ver, ampliar, descargar.', canPreview: false },
 
   // Tandas
-  { name: 'TandasManager', path: 'src/components/TandasManager.tsx', category: 'Tandas', description: 'Gestor de tandas', canPreview: true },
-  { name: 'GestionTandas', path: 'src/components/GestionTandas.tsx', category: 'Tandas', description: 'Gestión avanzada de tandas', canPreview: true },
-  { name: 'TandaViewer', path: 'src/components/TandaViewer.tsx', category: 'Tandas', description: 'Visor de tandas', canPreview: false },
+  { name: 'TandasManager', path: 'src/components/TandasManager.tsx', category: 'Tandas', description: '📦 Crear tandas de cata: agrupar muestras para sesiones de cata específicas.', canPreview: true },
+  { name: 'GestionTandas', path: 'src/components/GestionTandas.tsx', category: 'Tandas', description: '🔄 Gestionar tandas existentes: modificar composición, ver estado, asignar a mesas.', canPreview: true },
+  { name: 'TandaViewer', path: 'src/components/TandaViewer.tsx', category: 'Tandas', description: '👁️ Vista de una tanda específica con sus muestras y estado. Requiere ID de tanda.', canPreview: false },
 
   // Mesas
-  { name: 'MesasManager', path: 'src/components/MesasManager.tsx', category: 'Mesas', description: 'Gestor de mesas', canPreview: true },
-  { name: 'MesasManagerWithTabs', path: 'src/components/MesasManagerWithTabs.tsx', category: 'Mesas', description: 'Gestor de mesas con pestañas', canPreview: false },
-  { name: 'MesasVisualizacion', path: 'src/components/MesasVisualizacion.tsx', category: 'Mesas', description: 'Visualización de mesas', canPreview: true },
-  { name: 'AsignacionesMesas', path: 'src/components/AsignacionesMesas.tsx', category: 'Mesas', description: 'Asignaciones de mesas', canPreview: true },
+  { name: 'MesasManager', path: 'src/components/MesasManager.tsx', category: 'Mesas', description: '🪑 Gestionar mesas de cata: crear, nombrar, asignar catadores y tandas a cada mesa.', canPreview: true },
+  { name: 'MesasManagerWithTabs', path: 'src/components/MesasManagerWithTabs.tsx', category: 'Mesas', description: '🪑 Versión con pestañas del gestor de mesas para mejor organización.', canPreview: false },
+  { name: 'MesasVisualizacion', path: 'src/components/MesasVisualizacion.tsx', category: 'Mesas', description: '📊 Vista gráfica del estado de todas las mesas: ocupación, progreso de cata.', canPreview: true },
+  { name: 'AsignacionesMesas', path: 'src/components/AsignacionesMesas.tsx', category: 'Mesas', description: '🔗 Asignar catadores a mesas y tandas a cada sesión de cata.', canPreview: true },
 
   // Catadores
-  { name: 'CatadoresManager', path: 'src/components/CatadoresManager.tsx', category: 'Catadores', description: 'Gestor de catadores', canPreview: true },
+  { name: 'CatadoresManager', path: 'src/components/CatadoresManager.tsx', category: 'Catadores', description: '👥 CRUD de catadores: datos, especialidades, historial, asignaciones a mesas.', canPreview: true },
+  { name: 'CatadorDashboard', path: 'src/components/CatadorDashboard.tsx', category: 'Catadores', description: '📱 Panel del catador: ver sus tandas asignadas, registrar puntuaciones. Requiere login.', canPreview: false },
 
   // Dispositivos
-  { name: 'DispositivosManager', path: 'src/components/DispositivosManager.tsx', category: 'Dispositivos', description: 'Gestor de dispositivos', canPreview: true },
+  { name: 'DispositivosManager', path: 'src/components/DispositivosManager.tsx', category: 'Dispositivos', description: '📱 Gestionar tablets/dispositivos autorizados para que catadores registren puntuaciones.', canPreview: true },
 
   // Inscripción
-  { name: 'UnifiedInscriptionForm', path: 'src/components/UnifiedInscriptionForm.tsx', category: 'Inscripción', description: 'Formulario unificado de inscripción', canPreview: true },
-  { name: 'ConfirmacionScreen', path: 'src/components/ConfirmacionScreen.tsx', category: 'Inscripción', description: 'Pantalla de confirmación', canPreview: false },
-  { name: 'InscripcionExitosa', path: 'src/components/InscripcionExitosa.tsx', category: 'Inscripción', description: 'Pantalla de inscripción exitosa', canPreview: false },
-  { name: 'SubscriptionForm', path: 'src/components/SubscriptionForm.tsx', category: 'Inscripción', description: 'Formulario de suscripción', canPreview: false },
+  { name: 'UnifiedInscriptionForm', path: 'src/components/UnifiedInscriptionForm.tsx', category: 'Inscripción', description: '📝 Formulario completo de inscripción pública: datos empresa, muestras, pago.', canPreview: true },
+  { name: 'ConfirmacionScreen', path: 'src/components/ConfirmacionScreen.tsx', category: 'Inscripción', description: '✅ Pantalla de confirmación tras completar inscripción. Requiere datos previos.', canPreview: false },
+  { name: 'InscripcionExitosa', path: 'src/components/InscripcionExitosa.tsx', category: 'Inscripción', description: '🎉 Pantalla de éxito con resumen, PDF descargable y opciones de compartir.', canPreview: false },
+  { name: 'SubscriptionForm', path: 'src/components/SubscriptionForm.tsx', category: 'Inscripción', description: '📧 Formulario para suscribirse a newsletter o notificaciones del concurso.', canPreview: false },
 
   // Pagos
-  { name: 'PaymentSelection', path: 'src/components/PaymentSelection.tsx', category: 'Pagos', description: 'Selección de método de pago', canPreview: false },
-  { name: 'PayPalButton', path: 'src/components/PayPalButton.tsx', category: 'Pagos', description: 'Botón de PayPal', canPreview: false },
-  { name: 'PayPalModal', path: 'src/components/PayPalModal.tsx', category: 'Pagos', description: 'Modal de PayPal', canPreview: false },
+  { name: 'PaymentSelection', path: 'src/components/PaymentSelection.tsx', category: 'Pagos', description: '💳 Selector de método de pago: PayPal, transferencia, otros. Componente auxiliar.', canPreview: false },
+  { name: 'PayPalButton', path: 'src/components/PayPalButton.tsx', category: 'Pagos', description: '🔘 Botón integrado de PayPal para procesar pagos. Componente auxiliar.', canPreview: false },
+  { name: 'PayPalModal', path: 'src/components/PayPalModal.tsx', category: 'Pagos', description: '💰 Modal con el flujo de pago PayPal embebido. Componente auxiliar.', canPreview: false },
+  { name: 'PayPalConfigManager', path: 'src/components/PayPalConfigManager.tsx', category: 'Pagos', description: '⚙️ Configurar credenciales PayPal: Client ID, modo sandbox/live, moneda.', canPreview: false },
+  { name: 'PayPalTestLive', path: 'src/components/PayPalTestLive.tsx', category: 'Pagos', description: '🧪 Probar pagos reales de PayPal Live con montos pequeños (0.05€).', canPreview: false },
+  { name: 'PagosManager', path: 'src/components/PagosManager.tsx', category: 'Pagos', description: '💵 Historial y gestión de todos los pagos recibidos. Marcar como confirmados.', canPreview: false },
+
+  // Resultados y Puntuaciones
+  { name: 'ResultadosCatas', path: 'src/components/ResultadosCatas.tsx', category: 'Resultados', description: '🏆 Panel de resultados: ver puntuaciones finales, medallistas, estadísticas por categoría.', canPreview: false },
+  { name: 'ResultadosPublicos', path: 'src/components/ResultadosPublicos.tsx', category: 'Resultados', description: '📢 Vista pública de resultados para compartir: medalleros, ganadores por categoría.', canPreview: false },
+  { name: 'PuntuacionesManager', path: 'src/components/PuntuacionesManager.tsx', category: 'Resultados', description: '📊 Gestionar puntuaciones: editar, recalcular medias, resolver empates.', canPreview: false },
+  { name: 'DiplomasPublicos', path: 'src/components/DiplomasPublicos.tsx', category: 'Resultados', description: '🎖️ Generar y mostrar diplomas descargables para los vinos premiados.', canPreview: false },
+  { name: 'GeneradorImagenes', path: 'src/components/GeneradorImagenes.tsx', category: 'Resultados', description: '🖼️ Crear imágenes para redes sociales con los resultados y medallistas.', canPreview: false },
+
+  // Comunicaciones
+  { name: 'ComunicacionesManager', path: 'src/components/ComunicacionesManager.tsx', category: 'Comunicaciones', description: '📧 Enviar emails masivos a participantes: recordatorios, resultados, novedades.', canPreview: false },
 
   // Auth / Login
-  { name: 'LoginForm', path: 'src/components/LoginForm.tsx', category: 'Autenticación', description: 'Formulario de login admin', canPreview: true },
-  { name: 'UserLoginForm', path: 'src/components/UserLoginForm.tsx', category: 'Autenticación', description: 'Formulario de login usuario', canPreview: false },
-  { name: 'UserDashboard', path: 'src/components/UserDashboard.tsx', category: 'Autenticación', description: 'Dashboard de usuario', canPreview: false },
+  { name: 'LoginForm', path: 'src/components/LoginForm.tsx', category: 'Autenticación', description: '🔐 Formulario de login para administradores con email/contraseña.', canPreview: true },
 
   // Layout / UI
-  { name: 'MainLayout', path: 'src/components/MainLayout.tsx', category: 'Layout', description: 'Layout principal', canPreview: false },
-  { name: 'Header', path: 'src/components/Header.tsx', category: 'Layout', description: 'Cabecera de la aplicación', canPreview: false },
-  { name: 'Footer', path: 'src/components/Footer.tsx', category: 'Layout', description: 'Pie de página', canPreview: true },
-  { name: 'HeroLanding', path: 'src/components/HeroLanding.tsx', category: 'Layout', description: 'Hero de la landing page', canPreview: true },
-  { name: 'Modal', path: 'src/components/Modal.tsx', category: 'Layout', description: 'Componente modal reutilizable', canPreview: false },
+  { name: 'MainLayout', path: 'src/components/MainLayout.tsx', category: 'Layout', description: '📐 Estructura base de la aplicación: header, contenido, footer. Componente contenedor.', canPreview: false },
+  { name: 'Header', path: 'src/components/Header.tsx', category: 'Layout', description: '📌 Cabecera con logo, navegación y menú. Componente compartido.', canPreview: false },
+  { name: 'Footer', path: 'src/components/Footer.tsx', category: 'Layout', description: '📎 Pie de página con links, redes sociales y copyright.', canPreview: true },
+  { name: 'HeroLanding', path: 'src/components/HeroLanding.tsx', category: 'Layout', description: '🎯 Sección hero de la landing: título, descripción, botón de inscripción.', canPreview: true },
+  { name: 'Modal', path: 'src/components/Modal.tsx', category: 'Layout', description: '🪟 Componente modal genérico reutilizable. Requiere contenido como hijo.', canPreview: false },
 
   // Utilidades
-  { name: 'ImageUploader', path: 'src/components/ImageUploader.tsx', category: 'Utilidades', description: 'Cargador de imágenes', canPreview: true },
-  { name: 'EmailTest', path: 'src/components/EmailTest.tsx', category: 'Utilidades', description: 'Prueba de envío de emails', canPreview: true },
-  { name: 'PWAInstallBanner', path: 'src/components/PWAInstallBanner.tsx', category: 'Utilidades', description: 'Banner de instalación PWA', canPreview: false },
-  { name: 'UpdateNotification', path: 'src/components/UpdateNotification.tsx', category: 'Utilidades', description: 'Notificación de actualizaciones', canPreview: false },
+  { name: 'ImageUploader', path: 'src/components/ImageUploader.tsx', category: 'Utilidades', description: '📤 Componente para subir imágenes a Supabase Storage. Drag & drop.', canPreview: true },
+  { name: 'EmailTest', path: 'src/components/EmailTest.tsx', category: 'Utilidades', description: '📬 Probar envío de emails: verificar configuración SMTP y plantillas.', canPreview: true },
+  { name: 'PWAInstallBanner', path: 'src/components/PWAInstallBanner.tsx', category: 'Utilidades', description: '📲 Banner que invita a instalar la app como PWA en el dispositivo.', canPreview: false },
+  { name: 'UpdateNotification', path: 'src/components/UpdateNotification.tsx', category: 'Utilidades', description: '🔄 Notificación cuando hay una nueva versión disponible de la app.', canPreview: false },
 
   // Información
-  { name: 'Reglamento', path: 'src/components/Reglamento.tsx', category: 'Información', description: 'Reglamento del concurso', canPreview: true },
-  { name: 'Normativa', path: 'src/components/Normativa.tsx', category: 'Información', description: 'Normativa aplicable', canPreview: true },
+  { name: 'Reglamento', path: 'src/components/Reglamento.tsx', category: 'Información', description: '📜 Reglamento completo del concurso: normas, requisitos, proceso de cata.', canPreview: true },
+  { name: 'Normativa', path: 'src/components/Normativa.tsx', category: 'Información', description: '⚖️ Normativa legal aplicable: protección de datos, términos y condiciones.', canPreview: true },
 ];
 
 // Colores por categoría
@@ -155,6 +174,8 @@ const categoryColors: Record<string, { bg: string; text: string; border: string 
   'Dispositivos': { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-300' },
   'Inscripción': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
   'Pagos': { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300' },
+  'Resultados': { bg: 'bg-violet-100', text: 'text-violet-700', border: 'border-violet-300' },
+  'Comunicaciones': { bg: 'bg-sky-100', text: 'text-sky-700', border: 'border-sky-300' },
   'Autenticación': { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
   'Layout': { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' },
   'Utilidades': { bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-300' },

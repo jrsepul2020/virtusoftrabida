@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Send, Barcode } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Send, Barcode, ClipboardList } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import CompaniesManager from './CompaniesManager';
+import InscripcionesManager from './InscripcionesManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SimpleSamplesList from './SimpleSamplesList';
 import PrintSamples from './PrintSamples';
@@ -20,13 +22,14 @@ import BottlePhotosGallery from './BottlePhotosGallery';
 import ResultadosCatas from './ResultadosCatas';
 import PuntuacionesManager from './PuntuacionesManager';
 import PayPalConfigManager from './PayPalConfigManager';
+import PayPalTestLive from './PayPalTestLive';
 import CategoriasManager from './CategoriasManager';
 import BackupManager from './BackupManager';
-import PagosManager from './PagosManager';
 import ComunicacionesManager from './ComunicacionesManager';
 import EtiquetadoMuestras from './EtiquetadoMuestras';
+import UsuariosManager from './UsuariosManager';
 
-type Tab = 'statistics' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'pagos' | 'comunicaciones' | 'etiquetado';
+type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'paypalTest' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'etiquetado';
 
 interface MenuItem {
   id: string;
@@ -44,6 +47,38 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('statistics');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [pantallasKey, setPantallasKey] = useState(0);
+  const [currentUser, setCurrentUser] = useState<{ nombre: string; email: string } | null>(null);
+
+  // Obtener datos del usuario actual
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Buscar en tabla usuarios
+          const { data: userData } = await supabase
+            .from('usuarios')
+            .select('nombre, email')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (userData) {
+            setCurrentUser({ nombre: userData.nombre, email: userData.email });
+          } else {
+            // Fallback al email de auth
+            setCurrentUser({ 
+              nombre: session.user.email?.split('@')[0] || 'Usuario', 
+              email: session.user.email || '' 
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error obteniendo usuario:', error);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   const handleNavigateToSamplesByCategory = (category: string) => {
     setCategoryFilter(category);
@@ -55,13 +90,18 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     if (tab !== 'simpleList') {
       setCategoryFilter(undefined);
     }
+    // Si pulsamos en pantallas, forzar recarga
+    if (tab === 'pantallas') {
+      setPantallasKey(prev => prev + 1);
+    }
     setActiveTab(tab);
     setShowMobileMenu(false);
   };
 
   const menuItems: MenuItem[] = [
     { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
-    
+    { id: 'inscripciones', label: 'Inscripciones', icon: ClipboardList },
+    { id: 'separator1', label: '', icon: null, isSeparator: true },
     { id: 'companies', label: 'Empresas', icon: Building2 },
     { id: 'listadoEmpresas', label: 'Listado Empresas', icon: FileText },
     { id: 'simpleList', label: 'Listado Muestras', icon: List },
@@ -70,7 +110,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'categorias', label: 'Categorías', icon: Tag },
     { id: 'fotosBotellas', label: 'Fotos Botellas', icon: Camera },
     { id: 'chequeo', label: 'Chequeo', icon: List },
-    { id: 'form', label: 'Nueva Inscripción', icon: PlusCircle, highlight: true },
     { id: 'separator2', label: '', icon: null, isSeparator: true },
     { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
     { id: 'gestionTandas', label: 'Gestión Tandas', icon: FolderTree },
@@ -81,10 +120,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
     { id: 'dispositivos', label: 'Dispositivos', icon: Smartphone },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
-    { id: 'pagos', label: 'Pagos', icon: CreditCard },
     { id: 'comunicaciones', label: 'Comunicaciones', icon: Send },
-    { id: 'paypal', label: 'PayPal', icon: CreditCard },
+    { id: 'paypal', label: 'PayPal Config', icon: CreditCard },
+    { id: 'paypalTest', label: 'Test PayPal Live', icon: CreditCard, highlight: true },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
+    { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
     { id: 'backup', label: 'Respaldos', icon: Database },
     { id: 'pantallas', label: 'Pantallas', icon: Monitor },
@@ -148,11 +188,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <div className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-colors cursor-pointer">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-xs">J</span>
+                  <span className="text-white font-bold text-xs">{currentUser?.nombre?.charAt(0).toUpperCase() || 'U'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">José Ramón Sepúlveda</p>
-                  <p className="text-[10px] text-white/60 truncate">jrsepu2000@gmail.com</p>
+                  <p className="text-xs font-semibold text-white truncate">{currentUser?.nombre || 'Cargando...'}</p>
+                  <p className="text-[10px] text-white/60 truncate">{currentUser?.email || ''}</p>
                 </div>
               </div>
             </div>
@@ -223,11 +263,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-bold text-sm">J</span>
+                    <span className="text-white font-bold text-sm">{currentUser?.nombre?.charAt(0).toUpperCase() || 'U'}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">José Ramón Sepúlveda</p>
-                    <p className="text-xs text-white/60 truncate">jrsepu2000@gmail.com</p>
+                    <p className="text-sm font-semibold text-white truncate">{currentUser?.nombre || 'Cargando...'}</p>
+                    <p className="text-xs text-white/60 truncate">{currentUser?.email || ''}</p>
                   </div>
                 </div>
               </div>
@@ -260,8 +300,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className={activeTab === 'listadoEmpresas' ? 'p-2' : 'p-4'}>
             {activeTab === 'statistics' && <StatisticsManager onNavigateToSamples={handleNavigateToSamplesByCategory} />}
+            {activeTab === 'inscripciones' && <InscripcionesManager onNewInscripcion={() => setActiveTab('form')} />}
             {activeTab === 'companies' && <CompaniesManager />}
-            {activeTab === 'kanban' && <InscripcionesKanban />}
             {activeTab === 'listadoEmpresas' && <ListadoEmpresas />}
             {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} initialCategoryFilter={categoryFilter} />}
             {activeTab === 'gestionMuestras' && <ManageSamples />}
@@ -276,15 +316,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'mesas' && <MesasManager />}
             {activeTab === 'catadores' && <CatadoresManager />}
             {activeTab === 'dispositivos' && <DispositivosManager />}
-            {activeTab === 'pagos' && <PagosManager />}
             {activeTab === 'comunicaciones' && <ComunicacionesManager />}
             {activeTab === 'paypal' && <PayPalConfigManager />}
+            {activeTab === 'paypalTest' && <PayPalTestLive />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
             {activeTab === 'configuracion' && <SettingsManager />}
+            {activeTab === 'usuarios' && <UsuariosManager />}
             {activeTab === 'backup' && <BackupManager />}
-            {activeTab === 'pantallas' && <PantallasManager />}
+            {activeTab === 'pantallas' && <PantallasManager key={pantallasKey} />}
           </div>
         </div>
       </div>

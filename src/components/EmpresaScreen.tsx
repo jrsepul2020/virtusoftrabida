@@ -1,6 +1,29 @@
 import React from "react";
 import { CompanyData } from "./types";
 
+// Lista de países para el selector
+const PAISES = [
+  'España', 'Portugal', 'Francia', 'Italia', 'Alemania', 'Reino Unido', 'Estados Unidos',
+  'Argentina', 'Chile', 'México', 'Australia', 'Sudáfrica', 'Nueva Zelanda',
+  'Austria', 'Suiza', 'Bélgica', 'Países Bajos', 'Grecia', 'Hungría', 'Rumanía',
+  'Brasil', 'Uruguay', 'Perú', 'Colombia', 'Marruecos', 'Túnez', 'Líbano', 'Israel',
+  'China', 'Japón', 'Corea del Sur', 'India', 'Canadá', 'Otro'
+].sort();
+
+// Prefijos telefónicos
+const PREFIJOS = [
+  { pais: 'España', codigo: '+34' },
+  { pais: 'Portugal', codigo: '+351' },
+  { pais: 'Francia', codigo: '+33' },
+  { pais: 'Italia', codigo: '+39' },
+  { pais: 'Alemania', codigo: '+49' },
+  { pais: 'Reino Unido', codigo: '+44' },
+  { pais: 'Estados Unidos', codigo: '+1' },
+  { pais: 'Argentina', codigo: '+54' },
+  { pais: 'Chile', codigo: '+56' },
+  { pais: 'México', codigo: '+52' },
+];
+
 export function EmpresaScreen({
   company,
   onChange,
@@ -8,6 +31,8 @@ export function EmpresaScreen({
   precio,
   validationErrors = {},
   isManualInscription = false,
+  emailConfirmation = '',
+  onEmailConfirmationChange,
 }: {
   company: CompanyData;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
@@ -15,6 +40,8 @@ export function EmpresaScreen({
   precio: { pagadas: number; gratis: number; total: number };
   validationErrors?: {[key: string]: boolean};
   isManualInscription?: boolean;
+  emailConfirmation?: string;
+  onEmailConfirmationChange?: (value: string) => void;
 }) {
   return (
     <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100">
@@ -34,14 +61,21 @@ export function EmpresaScreen({
         {/* Primera fila - NIF, Nombre Empresa, Persona Contacto */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-2">
-            <label className="block text-primary-800 font-medium mb-1">NIF</label>
+            <label className="block text-primary-800 font-medium mb-1">NIF *</label>
             <input 
               type="text" 
               name="nif" 
               value={company.nif} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.nif 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
             />
+            {validationErrors?.nif && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
           <div className="lg:col-span-6">
             <label className="block text-primary-800 font-medium mb-1">Nombre de la Empresa *</label>
@@ -58,42 +92,103 @@ export function EmpresaScreen({
               } focus:ring-2 transition-colors`}
             />
             {validationErrors?.nombre_empresa && (
-              <p className="text-red-500 text-sm mt-1">Este campo es obligatorio</p>
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
             )}
           </div>
           <div className="lg:col-span-4">
-            <label className="block text-primary-800 font-medium mb-1">Persona de Contacto</label>
+            <label className="block text-primary-800 font-medium mb-1">Persona de Contacto *</label>
             <input 
               type="text" 
               name="persona_contacto" 
               value={company.persona_contacto} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.persona_contacto 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
             />
+            {validationErrors?.persona_contacto && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
         </div>
         
         {/* Segunda fila - Teléfono, Móvil, Email */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 mt-4">
           <div className="lg:col-span-3">
-            <label className="block text-primary-800 font-medium mb-1">Teléfono</label>
-            <input 
-              type="text" 
-              name="telefono" 
-              value={company.telefono} 
-              onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
-            />
+            <label className="block text-primary-800 font-medium mb-1">Teléfono *</label>
+            <div className="flex">
+              <select 
+                className="w-20 px-2 py-2 rounded-l-lg border-r-0 border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 bg-gray-50 text-sm"
+                onChange={(e) => {
+                  const prefijo = e.target.value;
+                  const telefonoActual = company.telefono?.replace(/^\+\d+\s?/, '') || '';
+                  onChange({ target: { name: 'telefono', value: prefijo + ' ' + telefonoActual } } as any);
+                }}
+                defaultValue="+34"
+              >
+                {PREFIJOS.map(p => (
+                  <option key={p.codigo} value={p.codigo}>{p.codigo}</option>
+                ))}
+              </select>
+              <input 
+                type="tel" 
+                inputMode="tel"
+                name="telefono" 
+                value={company.telefono?.replace(/^\+\d+\s?/, '') || ''} 
+                onChange={(e) => {
+                  const prefijo = company.telefono?.match(/^\+\d+/)?.[0] || '+34';
+                  onChange({ target: { name: 'telefono', value: prefijo + ' ' + e.target.value } } as any);
+                }}
+                placeholder="600 000 000"
+                className={`flex-1 px-4 py-2 rounded-r-lg border ${
+                  validationErrors?.telefono 
+                    ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                    : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+                } focus:ring-2 transition-colors`}
+              />
+            </div>
+            {validationErrors?.telefono && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
           <div className="lg:col-span-3">
-            <label className="block text-primary-800 font-medium mb-1">Móvil</label>
-            <input 
-              type="text" 
-              name="movil" 
-              value={company.movil} 
-              onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
-            />
+            <label className="block text-primary-800 font-medium mb-1">Móvil *</label>
+            <div className="flex">
+              <select 
+                className="w-20 px-2 py-2 rounded-l-lg border-r-0 border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 bg-gray-50 text-sm"
+                onChange={(e) => {
+                  const prefijo = e.target.value;
+                  const movilActual = company.movil?.replace(/^\+\d+\s?/, '') || '';
+                  onChange({ target: { name: 'movil', value: prefijo + ' ' + movilActual } } as any);
+                }}
+                defaultValue="+34"
+              >
+                {PREFIJOS.map(p => (
+                  <option key={p.codigo} value={p.codigo}>{p.codigo}</option>
+                ))}
+              </select>
+              <input 
+                type="tel" 
+                inputMode="tel"
+                name="movil" 
+                value={company.movil?.replace(/^\+\d+\s?/, '') || ''} 
+                onChange={(e) => {
+                  const prefijo = company.movil?.match(/^\+\d+/)?.[0] || '+34';
+                  onChange({ target: { name: 'movil', value: prefijo + ' ' + e.target.value } } as any);
+                }}
+                placeholder="600 000 000"
+                className={`flex-1 px-4 py-2 rounded-r-lg border ${
+                  validationErrors?.movil 
+                    ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                    : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+                } focus:ring-2 transition-colors`}
+              />
+            </div>
+            {validationErrors?.movil && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
           <div className="lg:col-span-6">
             <label className="block text-primary-800 font-medium mb-1">Email *</label>
@@ -103,6 +198,7 @@ export function EmpresaScreen({
               value={company.email} 
               onChange={onChange} 
               required 
+              placeholder="ejemplo@empresa.com"
               className={`w-full px-4 py-2 rounded-lg border ${
                 validationErrors?.email 
                   ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
@@ -110,7 +206,33 @@ export function EmpresaScreen({
               } focus:ring-2 transition-colors`}
             />
             {validationErrors?.email && (
-              <p className="text-red-500 text-sm mt-1">Este campo es obligatorio</p>
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
+          </div>
+        </div>
+
+        {/* Confirmación de email */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+          <div className="lg:col-span-6 lg:col-start-7">
+            <label className="block text-primary-800 font-medium mb-1">Confirmar Email *</label>
+            <input 
+              type="email" 
+              value={emailConfirmation} 
+              onChange={(e) => onEmailConfirmationChange?.(e.target.value)}
+              placeholder="Repita su email"
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.email_confirmation 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : company.email && emailConfirmation && company.email === emailConfirmation
+                    ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-200'
+                    : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
+            />
+            {validationErrors?.email_confirmation && (
+              <p className="text-red-500 text-sm mt-1">Los emails no coinciden</p>
+            )}
+            {company.email && emailConfirmation && company.email === emailConfirmation && (
+              <p className="text-green-600 text-sm mt-1">✓ Los emails coinciden</p>
             )}
           </div>
         </div>
@@ -118,58 +240,97 @@ export function EmpresaScreen({
         {/* Tercera fila - Dirección, Población, CP */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 mt-4">
           <div className="lg:col-span-8">
-            <label className="block text-primary-800 font-medium mb-1">Dirección</label>
+            <label className="block text-primary-800 font-medium mb-1">Dirección *</label>
             <input 
               type="text" 
               name="direccion" 
               value={company.direccion} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.direccion 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
             />
+            {validationErrors?.direccion && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
           <div className="lg:col-span-4">
-            <label className="block text-primary-800 font-medium mb-1">Población</label>
+            <label className="block text-primary-800 font-medium mb-1">Población *</label>
             <input 
               type="text" 
               name="poblacion" 
               value={company.poblacion} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.poblacion 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
             />
+            {validationErrors?.poblacion && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
         </div>
         
         {/* Cuarta fila - CP, Ciudad, País */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-12 gap-4 mt-4">
           <div className="lg:col-span-3">
-            <label className="block text-primary-800 font-medium mb-1">Código Postal</label>
+            <label className="block text-primary-800 font-medium mb-1">Código Postal *</label>
             <input 
               type="text" 
               name="codigo_postal" 
               value={company.codigo_postal} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.codigo_postal 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
             />
+            {validationErrors?.codigo_postal && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
           <div className="lg:col-span-5">
-            <label className="block text-primary-800 font-medium mb-1">Ciudad</label>
+            <label className="block text-primary-800 font-medium mb-1">Ciudad *</label>
             <input 
               type="text" 
               name="ciudad" 
               value={company.ciudad} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.ciudad 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors`}
             />
+            {validationErrors?.ciudad && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
           <div className="lg:col-span-4">
-            <label className="block text-primary-800 font-medium mb-1">País</label>
-            <input 
-              type="text" 
+            <label className="block text-primary-800 font-medium mb-1">País *</label>
+            <select 
               name="pais" 
               value={company.pais} 
               onChange={onChange} 
-              className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors" 
-            />
+              className={`w-full px-4 py-2 rounded-lg border ${
+                validationErrors?.pais 
+                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
+                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+              } focus:ring-2 transition-colors bg-white`}
+            >
+              <option value="">Seleccionar país...</option>
+              {PAISES.map(pais => (
+                <option key={pais} value={pais}>{pais}</option>
+              ))}
+            </select>
+            {validationErrors?.pais && (
+              <p className="text-red-500 text-sm mt-1">Obligatorio</p>
+            )}
           </div>
         </div>
         

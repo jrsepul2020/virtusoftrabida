@@ -1,5 +1,6 @@
-import { CheckCircle, Building2, Package, CreditCard, Mail, Phone, MapPin, Globe } from 'lucide-react';
+import { Building2, Package, CreditCard, Mail, Phone, MapPin, Globe, Download, MessageCircle, Search } from 'lucide-react';
 import { CompanyData, SampleData } from './types';
+import { useState } from 'react';
 
 interface InscripcionExitosaProps {
   onClose: () => void;
@@ -18,23 +19,63 @@ export function InscripcionExitosa({
   precio,
   metodoPago = 'transferencia'
 }: InscripcionExitosaProps) {
+  const [showTrackingInfo, setShowTrackingInfo] = useState(false);
+
+  // Función para generar texto del resumen
+  const generateSummaryText = () => {
+    let text = `🏆 INSCRIPCIÓN VIRTUS AWARDS\n\n`;
+    text += `📋 Pedido: #${pedido}\n`;
+    text += `🏢 Empresa: ${company?.nombre_empresa}\n`;
+    text += `📧 Email: ${company?.email}\n`;
+    text += `📦 Muestras: ${samples?.length || 0}\n`;
+    text += `💰 Total: ${precio?.total}€\n`;
+    text += `💳 Pago: ${metodoPago === 'transferencia' ? 'Transferencia' : 'PayPal'}\n\n`;
+    
+    if (samples && samples.length > 0) {
+      text += `🍷 MUESTRAS:\n`;
+      samples.forEach((s, i) => {
+        text += `${i + 1}. ${s.nombre_muestra} (${s.categoria})\n`;
+      });
+    }
+    
+    return text;
+  };
+
+  // Función para compartir por WhatsApp
+  const shareWhatsApp = () => {
+    const text = encodeURIComponent(generateSummaryText());
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
+  // Función para compartir por Email
+  const shareEmail = () => {
+    const subject = encodeURIComponent(`Inscripción Virtus Awards - Pedido #${pedido}`);
+    const body = encodeURIComponent(generateSummaryText());
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
+  // Función para descargar PDF (genera una versión imprimible)
+  const downloadPDF = () => {
+    // Abrir ventana de impresión que permite guardar como PDF
+    window.print();
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-orange-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-orange-50 py-8 px-4 print:bg-white print:py-2">
       <div className="max-w-4xl mx-auto">
         {/* Header de éxito */}
-        <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 text-center mb-6">
-          {/* Icono de éxito */}
+        <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 text-center mb-6 print:shadow-none print:rounded-none">
+          {/* Logo principal en lugar del check */}
           <div className="mb-6 flex justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 bg-green-400 rounded-full blur-xl opacity-50 animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-green-500 to-green-600 rounded-full p-5 shadow-lg">
-                <CheckCircle className="w-16 h-16 text-white" strokeWidth={2.5} />
-              </div>
-            </div>
+            <img 
+              src="/logo-bandera-1.png" 
+              alt="International Virtus Awards" 
+              className="h-18 md:h-32 object-contain"
+            />
           </div>
 
           {/* Título principal */}
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl md:text-4xl font-bold text-gray-900 mb-2">
             ¡Inscripción Realizada con Éxito!
           </h1>
 
@@ -46,13 +87,29 @@ export function InscripcionExitosa({
             </div>
           )}
 
-          {/* Logo */}
-          <div className="mt-6 flex justify-center">
-            <img 
-              src="/logo-bandera-1.png" 
-              alt="International Virtus Awards" 
-              className="h-20 md:h-24 object-contain"
-            />
+          {/* Botones de acción - Ocultos en impresión */}
+          <div className="flex flex-wrap justify-center gap-3 mt-6 print:hidden">
+            <button
+              onClick={downloadPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+            >
+              <Download className="w-4 h-4" />
+              <span>Descargar PDF</span>
+            </button>
+            <button
+              onClick={shareWhatsApp}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>WhatsApp</span>
+            </button>
+            <button
+              onClick={shareEmail}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-md"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Email</span>
+            </button>
           </div>
         </div>
 
@@ -139,15 +196,27 @@ export function InscripcionExitosa({
             <div className="space-y-4">
               {samples.map((sample, idx) => (
                 <div key={idx} className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
                       <span className="inline-flex items-center justify-center w-8 h-8 bg-primary-600 text-white rounded-full text-sm font-bold shadow">
                         {idx + 1}
                       </span>
                     </div>
+                    
+                    {/* Foto de la botella si existe */}
+                    {sample.foto_botella && (
+                      <div className="flex-shrink-0">
+                        <img 
+                          src={sample.foto_botella} 
+                          alt={sample.nombre_muestra}
+                          className="w-16 h-24 object-cover rounded-lg border border-amber-300 shadow-sm"
+                        />
+                      </div>
+                    )}
+                    
                     <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 text-lg mb-2">{sample.nombre_muestra}</h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                      <h3 className="font-bold text-gray-900 text-lg mb-3">{sample.nombre_muestra}</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2 text-sm">
                         <div>
                           <span className="text-gray-500">Categoría:</span>
                           <span className="ml-1 font-medium text-gray-800">{sample.categoria}</span>
@@ -172,37 +241,43 @@ export function InscripcionExitosa({
                         )}
                         {sample.igp && (
                           <div>
-                            <span className="text-gray-500">IGP:</span>
+                            <span className="text-gray-500">D.O./IGP:</span>
                             <span className="ml-1 font-medium text-gray-800">{sample.igp}</span>
                           </div>
                         )}
                         {sample.grado_alcoholico && (
                           <div>
-                            <span className="text-gray-500">Grado:</span>
+                            <span className="text-gray-500">Grado alcohólico:</span>
                             <span className="ml-1 font-medium text-gray-800">{sample.grado_alcoholico}°</span>
                           </div>
                         )}
                         {sample.azucar && (
                           <div>
-                            <span className="text-gray-500">Azúcar:</span>
+                            <span className="text-gray-500">Azúcar residual:</span>
                             <span className="ml-1 font-medium text-gray-800">{sample.azucar} g/l</span>
+                          </div>
+                        )}
+                        {sample.existencias && (
+                          <div>
+                            <span className="text-gray-500">Existencias:</span>
+                            <span className="ml-1 font-medium text-gray-800">{sample.existencias} uds.</span>
                           </div>
                         )}
                         {sample.tipo_uva && (
                           <div>
-                            <span className="text-gray-500">Tipo Uva:</span>
+                            <span className="text-gray-500">Variedad de uva:</span>
                             <span className="ml-1 font-medium text-gray-800">{sample.tipo_uva}</span>
                           </div>
                         )}
                         {sample.tipo_aceituna && (
                           <div>
-                            <span className="text-gray-500">Tipo Aceituna:</span>
+                            <span className="text-gray-500">Variedad aceituna:</span>
                             <span className="ml-1 font-medium text-gray-800">{sample.tipo_aceituna}</span>
                           </div>
                         )}
                         {sample.destilado && (
                           <div>
-                            <span className="text-gray-500">Destilado:</span>
+                            <span className="text-gray-500">Tipo destilado:</span>
                             <span className="ml-1 font-medium text-gray-800">{sample.destilado}</span>
                           </div>
                         )}
@@ -279,8 +354,80 @@ export function InscripcionExitosa({
           </div>
         </div>
 
+        {/* Sección de seguimiento */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 print:hidden">
+          <button
+            onClick={() => setShowTrackingInfo(!showTrackingInfo)}
+            className="w-full flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <Search className="w-6 h-6 text-purple-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">¿Cómo consultar el estado de mi inscripción?</h2>
+            </div>
+            <span className={`text-purple-600 text-2xl transition-transform ${showTrackingInfo ? 'rotate-180' : ''}`}>
+              ▼
+            </span>
+          </button>
+          
+          {showTrackingInfo && (
+            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+              <p className="text-gray-600">
+                Puede consultar el estado de su inscripción en cualquier momento:
+              </p>
+              
+              <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                <h4 className="font-semibold text-purple-800 mb-2">📋 Su código de seguimiento:</h4>
+                <div className="flex items-center gap-2">
+                  <code className="bg-white px-4 py-2 rounded-lg text-lg font-mono font-bold text-purple-700 border border-purple-200">
+                    {pedido}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(String(pedido || ''));
+                      alert('Código copiado al portapapeles');
+                    }}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="bg-purple-100 text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+                  <p className="text-gray-700">
+                    Visite nuestra página web: <a href="https://concursovirtusofraba.com" className="text-primary-600 hover:underline font-medium">concursovirtusofraba.com</a>
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="bg-purple-100 text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+                  <p className="text-gray-700">
+                    Busque la sección "Consultar inscripción" e introduzca su código de seguimiento
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="bg-purple-100 text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+                  <p className="text-gray-700">
+                    Podrá ver el estado de sus muestras, pagos y cualquier actualización
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <p className="text-blue-700 text-sm">
+                  <strong>💡 Consejo:</strong> Guarde este código junto con el email de confirmación. 
+                  Lo necesitará para cualquier consulta sobre su inscripción.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Botón para volver */}
-        <div className="text-center">
+        <div className="text-center print:hidden">
           <button
             onClick={onClose}
             className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold px-10 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"

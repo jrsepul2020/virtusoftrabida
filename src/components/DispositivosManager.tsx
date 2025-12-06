@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Smartphone, Trash2, RefreshCw, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Smartphone, Trash2, RefreshCw, CheckCircle, XCircle, Eye, Wifi, WifiOff, Clock } from 'lucide-react';
 
 interface Dispositivo {
   id: string;
@@ -17,12 +17,9 @@ export default function DispositivosManager() {
   const [dispositivos, setDispositivos] = useState<Dispositivo[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Dispositivo | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-  useEffect(() => {
-    loadDispositivos();
-  }, []);
-
-  const loadDispositivos = async () => {
+  const loadDispositivos = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -32,23 +29,25 @@ export default function DispositivosManager() {
 
       if (error) {
         console.error('Error al cargar dispositivos:', error);
-        // Si la tabla no existe, mostrar mensaje amigable
         if (error.code === '42P01') {
           alert('La tabla "dispositivos" no existe. Por favor, ejecuta la migración en Supabase.');
-        } else {
-          alert('Error al cargar dispositivos: ' + error.message);
         }
         throw error;
       }
       
-      console.log(`Dispositivos: ${data?.length || 0} cargados`);
       setDispositivos(data || []);
+      setLastRefresh(new Date());
     } catch (error) {
       console.error('Error crítico en dispositivos:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Cargar solo una vez al montar el componente
+  useEffect(() => {
+    loadDispositivos();
+  }, [loadDispositivos]);
 
   const handleToggleActivo = async (id: string, currentState: boolean) => {
     try {
@@ -100,43 +99,87 @@ export default function DispositivosManager() {
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     
-    if (diffMins < 1) return 'Ahora';
-    if (diffMins < 2) return `${diffMins}m (Online)`;
-    if (diffMins < 60) return `${diffMins}m`;
+    if (diffMins < 1) return 'Justo ahora';
+    if (diffMins < 2) return 'Hace 1 minuto';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h`;
+    if (diffHours < 24) return `Hace ${diffHours}h`;
     const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d`;
+    return `Hace ${diffDays} días`;
   };
 
-  const isRecentlyActive = (dateString: string) => {
+  // Estado de conexión basado en last_seen_at
+  const getConnectionStatus = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffMins = (now.getTime() - date.getTime()) / 60000;
-    return diffMins < 2; // Activo si se vio en los últimos 2 minutos
+    
+    if (diffMins < 2) return 'online';      // Visto en los últimos 2 minutos
+    if (diffMins < 10) return 'recent';      // Visto en los últimos 10 minutos
+    if (diffMins < 60) return 'idle';        // Visto en la última hora
+    return 'offline';                         // Más de 1 hora sin conexión
+  };
+
+  const getConnectionLabel = (status: string) => {
+    switch (status) {
+      case 'online': return 'Conectado';
+      case 'recent': return 'Reciente';
+      case 'idle': return 'Inactivo';
+      case 'offline': return 'Desconectado';
+      default: return 'Desconocido';
+    }
+  };
+
+  const getConnectionColor = (status: string) => {
+    switch (status) {
+      case 'online': return 'bg-green-500';
+      case 'recent': return 'bg-yellow-500';
+      case 'idle': return 'bg-orange-500';
+      case 'offline': return 'bg-gray-400';
+      default: return 'bg-gray-400';
+    }
+  };
+
+  // Estadísticas
+  const stats = {
+    total: dispositivos.length,
+    habilitados: dispositivos.filter(d => d.activo).length,
+    deshabilitados: dispositivos.filter(d => !d.activo).length,
+    online: dispositivos.filter(d => getConnectionStatus(d.last_seen_at) === 'online').length,
+    offline: dispositivos.filter(d => getConnectionStatus(d.last_seen_at) === 'offline').length,
   };
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Dispositivos Registrados</h2>
           <p className="text-gray-600 mt-1">
             Gestiona las tablets registradas en el sistema
           </p>
         </div>
-        <button
-          onClick={loadDispositivos}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Actualizar
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Indicador de última actualización */}
+          {lastRefresh && (
+            <div className="text-xs text-gray-500 flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-full">
+              <Clock className="w-3 h-3" />
+              <span>Última comprobación: {lastRefresh.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+            </div>
+          )}
+
+          <button
+            onClick={loadDispositivos}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Comprobar Estado
+          </button>
+        </div>
       </div>
 
-      {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Estadísticas mejoradas */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -144,7 +187,7 @@ export default function DispositivosManager() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total</p>
-              <p className="text-2xl font-bold text-gray-900">{dispositivos.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
           </div>
         </div>
@@ -152,13 +195,35 @@ export default function DispositivosManager() {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <Wifi className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Activos</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {dispositivos.filter(d => d.activo).length}
-              </p>
+              <p className="text-sm text-gray-600">Conectados</p>
+              <p className="text-2xl font-bold text-green-600">{stats.online}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+              <WifiOff className="w-5 h-5 text-gray-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Desconectados</p>
+              <p className="text-2xl font-bold text-gray-600">{stats.offline}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Habilitados</p>
+              <p className="text-2xl font-bold text-emerald-600">{stats.habilitados}</p>
             </div>
           </div>
         </div>
@@ -166,28 +231,35 @@ export default function DispositivosManager() {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <XCircle className="w-5 h-5 text-red-600" />
+              <XCircle className="w-5 h-5 text-red-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Inactivos</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {dispositivos.filter(d => !d.activo).length}
-              </p>
+              <p className="text-sm text-gray-600">Deshabilitados</p>
+              <p className="text-2xl font-bold text-red-500">{stats.deshabilitados}</p>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Conectados</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {dispositivos.filter(d => isRecentlyActive(d.last_seen_at)).length}
-              </p>
-            </div>
+      {/* Leyenda */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <span className="font-medium text-amber-800">Leyenda:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-gray-700">Conectado (último 2 min)</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+            <span className="text-gray-700">Reciente (2-10 min)</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+            <span className="text-gray-700">Inactivo (10-60 min)</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+            <span className="text-gray-700">Desconectado (+1 hora)</span>
           </div>
         </div>
       </div>
@@ -219,16 +291,23 @@ export default function DispositivosManager() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {dispositivos.map((dispositivo) => (
+              {dispositivos.map((dispositivo) => {
+                const connectionStatus = getConnectionStatus(dispositivo.last_seen_at);
+                const connectionLabel = getConnectionLabel(connectionStatus);
+                const connectionColor = getConnectionColor(connectionStatus);
+                
+                return (
                 <tr key={dispositivo.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center relative ${
                         dispositivo.activo ? 'bg-blue-100' : 'bg-gray-100'
                       }`}>
                         <Smartphone className={`w-4 h-4 ${
                           dispositivo.activo ? 'text-blue-600' : 'text-gray-400'
                         }`} />
+                        {/* Indicador de conexión */}
+                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${connectionColor} ${connectionStatus === 'online' ? 'animate-pulse' : ''}`}></div>
                       </div>
                       <span className="font-semibold text-gray-900">
                         {dispositivo.tablet_number}
@@ -241,22 +320,35 @@ export default function DispositivosManager() {
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      {isRecentlyActive(dispositivo.last_seen_at) && (
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      )}
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    <div className="flex flex-col gap-1">
+                      {/* Estado de habilitación */}
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
                         dispositivo.activo
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-red-100 text-red-800'
                       }`}>
-                        {dispositivo.activo ? 'Activo' : 'Inactivo'}
+                        {dispositivo.activo ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                        {dispositivo.activo ? 'Habilitado' : 'Deshabilitado'}
+                      </span>
+                      {/* Estado de conexión */}
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
+                        connectionStatus === 'online' ? 'bg-green-100 text-green-800' :
+                        connectionStatus === 'recent' ? 'bg-yellow-100 text-yellow-800' :
+                        connectionStatus === 'idle' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full ${connectionColor} ${connectionStatus === 'online' ? 'animate-pulse' : ''}`}></div>
+                        {connectionLabel}
                       </span>
                     </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="text-sm">
-                      <div className="text-gray-900">
+                      <div className={`font-medium ${
+                        connectionStatus === 'online' ? 'text-green-600' :
+                        connectionStatus === 'offline' ? 'text-red-600' :
+                        'text-gray-900'
+                      }`}>
                         {getTimeSince(dispositivo.last_seen_at)}
                       </div>
                       <div className="text-gray-500 text-xs">
@@ -280,10 +372,10 @@ export default function DispositivosManager() {
                         onClick={() => handleToggleActivo(dispositivo.id, dispositivo.activo)}
                         className={`p-1 rounded transition-colors ${
                           dispositivo.activo
-                            ? 'text-yellow-600 hover:bg-yellow-50'
+                            ? 'text-red-600 hover:bg-red-50'
                             : 'text-green-600 hover:bg-green-50'
                         }`}
-                        title={dispositivo.activo ? 'Desactivar' : 'Activar'}
+                        title={dispositivo.activo ? 'Deshabilitar' : 'Habilitar'}
                       >
                         {dispositivo.activo ? (
                           <XCircle className="w-4 h-4" />
@@ -301,7 +393,8 @@ export default function DispositivosManager() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
 

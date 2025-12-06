@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EmpresaScreen } from './EmpresaScreen';
 import { MuestrasScreen } from './MuestrasScreen';
 import { ConfirmacionScreen } from './ConfirmacionScreen';
@@ -9,6 +9,9 @@ import { User } from 'lucide-react';
 import Modal from './Modal';
 
 type FormStep = 'empresa' | 'muestras' | 'confirmacion' | 'exitosa';
+
+// Key para localStorage
+const STORAGE_KEY = 'virtus_inscription_draft';
 
 interface UnifiedInscriptionFormProps {
   isAdmin?: boolean; // Si es true, muestra opciones de admin
@@ -42,8 +45,15 @@ export default function UnifiedInscriptionForm({
   // Estado para marcar si es inscripción manual (solo para admin)
   const [isManualInscription, setIsManualInscription] = useState(isAdmin);
 
-  // Estados para el formulario por pasos
-  const [company, setCompany] = useState<CompanyData>({
+  // Estado para errores de validación
+  const [companyValidationErrors, setCompanyValidationErrors] = useState<{[key: string]: boolean}>({});
+  const [samplesValidationErrors, setSamplesValidationErrors] = useState<{[key: string]: boolean}>({});
+
+  // Estado para confirmación de email
+  const [emailConfirmation, setEmailConfirmation] = useState('');
+
+  // Estado inicial de company
+  const initialCompany: CompanyData = {
     nif: '',
     nombre_empresa: '',
     persona_contacto: '',
@@ -59,9 +69,10 @@ export default function UnifiedInscriptionForm({
     pagina_web: '',
     observaciones: '',
     num_muestras: 1,
-  });
+  };
 
-  const [samples, setSamples] = useState<SampleData[]>([{
+  // Estado inicial de sample
+  const initialSample: SampleData = {
     nombre_muestra: '',
     categoria: '',
     origen: '',
@@ -75,9 +86,56 @@ export default function UnifiedInscriptionForm({
     tipo_aceituna: '',
     destilado: '',
     foto_botella: '',
-  }]);
+  };
 
+  // Estados para el formulario por pasos
+  const [company, setCompany] = useState<CompanyData>(initialCompany);
+  const [samples, setSamples] = useState<SampleData[]>([{ ...initialSample }]);
   const [payment, setPayment] = useState<PaymentMethod>('transferencia');
+
+  // ========== AUTOGUARDADO EN LOCALSTORAGE ==========
+  // Cargar datos guardados al iniciar (solo si no es admin)
+  useEffect(() => {
+    if (!isAdmin) {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.company) setCompany(data.company);
+          if (data.samples) setSamples(data.samples);
+          if (data.payment) setPayment(data.payment);
+          if (data.currentStep && data.currentStep !== 'exitosa') setCurrentStep(data.currentStep);
+          if (data.emailConfirmation) setEmailConfirmation(data.emailConfirmation);
+        }
+      } catch (e) {
+        console.error('Error loading saved form data:', e);
+      }
+    }
+  }, [isAdmin]);
+
+  // Guardar datos cuando cambian (con debounce)
+  useEffect(() => {
+    if (!isAdmin && currentStep !== 'exitosa') {
+      const timeoutId = setTimeout(() => {
+        try {
+          const data = { company, samples, payment, currentStep, emailConfirmation };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+          console.error('Error saving form data:', e);
+        }
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [company, samples, payment, currentStep, emailConfirmation, isAdmin]);
+
+  // Limpiar localStorage al completar la inscripción
+  const clearSavedData = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.error('Error clearing saved data:', e);
+    }
+  };
 
   // Función para generar código único para muestras manuales (rango 1-999)
   const generateUniqueCode = async (): Promise<number> => {
@@ -177,13 +235,80 @@ export default function UnifiedInscriptionForm({
     setPayment(e.target.value as PaymentMethod);
   };
 
+  // Validación del paso Empresa
+  const validateCompanyStep = (): boolean => {
+    const errors: {[key: string]: boolean} = {};
+    
+    // Campos obligatorios (todos menos observaciones, pagina_web, medio_conocio)
+    if (!company.nif?.trim()) errors.nif = true;
+    if (!company.nombre_empresa?.trim()) errors.nombre_empresa = true;
+    if (!company.persona_contacto?.trim()) errors.persona_contacto = true;
+    if (!company.telefono?.trim()) errors.telefono = true;
+    if (!company.movil?.trim()) errors.movil = true;
+    if (!company.email?.trim()) errors.email = true;
+    // Validar que los emails coincidan
+    if (company.email?.trim() !== emailConfirmation?.trim()) errors.email_confirmation = true;
+    if (!company.direccion?.trim()) errors.direccion = true;
+    if (!company.poblacion?.trim()) errors.poblacion = true;
+    if (!company.codigo_postal?.trim()) errors.codigo_postal = true;
+    if (!company.ciudad?.trim()) errors.ciudad = true;
+    if (!company.pais?.trim()) errors.pais = true;
+    if (!company.num_muestras || company.num_muestras < 1) errors.num_muestras = true;
+    
+    setCompanyValidationErrors(errors);
+    
+    // Mostrar mensaje específico si los emails no coinciden
+    if (errors.email_confirmation && !errors.email) {
+      showModal('error', 'Emails no coinciden', 'El email y su confirmación deben ser iguales');
+      return false;
+    }
+    
+    return Object.keys(errors).length === 0;
+  };
+
   // Navegación entre pasos
   const handleCompanyNext = () => {
-    setCurrentStep('muestras');
+    if (validateCompanyStep()) {
+      setCurrentStep('muestras');
+    } else {
+      showModal('error', 'Campos obligatorios', 'Por favor, complete todos los campos obligatorios marcados con *');
+    }
+  };
+
+  // Helper functions para determinar campos según categoría
+  const isAceite = (categoria: string) => categoria?.toUpperCase().includes('ACEITE');
+  const isVinoSinAlcohol = (categoria: string) => categoria?.toUpperCase() === 'VINO SIN ALCOHOL';
+  const requiresGrado = (categoria: string) => !isVinoSinAlcohol(categoria) && !isAceite(categoria);
+
+  // Validación del paso Muestras
+  const validateSamplesStep = (): boolean => {
+    const errors: {[key: string]: boolean} = {};
+    
+    samples.forEach((sample, idx) => {
+      // Campos siempre obligatorios
+      if (!sample.nombre_muestra?.trim()) errors[`muestra_${idx}_nombre_muestra`] = true;
+      if (!sample.categoria?.trim()) errors[`muestra_${idx}_categoria`] = true;
+      if (!sample.pais?.trim()) errors[`muestra_${idx}_pais`] = true;
+      if (!sample.azucar?.toString().trim()) errors[`muestra_${idx}_azucar`] = true;
+      if (!sample.existencias?.toString().trim()) errors[`muestra_${idx}_existencias`] = true;
+      if (!sample.anio?.toString().trim()) errors[`muestra_${idx}_anio`] = true;
+      
+      // Grado alcohólico obligatorio solo si NO es vino sin alcohol NI aceite
+      if (requiresGrado(sample.categoria) && !sample.grado_alcoholico?.toString().trim()) {
+        errors[`muestra_${idx}_grado_alcoholico`] = true;
+      }
+    });
+    
+    setSamplesValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleMuestrasNext = () => {
-    setCurrentStep('confirmacion');
+    if (validateSamplesStep()) {
+      setCurrentStep('confirmacion');
+    } else {
+      showModal('error', 'Campos obligatorios', 'Por favor, complete todos los campos obligatorios de las muestras marcados con *');
+    }
   };
 
   const handleMuestrasPrev = () => {
@@ -198,39 +323,11 @@ export default function UnifiedInscriptionForm({
   const handleReset = () => {
     setSuccess(false);
     setCurrentStep('empresa');
-    setCompany({
-      nif: '',
-      nombre_empresa: '',
-      persona_contacto: '',
-      telefono: '',
-      movil: '',
-      email: '',
-      direccion: '',
-      poblacion: '',
-      codigo_postal: '',
-      ciudad: '',
-      pais: '',
-      medio_conocio: '',
-      pagina_web: '',
-      observaciones: '',
-      num_muestras: 1,
-    });
-    setSamples([{
-      nombre_muestra: '',
-      categoria: '',
-      origen: '',
-      igp: '',
-      pais: '',
-      azucar: '',
-      grado_alcoholico: '',
-      existencias: '',
-      anio: '',
-      tipo_uva: '',
-      tipo_aceituna: '',
-      destilado: '',
-      foto_botella: '',
-    }]);
+    setCompany({ ...initialCompany });
+    setSamples([{ ...initialSample }]);
     setPayment('transferencia');
+    setEmailConfirmation('');
+    clearSavedData(); // Limpiar localStorage
     if (isAdmin) {
       setIsManualInscription(true);
     }
@@ -242,15 +339,16 @@ export default function UnifiedInscriptionForm({
   };
 
   // Envío final del formulario
-  const handleSubmit = async () => {
+  const handleSubmit = async (paypalDetails?: any) => {
     setLoading(true);
     setError('');
-    console.log('🚀 Iniciando proceso de inscripción...');
+    const isPaidWithPayPal = !!paypalDetails;
+    console.log('🚀 Iniciando proceso de inscripción...', isPaidWithPayPal ? '(Pago con PayPal)' : '');
 
     try {
       // Mapear los datos del formulario a los nombres de columnas de la BD
       // El número de pedido se generará automáticamente en Supabase mediante trigger
-      const empresaData = {
+      const empresaData: any = {
         nif: company.nif,
         name: company.nombre_empresa,  // nombre_empresa -> name
         contact_person: company.persona_contacto,  // persona_contacto -> contact_person
@@ -267,9 +365,18 @@ export default function UnifiedInscriptionForm({
         observaciones: company.observaciones,
         // pedido se asigna automáticamente por el trigger en Supabase
         totalinscripciones: company.num_muestras,  // Número de muestras como total de inscripciones
-        status: 'pending',  // Estado por defecto
+        metodo_pago: isPaidWithPayPal ? 'paypal' : payment, // Método de pago
+        status: isPaidWithPayPal ? 'pagado' : 'pending',  // Si pagó con PayPal, marcar como pagado
+        pago_confirmado: isPaidWithPayPal, // Marcar pago como confirmado si es PayPal
+        fecha_pago: isPaidWithPayPal ? new Date().toISOString() : null, // Fecha de pago si es PayPal
         created_at: new Date().toISOString(),
       };
+
+      // Si pagó con PayPal, guardar referencia de transacción
+      if (isPaidWithPayPal && paypalDetails?.id) {
+        empresaData.referencia_pago = paypalDetails.id;
+        empresaData.notas_pago = `PayPal Transaction ID: ${paypalDetails.id}`;
+      }
 
       console.log('📝 Datos que se van a insertar en empresas:', empresaData);
 
@@ -285,6 +392,37 @@ export default function UnifiedInscriptionForm({
       }
       
       console.log('✅ Empresa insertada correctamente:', empresa);
+
+      // Si pagó con PayPal, registrar en tabla pagos_paypal
+      if (isPaidWithPayPal && paypalDetails) {
+        const pagoPaypalData = {
+          order_id: empresa.pedido?.toString() || empresa.id,
+          paypal_order_id: paypalDetails.id,
+          paypal_payment_id: paypalDetails.purchase_units?.[0]?.payments?.captures?.[0]?.id || null,
+          amount: calculatePrice(company.num_muestras).total,
+          currency: 'EUR',
+          status: 'completed',
+          raw_response: paypalDetails,
+          metadata: {
+            empresa_id: empresa.id,
+            empresa_nombre: empresa.name,
+            num_muestras: company.num_muestras
+          }
+        };
+
+        console.log('💳 Registrando pago PayPal:', pagoPaypalData);
+
+        const { error: pagoError } = await supabase
+          .from('pagos_paypal')
+          .insert([pagoPaypalData]);
+
+        if (pagoError) {
+          console.error('⚠️ Error al registrar pago PayPal (no crítico):', pagoError);
+          // No lanzamos error porque el pago ya se procesó correctamente
+        } else {
+          console.log('✅ Pago PayPal registrado correctamente');
+        }
+      }
 
       // Preparar muestras para insertar
       const samplesWithEmpresaId = [];
@@ -346,10 +484,11 @@ export default function UnifiedInscriptionForm({
             empresa: company,
             muestras: samples,
             precio: calculatePrice(company.num_muestras),
-            metodoPago: payment,
+            metodoPago: isPaidWithPayPal ? 'paypal' : payment,
             pedido: empresa.pedido,
             isAdmin: isAdmin,
             isManual: isManualInscription,
+            pagoConfirmado: isPaidWithPayPal,
           });
         } else {
           // Solo en producción (Vercel)
@@ -357,10 +496,12 @@ export default function UnifiedInscriptionForm({
             empresa: company,
             muestras: samples,
             precio: calculatePrice(company.num_muestras),
-            metodoPago: payment,
+            metodoPago: isPaidWithPayPal ? 'paypal' : payment,
             pedido: empresa.pedido,
             isAdmin: isAdmin,
             isManual: isManualInscription,
+            pagoConfirmado: isPaidWithPayPal,
+            paypalTransactionId: paypalDetails?.id || null,
           };
           
           console.log('Datos del email:', emailData);
@@ -391,6 +532,9 @@ export default function UnifiedInscriptionForm({
       // Cambiar a la pantalla de éxito
       console.log('✅ Inscripción completada, cambiando a pantalla de éxito...');
       console.log('Número de pedido:', empresa.pedido);
+      
+      // Limpiar datos guardados en localStorage
+      clearSavedData();
       
       // IMPORTANTE: Cambiar el step ANTES de setSuccess para evitar que se muestre
       // el mensaje de éxito en ConfirmacionScreen
@@ -516,32 +660,58 @@ export default function UnifiedInscriptionForm({
         </div>
       )}
 
-      {/* Indicador de progreso */}
-      <div className="mb-2">
-        <div className="flex items-center justify-center space-x-6">
-          <div className={`flex items-center ${currentStep === 'empresa' ? 'text-primary-600' : 'text-gray-400'}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              currentStep === 'empresa' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
-              1
-            </div>
-            <span className="ml-1 text-xs font-medium">Empresa</span>
+      {/* Indicador de progreso mejorado con barra visual */}
+      <div className="mb-4">
+        {/* Barra de progreso visual */}
+        <div className="relative mb-3">
+          <div className="h-2 bg-gray-200 rounded-full">
+            <div 
+              className="h-2 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full transition-all duration-500 ease-out"
+              style={{ 
+                width: currentStep === 'empresa' ? '33%' : currentStep === 'muestras' ? '66%' : '100%' 
+              }}
+            />
           </div>
-          <div className={`flex items-center ${currentStep === 'muestras' ? 'text-primary-600' : 'text-gray-400'}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              currentStep === 'muestras' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
-              2
-            </div>
-            <span className="ml-1 text-xs font-medium">Muestras</span>
+          <div className="absolute -top-1 right-0 text-xs font-medium text-primary-600">
+            {currentStep === 'empresa' ? '33%' : currentStep === 'muestras' ? '66%' : '100%'}
           </div>
+        </div>
+        
+        {/* Pasos */}
+        <div className="flex items-center justify-between">
+          <div className={`flex items-center ${currentStep === 'empresa' ? 'text-primary-600' : currentStep !== 'empresa' ? 'text-green-600' : 'text-gray-400'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
+              currentStep === 'empresa' ? 'bg-primary-600 text-white' : currentStep !== 'empresa' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+            }`}>
+              {currentStep !== 'empresa' ? '✓' : '1'}
+            </div>
+            <span className="ml-2 text-sm font-medium hidden sm:inline">Empresa</span>
+          </div>
+          
+          <div className="flex-1 h-0.5 mx-2 bg-gray-200">
+            <div className={`h-full transition-all duration-300 ${currentStep !== 'empresa' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: currentStep !== 'empresa' ? '100%' : '0%' }} />
+          </div>
+          
+          <div className={`flex items-center ${currentStep === 'muestras' ? 'text-primary-600' : currentStep === 'confirmacion' ? 'text-green-600' : 'text-gray-400'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
+              currentStep === 'muestras' ? 'bg-primary-600 text-white' : currentStep === 'confirmacion' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+            }`}>
+              {currentStep === 'confirmacion' ? '✓' : '2'}
+            </div>
+            <span className="ml-2 text-sm font-medium hidden sm:inline">Muestras</span>
+          </div>
+          
+          <div className="flex-1 h-0.5 mx-2 bg-gray-200">
+            <div className={`h-full transition-all duration-300 ${currentStep === 'confirmacion' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: currentStep === 'confirmacion' ? '100%' : '0%' }} />
+          </div>
+          
           <div className={`flex items-center ${currentStep === 'confirmacion' ? 'text-primary-600' : 'text-gray-400'}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
               currentStep === 'confirmacion' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               3
             </div>
-            <span className="ml-1 text-xs font-medium">Confirmación</span>
+            <span className="ml-2 text-sm font-medium hidden sm:inline">Confirmación</span>
           </div>
         </div>
       </div>
@@ -553,7 +723,10 @@ export default function UnifiedInscriptionForm({
           onChange={handleCompanyChange}
           onNext={handleCompanyNext}
           precio={calculatePrice(company.num_muestras)}
+          validationErrors={companyValidationErrors}
           isManualInscription={isManualInscription}
+          emailConfirmation={emailConfirmation}
+          onEmailConfirmationChange={setEmailConfirmation}
         />
       )}
 
@@ -564,6 +737,7 @@ export default function UnifiedInscriptionForm({
           onImageChange={handleSampleImageChange}
           onNext={handleMuestrasNext}
           onPrev={handleMuestrasPrev}
+          validationErrors={samplesValidationErrors}
         />
       )}
 

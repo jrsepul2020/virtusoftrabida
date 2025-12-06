@@ -1,0 +1,874 @@
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { RefreshCw, Download, Eye, Edit, X, ChevronUp, ChevronDown, Check, Clock, AlertCircle, Save, PlusCircle } from 'lucide-react';
+import * as XLSX from 'xlsx';
+
+interface Muestra {
+  id: string;
+  nombre: string;
+  categoria: string;
+  anio: number | null;
+  igp: string | null;
+  grado: number | null;
+  pais: string | null;
+}
+
+interface Inscripcion {
+  id: string;
+  created_at: string;
+  pedido: number | null;
+  name: string;
+  email: string;
+  phone: string;
+  movil: string;
+  pais: string;
+  status: string;
+  revisada: boolean;
+  // Campos adicionales para detalle
+  nif?: string;
+  address?: string;
+  poblacion?: string;
+  ciudad?: string;
+  codigo_postal?: string;
+  contact_person?: string;
+  pagina_web?: string;
+  conocimiento?: string;
+  observaciones?: string;
+  metodo_pago?: string;
+  referencia_pago?: string;
+  pago_confirmado?: boolean;
+  fecha_pago?: string;
+  totalinscripciones?: number;
+  muestras?: Muestra[];
+  muestras_count?: number;
+}
+
+type SortField = 'created_at' | 'pedido' | 'name' | 'status' | 'revisada';
+type SortDirection = 'asc' | 'desc';
+
+interface InscripcionesManagerProps {
+  onNewInscripcion?: () => void;
+}
+
+const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscripcion }) => {
+  const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [filterRevisada, setFilterRevisada] = useState<string>('pendiente');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal states
+  const [selectedInscripcion, setSelectedInscripcion] = useState<Inscripcion | null>(null);
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | null>(null);
+  const [loadingMuestras, setLoadingMuestras] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Inscripcion>>({});
+
+  const fetchInscripciones = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('empresas')
+        .select(`
+          id,
+          created_at,
+          pedido,
+          name,
+          email,
+          phone,
+          movil,
+          pais,
+          status,
+          revisada,
+          nif,
+          address,
+          poblacion,
+          ciudad,
+          codigo_postal,
+          contact_person,
+          pagina_web,
+          conocimiento,
+          observaciones,
+          metodo_pago,
+          referencia_pago,
+          pago_confirmado,
+          fecha_pago,
+          totalinscripciones
+        `)
+        .order('created_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      // Obtener conteo de muestras por empresa
+      const { data: muestrasCount, error: muestrasError } = await supabase
+        .from('muestras')
+        .select('empresa_id');
+
+      if (muestrasError) throw muestrasError;
+
+      // Contar muestras por empresa
+      const countByEmpresa: Record<string, number> = {};
+      muestrasCount?.forEach((m: any) => {
+        const empresaId = m.empresa_id;
+        countByEmpresa[empresaId] = (countByEmpresa[empresaId] || 0) + 1;
+      });
+
+      // Añadir conteo a cada inscripción
+      const inscripcionesConMuestras = (data || []).map((insc: any) => ({
+        ...insc,
+        muestras_count: countByEmpresa[insc.id] || 0
+      }));
+
+      setInscripciones(inscripcionesConMuestras);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMuestrasForInscripcion = async (empresaId: string): Promise<Muestra[]> => {
+    const { data, error } = await supabase
+      .from('muestras')
+      .select('id, nombre, categoria, anio, igp, grado, pais')
+      .eq('empresa_id', empresaId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  };
+
+  useEffect(() => {
+    fetchInscripciones();
+  }, []);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const handleToggleRevisada = async (id: string, currentValue: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('empresas')
+        .update({ revisada: !currentValue })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setInscripciones(prev => 
+        prev.map(insc => 
+          insc.id === id ? { ...insc, revisada: !currentValue } : insc
+        )
+      );
+    } catch (err: any) {
+      alert('Error al actualizar: ' + err.message);
+    }
+  };
+
+  const openModal = async (inscripcion: Inscripcion, mode: 'view' | 'edit') => {
+    setLoadingMuestras(true);
+    setModalMode(mode);
+    
+    try {
+      const muestras = await fetchMuestrasForInscripcion(inscripcion.id);
+      setSelectedInscripcion({ ...inscripcion, muestras });
+      if (mode === 'edit') {
+        setEditForm({ ...inscripcion });
+      }
+    } catch (err: any) {
+      alert('Error al cargar muestras: ' + err.message);
+    } finally {
+      setLoadingMuestras(false);
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedInscripcion(null);
+    setModalMode(null);
+    setEditForm({});
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedInscripcion) return;
+    
+    setSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from('empresas')
+        .update({
+          name: editForm.name,
+          email: editForm.email,
+          phone: editForm.phone,
+          movil: editForm.movil,
+          pais: editForm.pais,
+          address: editForm.address,
+          poblacion: editForm.poblacion,
+          ciudad: editForm.ciudad,
+          codigo_postal: editForm.codigo_postal,
+          nif: editForm.nif,
+          contact_person: editForm.contact_person,
+          pagina_web: editForm.pagina_web,
+          status: editForm.status,
+          observaciones: editForm.observaciones,
+          revisada: editForm.revisada
+        })
+        .eq('id', selectedInscripcion.id);
+
+      if (error) throw error;
+
+      setInscripciones(prev => 
+        prev.map(insc => 
+          insc.id === selectedInscripcion.id 
+            ? { ...insc, ...editForm } 
+            : insc
+        )
+      );
+
+      closeModal();
+      alert('Inscripción actualizada correctamente');
+    } catch (err: any) {
+      alert('Error al guardar: ' + err.message);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  // Filtrado y ordenación
+  const filteredInscripciones = inscripciones
+    .filter(insc => {
+      if (filterRevisada === 'revisada' && !insc.revisada) return false;
+      if (filterRevisada === 'pendiente' && insc.revisada) return false;
+      if (filterStatus !== 'all' && insc.status !== filterStatus) return false;
+      
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        return (
+          insc.name?.toLowerCase().includes(search) ||
+          insc.email?.toLowerCase().includes(search) ||
+          String(insc.pedido || '').includes(search) ||
+          insc.pais?.toLowerCase().includes(search)
+        );
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      let aVal: any = a[sortField];
+      let bVal: any = b[sortField];
+      
+      if (sortField === 'created_at') {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+      }
+      
+      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+      
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+  const exportToExcel = () => {
+    const dataToExport = filteredInscripciones.map(insc => ({
+      'Fecha': new Date(insc.created_at).toLocaleDateString('es-ES'),
+      'Nº Pedido': insc.pedido || '',
+      'Estado': insc.status,
+      'Empresa': insc.name,
+      'Email': insc.email,
+      'Teléfono': insc.phone || '',
+      'Móvil': insc.movil || '',
+      'País': insc.pais,
+      'Método Pago': insc.metodo_pago || '',
+      'Revisada': insc.revisada ? 'Sí' : 'No',
+      'Muestras': insc.muestras_count || 0
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inscripciones');
+    XLSX.writeFile(wb, `inscripciones_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
+      'pending': { color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="w-3 h-3" />, label: 'Pendiente' },
+      'pagado': { color: 'bg-green-100 text-green-800', icon: <Check className="w-3 h-3" />, label: 'Pagado' },
+      'approved': { color: 'bg-blue-100 text-blue-800', icon: <Check className="w-3 h-3" />, label: 'Aprobado' },
+      'rejected': { color: 'bg-red-100 text-red-800', icon: <AlertCircle className="w-3 h-3" />, label: 'Rechazado' }
+    };
+    
+    const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', icon: null, label: status };
+    
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        {config.icon}
+        {config.label}
+      </span>
+    );
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ChevronUp className="w-4 h-4 text-gray-300" />;
+    return sortDirection === 'asc' 
+      ? <ChevronUp className="w-4 h-4 text-amber-600" />
+      : <ChevronDown className="w-4 h-4 text-amber-600" />;
+  };
+
+  const stats = {
+    total: inscripciones.length,
+    revisadas: inscripciones.filter(i => i.revisada).length,
+    pendientes: inscripciones.filter(i => !i.revisada).length,
+    pagadas: inscripciones.filter(i => i.status === 'pagado').length
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="w-8 h-8 animate-spin text-amber-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+        Error: {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Estadísticas */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div 
+          onClick={() => { setFilterRevisada('all'); setFilterStatus('all'); }}
+          className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-gray-300"
+        >
+          <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+          <div className="text-sm text-gray-500">Total inscripciones</div>
+        </div>
+        <div 
+          onClick={() => { setFilterRevisada('revisada'); setFilterStatus('all'); }}
+          className="bg-green-50 rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-green-400"
+        >
+          <div className="text-2xl font-bold text-green-600">{stats.revisadas}</div>
+          <div className="text-sm text-green-600">Revisadas</div>
+        </div>
+        <div 
+          onClick={() => { setFilterRevisada('pendiente'); setFilterStatus('all'); }}
+          className="bg-red-50 rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-red-400"
+        >
+          <div className="text-2xl font-bold text-red-600">{stats.pendientes}</div>
+          <div className="text-sm text-red-600">Pendientes revisión</div>
+        </div>
+        <div 
+          onClick={() => { setFilterStatus('pagado'); setFilterRevisada('all'); }}
+          className="bg-blue-50 rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-400"
+        >
+          <div className="text-2xl font-bold text-blue-600">{stats.pagadas}</div>
+          <div className="text-sm text-blue-600">Pagadas</div>
+        </div>
+      </div>
+
+      {/* Filtros y acciones */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex flex-wrap gap-3 items-center">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, email, pedido o país..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500 w-96"
+            />
+            
+            {onNewInscripcion && (
+              <button
+                onClick={onNewInscripcion}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Nueva Inscripción
+              </button>
+            )}
+            
+            <select
+              value={filterRevisada}
+              onChange={(e) => setFilterRevisada(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="all">Todas</option>
+              <option value="pendiente">Pendientes revisión</option>
+              <option value="revisada">Revisadas</option>
+            </select>
+
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="pending">Pendiente</option>
+              <option value="pagado">Pagado</option>
+              <option value="approved">Aprobado</option>
+              <option value="rejected">Rechazado</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={fetchInscripciones}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Actualizar
+            </button>
+            <button
+              onClick={exportToExcel}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Excel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                  ✓
+                </th>
+                <th 
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('created_at')}
+                >
+                  <div className="flex items-center gap-1">
+                    Fecha <SortIcon field="created_at" />
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('pedido')}
+                >
+                  <div className="flex items-center gap-1">
+                    Pedido <SortIcon field="pedido" />
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center gap-1">
+                    Estado <SortIcon field="status" />
+                  </div>
+                </th>
+                <th 
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 max-w-[150px]"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-1">
+                    Nombre <SortIcon field="name" />
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Teléfono
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Muestras
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Pago
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  País
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredInscripciones.map((insc) => (
+                <tr 
+                  key={insc.id} 
+                  className={`hover:bg-gray-50 ${insc.revisada ? 'bg-green-50' : 'bg-red-50'}`}
+                >
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={insc.revisada}
+                      onChange={() => handleToggleRevisada(insc.id, insc.revisada)}
+                      className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 cursor-pointer"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                    {new Date(insc.created_at).toLocaleDateString('es-ES')}
+                  </td>
+                  <td className="px-4 py-3 text-sm font-medium text-amber-700 whitespace-nowrap">
+                    {insc.pedido || '-'}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {getStatusBadge(insc.status)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900 max-w-[150px] truncate" title={insc.name}>
+                    {insc.name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {insc.email}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                    {insc.phone || insc.movil || '-'}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-flex items-center justify-center w-6 h-6 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
+                      {insc.muestras_count || 0}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {insc.metodo_pago ? (
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        insc.metodo_pago === 'paypal' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-orange-100 text-orange-700'
+                      }`}>
+                        {insc.metodo_pago === 'paypal' ? '💳 PayPal' : '🏦 Transferencia'}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {insc.pais}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => openModal(insc, 'view')}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Ver detalle"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => openModal(insc, 'edit')}
+                        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredInscripciones.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No se encontraron inscripciones con los filtros seleccionados
+          </div>
+        )}
+      </div>
+
+      {/* Contador */}
+      <div className="text-sm text-gray-500 text-center">
+        Mostrando {filteredInscripciones.length} de {inscripciones.length} inscripciones
+      </div>
+
+      {/* Modal */}
+      {modalMode && selectedInscripcion && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-amber-600 text-white px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                {modalMode === 'view' ? 'Detalle de Inscripción' : 'Editar Inscripción'}
+              </h3>
+              <button onClick={closeModal} className="p-1 hover:bg-amber-700 rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {loadingMuestras ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="w-8 h-8 animate-spin text-amber-600" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-gray-800 border-b pb-2">Datos de la Empresa</h4>
+                      
+                      {modalMode === 'edit' ? (
+                        <>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Nombre/Razón Social</label>
+                            <input
+                              type="text"
+                              value={editForm.name || ''}
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">NIF/CIF</label>
+                            <input
+                              type="text"
+                              value={editForm.nif || ''}
+                              onChange={(e) => setEditForm({ ...editForm, nif: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Dirección</label>
+                            <input
+                              type="text"
+                              value={editForm.address || ''}
+                              onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">Población</label>
+                              <input
+                                type="text"
+                                value={editForm.poblacion || ''}
+                                onChange={(e) => setEditForm({ ...editForm, poblacion: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">Ciudad</label>
+                              <input
+                                type="text"
+                                value={editForm.ciudad || ''}
+                                onChange={(e) => setEditForm({ ...editForm, ciudad: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">C.P.</label>
+                              <input
+                                type="text"
+                                value={editForm.codigo_postal || ''}
+                                onChange={(e) => setEditForm({ ...editForm, codigo_postal: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">País</label>
+                              <input
+                                type="text"
+                                value={editForm.pais || ''}
+                                onChange={(e) => setEditForm({ ...editForm, pais: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div><span className="text-gray-500 text-sm">Nombre:</span> <span className="font-medium">{selectedInscripcion.name}</span></div>
+                          {selectedInscripcion.nif && <div><span className="text-gray-500 text-sm">NIF:</span> <span className="font-medium">{selectedInscripcion.nif}</span></div>}
+                          {selectedInscripcion.address && <div><span className="text-gray-500 text-sm">Dirección:</span> <span className="font-medium">{selectedInscripcion.address}</span></div>}
+                          <div><span className="text-gray-500 text-sm">Localidad:</span> <span className="font-medium">{selectedInscripcion.poblacion || selectedInscripcion.ciudad || '-'} {selectedInscripcion.codigo_postal}</span></div>
+                          <div><span className="text-gray-500 text-sm">País:</span> <span className="font-medium">{selectedInscripcion.pais}</span></div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-gray-800 border-b pb-2">Contacto y Estado</h4>
+                      
+                      {modalMode === 'edit' ? (
+                        <>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Email</label>
+                            <input
+                              type="email"
+                              value={editForm.email || ''}
+                              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">Teléfono</label>
+                              <input
+                                type="text"
+                                value={editForm.phone || ''}
+                                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">Móvil</label>
+                              <input
+                                type="text"
+                                value={editForm.movil || ''}
+                                onChange={(e) => setEditForm({ ...editForm, movil: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Persona de Contacto</label>
+                            <input
+                              type="text"
+                              value={editForm.contact_person || ''}
+                              onChange={(e) => setEditForm({ ...editForm, contact_person: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Web</label>
+                            <input
+                              type="text"
+                              value={editForm.pagina_web || ''}
+                              onChange={(e) => setEditForm({ ...editForm, pagina_web: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Estado</label>
+                            <select
+                              value={editForm.status || ''}
+                              onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            >
+                              <option value="pending">Pendiente</option>
+                              <option value="pagado">Pagado</option>
+                              <option value="approved">Aprobado</option>
+                              <option value="rejected">Rechazado</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="editRevisada"
+                              checked={editForm.revisada || false}
+                              onChange={(e) => setEditForm({ ...editForm, revisada: e.target.checked })}
+                              className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                            />
+                            <label htmlFor="editRevisada" className="text-sm text-gray-600">Marcada como revisada</label>
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">Observaciones</label>
+                            <textarea
+                              value={editForm.observaciones || ''}
+                              onChange={(e) => setEditForm({ ...editForm, observaciones: e.target.value })}
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div><span className="text-gray-500 text-sm">Email:</span> <span className="font-medium">{selectedInscripcion.email}</span></div>
+                          <div><span className="text-gray-500 text-sm">Teléfono:</span> <span className="font-medium">{selectedInscripcion.phone || '-'}</span></div>
+                          <div><span className="text-gray-500 text-sm">Móvil:</span> <span className="font-medium">{selectedInscripcion.movil || '-'}</span></div>
+                          {selectedInscripcion.contact_person && <div><span className="text-gray-500 text-sm">Contacto:</span> <span className="font-medium">{selectedInscripcion.contact_person}</span></div>}
+                          {selectedInscripcion.pagina_web && <div><span className="text-gray-500 text-sm">Web:</span> <a href={selectedInscripcion.pagina_web} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">{selectedInscripcion.pagina_web}</a></div>}
+                          <div><span className="text-gray-500 text-sm">Nº Pedido:</span> <span className="font-medium text-amber-700">{selectedInscripcion.pedido || '-'}</span></div>
+                          <div><span className="text-gray-500 text-sm">Estado:</span> {getStatusBadge(selectedInscripcion.status)}</div>
+                          <div><span className="text-gray-500 text-sm">Método Pago:</span> <span className="font-medium">{selectedInscripcion.metodo_pago || '-'}</span></div>
+                          {selectedInscripcion.referencia_pago && <div><span className="text-gray-500 text-sm">Ref. Pago:</span> <span className="font-medium text-xs">{selectedInscripcion.referencia_pago}</span></div>}
+                          <div><span className="text-gray-500 text-sm">Revisada:</span> <span className={`font-medium ${selectedInscripcion.revisada ? 'text-green-600' : 'text-red-600'}`}>{selectedInscripcion.revisada ? 'Sí' : 'No'}</span></div>
+                          {selectedInscripcion.observaciones && <div><span className="text-gray-500 text-sm">Observaciones:</span> <span className="font-medium">{selectedInscripcion.observaciones}</span></div>}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Muestras */}
+                  <div>
+                    <h4 className="font-semibold text-gray-800 border-b pb-2 mb-4">
+                      Muestras ({selectedInscripcion.muestras?.length || 0})
+                    </h4>
+                    
+                    {selectedInscripcion.muestras && selectedInscripcion.muestras.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200 text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Año</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">D.O./IGP</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Grado</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {selectedInscripcion.muestras.map((muestra, idx) => (
+                              <tr key={muestra.id} className="hover:bg-gray-50">
+                                <td className="px-3 py-2 text-gray-500">{idx + 1}</td>
+                                <td className="px-3 py-2 font-medium text-gray-900">{muestra.nombre}</td>
+                                <td className="px-3 py-2 text-gray-600">{muestra.categoria}</td>
+                                <td className="px-3 py-2 text-gray-600">{muestra.anio || '-'}</td>
+                                <td className="px-3 py-2 text-gray-600">{muestra.igp || '-'}</td>
+                                <td className="px-3 py-2 text-gray-600">{muestra.grado ? `${muestra.grado}%` : '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        No hay muestras registradas
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {modalMode === 'edit' && (
+              <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={savingEdit}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+                >
+                  {savingEdit ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Guardar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default InscripcionesManager;

@@ -35,36 +35,99 @@ function App() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Verificar estado de admin en localStorage
-    const adminSession = localStorage.getItem('adminLoggedIn');
-    const savedRole = localStorage.getItem('userRole');
-    if (adminSession === 'true') {
-      setAdminLoggedIn(true);
-      setUserRole(savedRole);
-      
-      // Restaurar vista según rol
-      if (savedRole === 'Catador') {
-        setView('catador');
-      } else {
-        setView('admin');
+    // Verificar sesión REAL de Supabase (no solo localStorage)
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error verificando sesión:', error);
+          clearAuthState();
+          setLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          // Sesión válida - obtener rol del usuario
+          const { data: userData, error: userError } = await supabase
+            .from('usuarios')
+            .select('rol')
+            .eq('id', session.user.id)
+            .single();
+
+          if (userError || !userData) {
+            // No tiene rol asignado - denegar acceso
+            console.warn('Usuario sin rol asignado');
+            await supabase.auth.signOut();
+            clearAuthState();
+          } else {
+            // Rol válido - permitir acceso
+            setAdminLoggedIn(true);
+            setUserRole(userData.rol);
+            localStorage.setItem('adminLoggedIn', 'true');
+            localStorage.setItem('userRole', userData.rol);
+            
+            if (userData.rol === 'Catador') {
+              setView('catador');
+            } else {
+              setView('admin');
+            }
+          }
+        } else {
+          // No hay sesión - limpiar estado
+          clearAuthState();
+        }
+      } catch (err) {
+        console.error('Error en verificación de sesión:', err);
+        clearAuthState();
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    const clearAuthState = () => {
+      setAdminLoggedIn(false);
+      setUserRole(null);
+      localStorage.removeItem('adminLoggedIn');
+      localStorage.removeItem('userRole');
+    };
+
+    checkSession();
+
+    // Escuchar cambios en la autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        clearAuthState();
+        setView('home');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleAdminLogin = (success: boolean, role?: string) => {
+    console.log('🔐 handleAdminLogin llamado:', { success, role });
+    
     if (success) {
+      // Normalizar rol
+      const normalizedRole = role?.toLowerCase() === 'catador' ? 'Catador' : 'Admin';
+      console.log('✅ Login exitoso, rol normalizado:', normalizedRole);
+      
       setAdminLoggedIn(true);
-      setUserRole(role || 'admin');
+      setUserRole(normalizedRole);
       localStorage.setItem('adminLoggedIn', 'true');
-      localStorage.setItem('userRole', role || 'admin');
+      localStorage.setItem('userRole', normalizedRole);
       
       // Redirigir según rol
-      if (role === 'Catador') {
+      if (normalizedRole === 'Catador') {
+        console.log('➡️ Redirigiendo a catador');
         setView('catador');
       } else {
+        console.log('➡️ Redirigiendo a admin');
         setView('admin');
       }
+    } else {
+      console.log('❌ Login fallido');
     }
   };
 

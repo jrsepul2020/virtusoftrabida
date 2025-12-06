@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// Fecha de build para mostrar en la app
+const buildDate = new Date().toISOString();
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __BUILD_DATE__: JSON.stringify(buildDate),
+  },
   base: '/',
   optimizeDeps: {
     exclude: ['lucide-react'],

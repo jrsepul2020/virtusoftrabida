@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Camera, Upload, X, Image as ImageIcon, Loader2, ZoomIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface ImageUploaderProps {
@@ -18,6 +18,7 @@ export default function ImageUploader({
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -109,19 +110,53 @@ export default function ImageUploader({
 
       {/* Preview de la imagen */}
       {preview && (
-        <div className="relative inline-block">
+        <div className="relative inline-block group">
           <img 
             src={preview} 
             alt="Preview" 
-            className="w-full max-w-xs h-48 object-cover rounded-lg border-2 border-gray-300 shadow-md"
+            className="w-full max-w-xs h-48 object-cover rounded-lg border-2 border-gray-300 shadow-md cursor-pointer transition-transform hover:scale-[1.02]"
+            onClick={() => setShowModal(true)}
           />
+          {/* Overlay con icono de zoom */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center cursor-pointer"
+            onClick={() => setShowModal(true)}
+          >
+            <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+          </div>
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg z-10"
           >
             <X className="w-4 h-4" />
           </button>
+          <p className="text-xs text-gray-500 mt-1">Haz clic para ampliar</p>
+        </div>
+      )}
+
+      {/* Modal de imagen ampliada */}
+      {showModal && preview && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full">
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors flex items-center gap-2"
+            >
+              <span className="text-sm">Cerrar</span>
+              <X className="w-6 h-6" />
+            </button>
+            <img 
+              src={preview} 
+              alt="Imagen ampliada" 
+              className="w-full h-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
         </div>
       )}
 

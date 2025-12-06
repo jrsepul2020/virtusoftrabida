@@ -1,7 +1,32 @@
 import { useEffect, useState } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.4.0';
+
+// Declarar la variable global de Vite
+declare const __BUILD_DATE__: string;
+
+// Formatear la fecha de build
+const formatBuildDate = () => {
+  try {
+    const date = new Date(__BUILD_DATE__);
+    return date.toLocaleDateString('es-ES', { 
+      day: '2-digit', 
+      month: '2-digit',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  } catch {
+    return new Date().toLocaleDateString('es-ES', { 
+      day: '2-digit', 
+      month: '2-digit',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  }
+};
+
+const BUILD_DATE = formatBuildDate();
 
 export default function UpdateNotification() {
   const [showUpdate, setShowUpdate] = useState(false);
@@ -172,6 +197,8 @@ export function VersionBadge({ currentView }: { currentView?: string }) {
       title="Click para forzar actualización"
     >
       <span>v{APP_VERSION}</span>
+      <span className="text-white/50">•</span>
+      <span className="text-green-400 text-[10px]">{BUILD_DATE}</span>
       {viewName && (
         <>
           <span className="text-white/50">•</span>

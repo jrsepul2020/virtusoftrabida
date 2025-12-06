@@ -55,19 +55,37 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
       if (authError) throw authError;
 
-      // Obtener rol del usuario
+      console.log('✅ Login exitoso, userId:', authData.user.id);
+
+      // Intentar obtener rol del usuario
       const { data: userData, error: userError } = await supabase
         .from('usuarios')
         .select('rol')
         .eq('id', authData.user.id)
         .single();
 
-      if (userError) {
-        console.error('Error fetching user role:', userError);
-        onLogin(true, 'admin'); // Fallback a admin si no se encuentra rol
+      console.log('📋 Datos usuario:', userData, 'Error:', userError);
+
+      // Si hay error o no hay datos, usar 'Admin' como fallback temporal
+      let userRole = 'Admin';
+      
+      if (!userError && userData?.rol) {
+        // Normalizar rol: admin -> Admin, catador -> Catador
+        const rawRol = userData.rol.toLowerCase();
+        if (rawRol === 'admin') {
+          userRole = 'Admin';
+        } else if (rawRol === 'catador') {
+          userRole = 'Catador';
+        } else {
+          userRole = userData.rol;
+        }
+        console.log('✅ Rol obtenido de DB:', userData.rol, '-> normalizado:', userRole);
       } else {
-        onLogin(true, userData.rol);
+        console.warn('⚠️ No se pudo obtener rol, usando Admin por defecto');
       }
+      
+      console.log('✅ Acceso permitido con rol:', userRole);
+      onLogin(true, userRole);
     } catch (err: any) {
       // Sanitize error messages to prevent information leakage
       const safeErrorMessage = getSafeErrorMessage(err);

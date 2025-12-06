@@ -24,7 +24,7 @@ export async function exportToJSON(): Promise<BackupData> {
   const [empresasRes, muestrasRes, catadoresRes, mesasRes] = await Promise.all([
     supabase.from('empresas').select('*'),
     supabase.from('muestras').select('*'),
-    supabase.from('usuarios').select('id, nombre, email, pais, rol, activo, mesa, puesto, tablet, codigocatador, created_at'),
+    supabase.from('usuarios').select('id, nombre, email, pais, rol, mesa, puesto, tablet, codigocatador, created_at'),
     supabase.from('mesas').select('*'),
   ]);
 
