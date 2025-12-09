@@ -1,0 +1,193 @@
+/**
+ * Supabase Edge Function: paypal-transactions
+ * Obtiene transacciones reales de PayPal usando su REST API
+ * 
+ * Configuración necesaria:
+ * - PAYPAL_CLIENT_ID: Tu Client ID de PayPal
+ * - PAYPAL_SECRET: Tu Secret de PayPal
+ * - PAYPAL_MODE: 'sandbox' o 'live'
+ */
+
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    // Leer el body de forma segura: puede venir vacío o no ser JSON válido
+    const bodyText = await req.text()
+    let parsedBody: any = {}
+    if (bodyText) {
+      try {
+        parsedBody = JSON.parse(bodyText)
+      } catch (e) {
+        console.warn('Invalid JSON body received:', String(e))
+        parsedBody = {}
+      }
+    }
+    const { start_date, end_date } = parsedBody
+
+    // Configuración de PayPal desde variables de entorno
+    const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID')
+    const PAYPAL_SECRET = Deno.env.get('PAYPAL_SECRET')
+    const PAYPAL_MODE = Deno.env.get('PAYPAL_MODE') || 'sandbox'
+
+    // Debug: si se llama con { debug: true } o ?debug=true, devolver presencia de secrets
+    const url = new URL(req.url)
+    if (url.searchParams.get('debug') === 'true' || parsedBody.debug === true) {
+      return new Response(JSON.stringify({
+        success: true,
+        debug: true,
+        has_client_id: !!PAYPAL_CLIENT_ID,
+        has_secret: !!PAYPAL_SECRET,
+        mode: PAYPAL_MODE
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
+      throw new Error('PayPal credentials not configured')
+    }
+
+    // Base URL según el modo
+    const baseURL = PAYPAL_MODE === 'live'
+      ? 'https://api-m.paypal.com'
+      : 'https://api-m.sandbox.paypal.com'
+
+    // 1. Obtener Access Token de PayPal
+    const authResponse = await fetch(`${baseURL}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Accept-Language': 'en_US',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`)}`
+      },
+      body: 'grant_type=client_credentials'
+    })
+
+    if (!authResponse.ok) {
+      const errorText = await authResponse.text()
+      console.error('PayPal auth error:', errorText)
+      throw new Error(`PayPal authentication failed: ${authResponse.status}`)
+    }
+
+    const authData = await authResponse.json()
+    const accessToken = authData.access_token
+
+    // 2. Obtener transacciones usando la Transactions API
+    // Formato de fechas: YYYY-MM-DDTHH:MM:SS+0000 (PayPal requiere este formato exacto)
+    const formatPayPalDate = (date: Date) => {
+      return date.toISOString().replace('Z', '+0000').replace(/\.\d{3}/, '')
+    }
+    
+    // Por defecto, últimos 31 días (máximo permitido por PayPal)
+    const now = new Date()
+    const defaultStart = new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000)
+    
+    const startDate = start_date ? formatPayPalDate(new Date(start_date)) : formatPayPalDate(defaultStart)
+    const endDate = end_date ? formatPayPalDate(new Date(end_date)) : formatPayPalDate(now)
+
+    console.log('Fetching PayPal transactions:', { startDate, endDate, mode: PAYPAL_MODE })
+
+    // Endpoint de transacciones
+    const transactionsURL = `${baseURL}/v1/reporting/transactions?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&fields=all&page_size=100`
+
+    console.log('PayPal URL:', transactionsURL)
+
+    const transactionsResponse = await fetch(transactionsURL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+
+    const transactionsText = await transactionsResponse.text()
+    console.log('PayPal response status:', transactionsResponse.status)
+    console.log('PayPal response:', transactionsText.substring(0, 500))
+
+    if (!transactionsResponse.ok) {
+      console.error('PayPal transactions error:', transactionsText)
+      throw new Error(`Failed to fetch transactions: ${transactionsResponse.status} - ${transactionsText}`)
+    }
+
+    const transactionsData = JSON.parse(transactionsText)
+
+    // Mostrar todas las transacciones (sin filtrar por estado para debugging)
+    const allTransactions = transactionsData.transaction_details || []
+    console.log('Total transactions found:', allTransactions.length)
+    
+    // Filtrar transacciones completadas (pagos recibidos) - códigos comunes de PayPal
+    const completedTransactions = allTransactions.filter(
+      (t: any) => {
+        const status = t.transaction_info?.transaction_status
+        // S = Success, V = Verified, P = Pending
+        // También incluir si no hay status (algunas transacciones legacy)
+        return status === 'S' || status === 'V' || status === 'P' || !status
+      }
+    )
+
+    // Formatear las transacciones para el frontend
+    const formattedTransactions = completedTransactions.map((t: any) => ({
+      id: t.transaction_info?.transaction_id,
+      status: t.transaction_info?.transaction_status === 'S' ? 'COMPLETED' : 
+              t.transaction_info?.transaction_status === 'P' ? 'PENDING' : 'OTHER',
+      amount: {
+        value: t.transaction_info?.transaction_amount?.value,
+        currency_code: t.transaction_info?.transaction_amount?.currency_code
+      },
+      payer: {
+        email_address: t.payer_info?.email_address,
+        name: {
+          given_name: t.payer_info?.payer_name?.given_name,
+          surname: t.payer_info?.payer_name?.surname
+        }
+      },
+      description: t.transaction_info?.transaction_subject || t.transaction_info?.transaction_note,
+      create_time: t.transaction_info?.transaction_initiation_date,
+      update_time: t.transaction_info?.transaction_updated_date
+    }))
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        transactions: formattedTransactions,
+        total_count: formattedTransactions.length,
+        mode: PAYPAL_MODE,
+        date_range: {
+          start: startDate,
+          end: endDate
+        }
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    )
+
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorDetails = error instanceof Error ? error.toString() : String(error)
+    console.error('Error in paypal-transactions function:', error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: errorMessage,
+        details: errorDetails
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      },
+    )
+  }
+})
