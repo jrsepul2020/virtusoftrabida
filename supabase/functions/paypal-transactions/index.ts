@@ -23,7 +23,18 @@ serve(async (req) => {
   }
 
   try {
-    const { start_date, end_date } = await req.json()
+    // Leer el body de forma segura: puede venir vacío o no ser JSON válido
+    const bodyText = await req.text()
+    let parsedBody: any = {}
+    if (bodyText) {
+      try {
+        parsedBody = JSON.parse(bodyText)
+      } catch (e) {
+        console.warn('Invalid JSON body received:', String(e))
+        parsedBody = {}
+      }
+    }
+    const { start_date, end_date } = parsedBody
 
     // Configuración de PayPal desde variables de entorno
     const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID')
