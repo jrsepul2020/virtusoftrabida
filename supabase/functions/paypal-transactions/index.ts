@@ -30,6 +30,27 @@ serve(async (req) => {
     const PAYPAL_SECRET = Deno.env.get('PAYPAL_SECRET')
     const PAYPAL_MODE = Deno.env.get('PAYPAL_MODE') || 'sandbox'
 
+    // Debug rápido: si se llama con { debug: true } o ?debug=true, devolver presencia de secrets
+    try {
+      const url = new URL(req.url)
+      if (url.searchParams.get('debug') === 'true' || ((req.headers.get('content-type') || '').includes('application/json') && await (async () => {
+        try {
+          const body = await req.json();
+          return body && body.debug === true;
+        } catch { return false }
+      })())) {
+        return new Response(JSON.stringify({
+          success: true,
+          debug: true,
+          has_client_id: !!PAYPAL_CLIENT_ID,
+          has_secret: !!PAYPAL_SECRET,
+          mode: PAYPAL_MODE
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }})
+      }
+    } catch (e) {
+      // ignore debug failures
+    }
+
     if (!PAYPAL_CLIENT_ID || !PAYPAL_SECRET) {
       throw new Error('PayPal credentials not configured')
     }
