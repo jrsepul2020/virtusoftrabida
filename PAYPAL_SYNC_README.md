@@ -31,6 +31,10 @@ PAYPAL_SECRET=tu_secret_aqui
 PAYPAL_MODE=live  # o 'sandbox' para pruebas
 ```
 
+> ⚠️ **IMPORTANTE**: NUNCA pongas tus credenciales reales en archivos del repositorio.
+> Las credenciales deben configurarse SOLO en Supabase Dashboard → Edge Functions → Settings
+> o usando el comando: `supabase secrets set PAYPAL_CLIENT_ID=xxx PAYPAL_SECRET=xxx`
+
 ### Paso 3: Desplegar la Función Edge
 
 ```bash

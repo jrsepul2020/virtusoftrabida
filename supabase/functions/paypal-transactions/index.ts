@@ -61,12 +61,24 @@ serve(async (req) => {
     const accessToken = authData.access_token
 
     // 2. Obtener transacciones usando la Transactions API
-    // Formato de fechas: YYYY-MM-DDTHH:MM:SS-0000
-    const startDate = start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-    const endDate = end_date || new Date().toISOString()
+    // Formato de fechas: YYYY-MM-DDTHH:MM:SS+0000 (PayPal requiere este formato exacto)
+    const formatPayPalDate = (date: Date) => {
+      return date.toISOString().replace('Z', '+0000').replace(/\.\d{3}/, '')
+    }
+    
+    // Por defecto, últimos 31 días (máximo permitido por PayPal)
+    const now = new Date()
+    const defaultStart = new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000)
+    
+    const startDate = start_date ? formatPayPalDate(new Date(start_date)) : formatPayPalDate(defaultStart)
+    const endDate = end_date ? formatPayPalDate(new Date(end_date)) : formatPayPalDate(now)
+
+    console.log('Fetching PayPal transactions:', { startDate, endDate, mode: PAYPAL_MODE })
 
     // Endpoint de transacciones
-    const transactionsURL = `${baseURL}/v1/reporting/transactions?start_date=${startDate}&end_date=${endDate}&fields=all&page_size=100`
+    const transactionsURL = `${baseURL}/v1/reporting/transactions?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&fields=all&page_size=100`
+
+    console.log('PayPal URL:', transactionsURL)
 
     const transactionsResponse = await fetch(transactionsURL, {
       method: 'GET',
@@ -76,19 +88,29 @@ serve(async (req) => {
       }
     })
 
+    const transactionsText = await transactionsResponse.text()
+    console.log('PayPal response status:', transactionsResponse.status)
+    console.log('PayPal response:', transactionsText.substring(0, 500))
+
     if (!transactionsResponse.ok) {
-      const errorText = await transactionsResponse.text()
-      console.error('PayPal transactions error:', errorText)
-      throw new Error(`Failed to fetch transactions: ${transactionsResponse.status}`)
+      console.error('PayPal transactions error:', transactionsText)
+      throw new Error(`Failed to fetch transactions: ${transactionsResponse.status} - ${transactionsText}`)
     }
 
-    const transactionsData = await transactionsResponse.json()
+    const transactionsData = JSON.parse(transactionsText)
 
-    // Filtrar solo transacciones completadas (pagos recibidos)
-    const completedTransactions = (transactionsData.transaction_details || []).filter(
-      (t: any) => t.transaction_info?.transaction_status === 'S' || // Success
-                  t.transaction_info?.transaction_status === 'V' || // Completed/Verified
-                  t.transaction_info?.transaction_status === 'P'    // Pending (optional)
+    // Mostrar todas las transacciones (sin filtrar por estado para debugging)
+    const allTransactions = transactionsData.transaction_details || []
+    console.log('Total transactions found:', allTransactions.length)
+    
+    // Filtrar transacciones completadas (pagos recibidos) - códigos comunes de PayPal
+    const completedTransactions = allTransactions.filter(
+      (t: any) => {
+        const status = t.transaction_info?.transaction_status
+        // S = Success, V = Verified, P = Pending
+        // También incluir si no hay status (algunas transacciones legacy)
+        return status === 'S' || status === 'V' || status === 'P' || !status
+      }
     )
 
     // Formatear las transacciones para el frontend
@@ -129,13 +151,15 @@ serve(async (req) => {
       },
     )
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorDetails = error instanceof Error ? error.toString() : String(error)
     console.error('Error in paypal-transactions function:', error)
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Unknown error',
-        details: error.toString()
+        error: errorMessage,
+        details: errorDetails
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
