@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { Save, Medal, RefreshCw, Download, ChevronDown, ChevronUp, Settings, Plus, Trash2, Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Save, Medal, RefreshCw, Download, ChevronDown, ChevronUp, Settings, Plus, Trash2, Search, Filter, ArrowUpDown, BarChart3, X, FileText, Send, Users, MailCheck } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 interface Muestra {
   id: number;
@@ -30,6 +31,13 @@ interface MedalConfig {
   activo: boolean;
 }
 
+interface UsuarioEmail {
+  id: string;
+  nombre: string;
+  email: string;
+  rol?: string | null;
+}
+
 export default function PuntuacionesManager() {
   const [muestras, setMuestras] = useState<Muestra[]>([]);
   const [medalConfig, setMedalConfig] = useState<MedalConfig[]>([]);
@@ -38,6 +46,17 @@ export default function PuntuacionesManager() {
   const [editedRows, setEditedRows] = useState<Set<number>>(new Set());
   const [showMedalConfig, setShowMedalConfig] = useState(false);
   const [savingMedals, setSavingMedals] = useState(false);
+  const [showPreliminarPanel, setShowPreliminarPanel] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [usuariosEmail, setUsuariosEmail] = useState<UsuarioEmail[]>([]);
+  const [usuariosEmailLoading, setUsuariosEmailLoading] = useState(false);
+  const [recipientSearch, setRecipientSearch] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [emailMessage, setEmailMessage] = useState('');
+  const [sendingReport, setSendingReport] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [pdfCache, setPdfCache] = useState<{ base64: string; filename: string } | null>(null);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
   
   // Filtros, búsqueda y ordenación
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,6 +67,32 @@ export default function PuntuacionesManager() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (showEmailModal && usuariosEmail.length === 0 && !usuariosEmailLoading) {
+      fetchUsuariosEmail();
+    }
+  }, [showEmailModal]);
+
+  const fetchUsuariosEmail = async () => {
+    setUsuariosEmailLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nombre, email, rol')
+        .not('email', 'is', null)
+        .order('nombre', { ascending: true });
+
+      if (error) throw error;
+      const filtered = (data || []).filter(u => !!u.email);
+      setUsuariosEmail(filtered as UsuarioEmail[]);
+    } catch (error) {
+      console.error('Error cargando usuarios para email:', error);
+      alert('No se pudieron cargar los usuarios.');
+    } finally {
+      setUsuariosEmailLoading(false);
+    }
+  };
 
   // Obtener categorías únicas para el filtro
   const categoriasUnicas = useMemo(() => {
@@ -225,6 +270,74 @@ export default function PuntuacionesManager() {
     const config = medalConfig.find(m => m.medalla === medalla);
     return config?.color_hex || '#888';
   };
+
+  const resultadosPreliminares = useMemo(() => {
+    const evaluadas = muestras.filter(m => m.puntuacion_total !== null);
+    const totalEvaluadas = evaluadas.length;
+    const promedioGeneral = totalEvaluadas > 0
+      ? evaluadas.reduce((acc, muestra) => acc + (muestra.puntuacion_total ?? 0), 0) / totalEvaluadas
+      : 0;
+
+    const ordenadas = [...evaluadas].sort((a, b) => (b.puntuacion_total ?? 0) - (a.puntuacion_total ?? 0));
+    const top10 = ordenadas.slice(0, 10);
+    const mejorPuntuada = ordenadas[0] || null;
+
+    const medallaCounts = evaluadas.reduce((acc, muestra) => {
+      const key = muestra.medalla || 'Sin medalla';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const medallaMasOtorgada = Object.entries(medallaCounts).sort((a, b) => b[1] - a[1])[0] || null;
+
+    const categoriaMap = evaluadas.reduce((acc, muestra) => {
+      const categoriaClave = muestra.categoriadecata || 'Sin categoría';
+      if (!acc[categoriaClave]) {
+        acc[categoriaClave] = {
+          total: 0,
+          sum: 0,
+          top: muestra
+        };
+      }
+      acc[categoriaClave].total += 1;
+      acc[categoriaClave].sum += muestra.puntuacion_total ?? 0;
+      if ((muestra.puntuacion_total ?? 0) > (acc[categoriaClave].top.puntuacion_total ?? 0)) {
+        acc[categoriaClave].top = muestra;
+      }
+      return acc;
+    }, {} as Record<string, { total: number; sum: number; top: Muestra }>);
+
+    const categorias = Object.entries(categoriaMap).map(([nombre, data]) => ({
+      nombre,
+      total: data.total,
+      promedio: data.total ? data.sum / data.total : 0,
+      top: data.top
+    })).sort((a, b) => b.promedio - a.promedio);
+
+    return {
+      totalEvaluadas,
+      promedioGeneral,
+      mejorPuntuada,
+      medallaCounts,
+      medallaMasOtorgada,
+      top10,
+      categorias
+    };
+  }, [muestras]);
+
+  const usuariosFiltradosEmail = useMemo(() => {
+    const term = recipientSearch.trim().toLowerCase();
+    if (!term) return usuariosEmail;
+    return usuariosEmail.filter(u =>
+      (u.nombre || '').toLowerCase().includes(term) ||
+      (u.email || '').toLowerCase().includes(term) ||
+      (u.rol || '').toLowerCase().includes(term)
+    );
+  }, [usuariosEmail, recipientSearch]);
+
+  useEffect(() => {
+    setPdfCache(null);
+  }, [muestras, medalConfig]);
 
   // ============ MEDAL CONFIG HANDLERS ============
 
@@ -447,6 +560,84 @@ export default function PuntuacionesManager() {
     link.click();
   };
 
+  const getOrCreatePdfCache = () => {
+    if (pdfCache) return pdfCache;
+    const report = generatePdfReport();
+    setPdfCache({ base64: report.base64, filename: report.filename });
+    return { base64: report.base64, filename: report.filename };
+  };
+
+  const handleDownloadPdf = () => {
+    setPdfGenerating(true);
+    try {
+      const report = generatePdfReport();
+      setPdfCache({ base64: report.base64, filename: report.filename });
+      const url = URL.createObjectURL(report.blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = report.filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      alert('No se pudo generar el PDF.');
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
+  const handleSendReport = async () => {
+    if (selectedRecipients.length === 0) {
+      alert('Selecciona al menos un destinatario.');
+      return;
+    }
+
+    setSendingReport(true);
+    setEmailStatus(null);
+    try {
+      const pdfData = getOrCreatePdfCache();
+      const response = await fetch('/api/send-scores-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipients: selectedRecipients,
+          message: emailMessage,
+          resumen: {
+            totalRegistradas: stats.total,
+            totalEvaluadas: resultadosPreliminares.totalEvaluadas,
+            promedio: resultadosPreliminares.promedioGeneral,
+            fecha: new Date().toISOString()
+          },
+          pdf: {
+            filename: pdfData.filename,
+            base64: pdfData.base64
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Error desconocido');
+      }
+
+      setEmailStatus('Informe enviado correctamente.');
+      setShowEmailModal(false);
+      setSelectedRecipients([]);
+      setEmailMessage('');
+    } catch (error) {
+      console.error('Error enviando PDF por email:', error);
+      alert('No se pudo enviar el email. Revisa la consola para más detalles.');
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
+  const toggleRecipient = (email: string) => {
+    setSelectedRecipients(prev =>
+      prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -467,8 +658,416 @@ export default function PuntuacionesManager() {
     plata: muestras.filter(m => m.medalla === 'Plata').length,
   };
 
+  const formatScore = (score: number | null | undefined) => {
+    if (score === null || score === undefined) return '-';
+    return score.toFixed(2);
+  };
+
+  const generatePdfReport = () => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const marginX = 40;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let cursorY = 60;
+    const fecha = new Date();
+    const filename = `puntuaciones_${fecha.toISOString().split('T')[0]}.pdf`;
+
+    const ensureSpace = (height: number) => {
+      if (cursorY + height > pageHeight - 40) {
+        doc.addPage();
+        cursorY = 60;
+      }
+    };
+
+    const addText = (text: string, options: { bold?: boolean; spacing?: number } = {}) => {
+      ensureSpace(options.spacing ?? 14);
+      doc.setFont('helvetica', options.bold ? 'bold' : 'normal');
+      doc.setFontSize(options.bold ? 14 : 11);
+      doc.text(text, marginX, cursorY);
+      cursorY += options.spacing ?? 14;
+    };
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Informe preliminar de puntuaciones', marginX, cursorY);
+    cursorY += 24;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generado el ${fecha.toLocaleDateString('es-ES')} a las ${fecha.toLocaleTimeString('es-ES')}`, marginX, cursorY);
+    cursorY += 20;
+
+    addText('Resumen general', { bold: true, spacing: 18 });
+    addText(`Muestras registradas: ${stats.total}`);
+    addText(`Muestras evaluadas: ${resultadosPreliminares.totalEvaluadas}`);
+    addText(`Promedio general: ${resultadosPreliminares.totalEvaluadas ? formatScore(resultadosPreliminares.promedioGeneral) : '-'}`);
+    addText(`Gran Oro: ${stats.granOro} · Oro: ${stats.oro} · Plata: ${stats.plata}`);
+
+    if (resultadosPreliminares.mejorPuntuada) {
+      addText('', { spacing: 10 });
+      addText('Muestra destacada', { bold: true, spacing: 16 });
+      addText(`${resultadosPreliminares.mejorPuntuada.nombre}`);
+      addText(`Código: ${resultadosPreliminares.mejorPuntuada.codigotexto || resultadosPreliminares.mejorPuntuada.codigo}`);
+      addText(`Puntuación: ${formatScore(resultadosPreliminares.mejorPuntuada.puntuacion_total)} (${resultadosPreliminares.mejorPuntuada.medalla || 'Sin medalla'})`);
+    }
+
+    const medallas = Object.entries(resultadosPreliminares.medallaCounts).sort((a, b) => b[1] - a[1]);
+    if (medallas.length) {
+      addText('', { spacing: 12 });
+      addText('Distribución de medallas', { bold: true, spacing: 16 });
+      medallas.forEach(([nombre, cantidad]) => {
+        const porcentaje = resultadosPreliminares.totalEvaluadas ? ((cantidad / resultadosPreliminares.totalEvaluadas) * 100).toFixed(1) : '0';
+        addText(`${nombre}: ${cantidad} (${porcentaje}%)`);
+      });
+    }
+
+    if (resultadosPreliminares.top10.length) {
+      addText('', { spacing: 12 });
+      addText('Top 10 general', { bold: true, spacing: 16 });
+      resultadosPreliminares.top10.forEach((muestra, idx) => {
+        addText(`${idx + 1}. ${muestra.nombre} · ${formatScore(muestra.puntuacion_total)} pts · ${muestra.medalla || 'Sin medalla'}`);
+      });
+    }
+
+    if (resultadosPreliminares.categorias.length) {
+      addText('', { spacing: 12 });
+      addText('Rendimiento por categoría', { bold: true, spacing: 16 });
+      resultadosPreliminares.categorias.forEach(cat => {
+        addText(`${cat.nombre}: promedio ${formatScore(cat.promedio)} (${cat.total} muestras)`);
+        if (cat.top) addText(`Mejor posicionada: ${cat.top.nombre} (${formatScore(cat.top.puntuacion_total)})`, { spacing: 12 });
+      });
+    }
+
+    const blob = doc.output('blob');
+    const dataUri = doc.output('datauristring');
+    const base64 = dataUri.split(',')[1];
+    return { blob, base64, filename };
+  };
+
   return (
-    <div className="space-y-6">
+    <>
+      {showPreliminarPanel && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowPreliminarPanel(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-wide text-primary-600 font-semibold">Panel de resultados preliminares</p>
+                <h3 className="text-2xl font-bold text-gray-900 mt-1">Estado actual de la cata</h3>
+                <p className="text-gray-500 text-sm">
+                  Basado en {resultadosPreliminares.totalEvaluadas} muestras evaluadas de {muestras.length} registradas.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPreliminarPanel(false)}
+                className="ml-auto p-2 rounded-full border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-colors"
+                aria-label="Cerrar panel de resultados"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-primary-50 border border-primary-100 rounded-xl p-4">
+                <p className="text-sm text-primary-600">Muestras evaluadas</p>
+                <p className="text-3xl font-bold text-primary-900 mt-1">{resultadosPreliminares.totalEvaluadas}</p>
+                <p className="text-xs text-primary-700 mt-2">{stats.total - resultadosPreliminares.totalEvaluadas} pendientes</p>
+              </div>
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+                <p className="text-sm text-indigo-600">Promedio general</p>
+                <p className="text-3xl font-bold text-indigo-900 mt-1">{resultadosPreliminares.totalEvaluadas ? formatScore(resultadosPreliminares.promedioGeneral) : '-'}</p>
+                <p className="text-xs text-indigo-700 mt-2">Calculado sobre todas las puntuaciones cargadas</p>
+              </div>
+              <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                <p className="text-sm text-amber-600">Mejor muestra</p>
+                <p className="text-lg font-semibold text-amber-900 mt-1">
+                  {resultadosPreliminares.mejorPuntuada ? resultadosPreliminares.mejorPuntuada.nombre : 'Sin datos'}
+                </p>
+                <p className="text-sm text-amber-700">
+                  {resultadosPreliminares.mejorPuntuada ? `#${resultadosPreliminares.mejorPuntuada.codigotexto || resultadosPreliminares.mejorPuntuada.codigo} · ${formatScore(resultadosPreliminares.mejorPuntuada.puntuacion_total)}` : 'Esperando puntuaciones'}
+                </p>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                <p className="text-sm text-emerald-600">Medalla destacada</p>
+                {resultadosPreliminares.medallaMasOtorgada ? (
+                  <>
+                    <p className="text-3xl font-bold text-emerald-900 mt-1">{resultadosPreliminares.medallaMasOtorgada[0]}</p>
+                    <p className="text-sm text-emerald-700">{resultadosPreliminares.medallaMasOtorgada[1]} otorgadas</p>
+                  </>
+                ) : (
+                  <p className="text-lg font-semibold text-emerald-900 mt-1">Sin resultados</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <h4 className="text-lg font-semibold text-gray-800">Distribución de medallas</h4>
+                <span className="text-xs text-gray-500">Solo muestras ya evaluadas</span>
+              </div>
+              {Object.keys(resultadosPreliminares.medallaCounts).length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(resultadosPreliminares.medallaCounts).sort((a, b) => b[1] - a[1]).map(([medalla, count]) => (
+                    <div key={medalla} className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl shadow-sm">
+                      <span
+                        className="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold"
+                        style={{ backgroundColor: getMedalColor(medalla) || '#9CA3AF' }}
+                      >
+                        {count}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{medalla}</p>
+                        <p className="text-xs text-gray-500">{((count / resultadosPreliminares.totalEvaluadas) * 100 || 0).toFixed(1)}%</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Aún no hay medallas registradas.</p>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h4 className="text-lg font-semibold text-gray-800">Top 10 general</h4>
+                <span className="text-xs text-gray-500">Ordenado por puntuación total</span>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-gray-100">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600">Pos.</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600">Código</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600">Muestra</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600">Cat. cata</th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-600">Empresa</th>
+                      <th className="px-3 py-2 text-center font-semibold text-gray-600">Puntuación</th>
+                      <th className="px-3 py-2 text-center font-semibold text-gray-600">Medalla</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {resultadosPreliminares.top10.length > 0 ? (
+                      resultadosPreliminares.top10.map((muestra, idx) => (
+                        <tr key={muestra.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-gray-700 font-semibold">#{idx + 1}</td>
+                          <td className="px-3 py-2 text-gray-700">{muestra.codigotexto || muestra.codigo}</td>
+                          <td className="px-3 py-2 text-gray-900 font-medium max-w-[250px] truncate" title={muestra.nombre}>
+                            {muestra.nombre}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">{muestra.categoriadecata || 'Sin categoría'}</td>
+                          <td className="px-3 py-2 text-gray-600">{muestra.empresa_nombre || 'Sin empresa'}</td>
+                          <td className="px-3 py-2 text-center font-bold text-primary-700">{formatScore(muestra.puntuacion_total)}</td>
+                          <td className="px-3 py-2 text-center">
+                            {muestra.medalla ? (
+                              <span
+                                className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                                style={{ backgroundColor: getMedalColor(muestra.medalla) || '#6B7280' }}
+                              >
+                                {muestra.medalla}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
+                          Aún no hay puntuaciones suficientes para generar un top.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h4 className="text-lg font-semibold text-gray-800">Rendimiento por categoría de cata</h4>
+                <span className="text-xs text-gray-500">Promedio y muestra destacada</span>
+              </div>
+              {resultadosPreliminares.categorias.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {resultadosPreliminares.categorias.map(cat => (
+                    <div key={cat.nombre} className="border border-gray-100 rounded-xl p-4 bg-white shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-base font-semibold text-gray-800">{cat.nombre}</h5>
+                        <span className="text-xs text-gray-500">{cat.total} muestras</span>
+                      </div>
+                      <p className="text-3xl font-bold text-primary-700 mt-2">{formatScore(cat.promedio)}</p>
+                      <p className="text-sm text-gray-500">Promedio preliminar</p>
+                      <div className="mt-3 text-sm">
+                        <p className="text-gray-700 font-medium">Mejor posicionada</p>
+                        <p className="text-gray-600">
+                          {cat.top ? `${cat.top.nombre} (${formatScore(cat.top.puntuacion_total)})` : 'Sin datos'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Todavía no hay categorías con suficientes datos.</p>
+              )}
+            </div>
+
+            <div className="p-4 bg-primary-50 rounded-xl border border-primary-100 text-sm text-primary-800">
+              Los datos son orientativos y se actualizan automáticamente con cada guardado. Utiliza el botón "CSV" para compartir los resultados actuales con el equipo.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEmailModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setShowEmailModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-y-auto p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-orange-500 font-semibold">Compartir informe</p>
+                <h3 className="text-2xl font-bold text-gray-900 mt-1">Enviar PDF a usuarios registrados</h3>
+                <p className="text-gray-500 text-sm">Selecciona destinatarios de la tabla `usuarios` y adjunta el informe generado.</p>
+              </div>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="ml-auto p-2 rounded-full border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-colors"
+                aria-label="Cerrar envío de PDF"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+              <div className="space-y-4">
+                <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-center gap-3">
+                  <MailCheck className="w-10 h-10 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-orange-600 font-semibold">Destinatarios seleccionados</p>
+                    <p className="text-2xl font-bold text-orange-900">{selectedRecipients.length}</p>
+                    <p className="text-xs text-orange-800">Puedes filtrar y seleccionar múltiples usuarios</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Mensaje opcional</label>
+                  <textarea
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                    rows={6}
+                    className="mt-2 w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    placeholder="Añade instrucciones o notas para los jueces..."
+                  />
+                </div>
+                {emailStatus && (
+                  <div className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+                    {emailStatus}
+                  </div>
+                )}
+              </div>
+
+              <div className="border border-gray-100 rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="w-5 h-5 text-gray-500" />
+                  <h4 className="text-base font-semibold text-gray-800">Usuarios disponibles</h4>
+                </div>
+
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    value={recipientSearch}
+                    onChange={(e) => setRecipientSearch(e.target.value)}
+                    placeholder="Buscar por nombre, email o rol"
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                  <span>{usuariosFiltradosEmail.length} usuarios encontrados</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedRecipients(prev => {
+                        const set = new Set(prev);
+                        usuariosFiltradosEmail.forEach(u => set.add(u.email));
+                        return Array.from(set);
+                      })}
+                      className="text-primary-600 hover:text-primary-800 font-semibold"
+                    >
+                      Seleccionar visibles
+                    </button>
+                    <button
+                      onClick={() => setSelectedRecipients([])}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      Limpiar
+                    </button>
+                  </div>
+                </div>
+
+                <div className="h-64 overflow-y-auto space-y-2">
+                  {usuariosEmailLoading ? (
+                    <div className="flex items-center justify-center h-full text-gray-500">Cargando usuarios...</div>
+                  ) : usuariosFiltradosEmail.length === 0 ? (
+                    <div className="text-sm text-gray-500">No hay usuarios con ese filtro.</div>
+                  ) : (
+                    usuariosFiltradosEmail.map(usuario => (
+                      <label
+                        key={usuario.id}
+                        className={`flex items-center gap-3 border rounded-xl px-3 py-2 cursor-pointer transition-colors ${
+                          selectedRecipients.includes(usuario.email)
+                            ? 'border-orange-400 bg-orange-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedRecipients.includes(usuario.email)}
+                          onChange={() => toggleRecipient(usuario.email)}
+                          className="w-4 h-4 text-orange-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{usuario.nombre || 'Sin nombre'}</p>
+                          <p className="text-xs text-gray-500 truncate">{usuario.email}</p>
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">{usuario.rol || 'Sin rol'}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
+              <p className="text-sm text-gray-500">El PDF se adjuntará automáticamente. Puedes regenerarlo con el botón "PDF" si hiciste cambios.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSendReport}
+                  disabled={sendingReport || selectedRecipients.length === 0}
+                  className="px-5 py-2 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-60"
+                >
+                  {sendingReport ? 'Enviando...' : 'Enviar informe'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -487,11 +1086,33 @@ export default function PuntuacionesManager() {
             Recargar
           </button>
           <button
+            onClick={() => setShowPreliminarPanel(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Resultados
+          </button>
+          <button
             onClick={exportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Download className="w-4 h-4" />
             CSV
+          </button>
+          <button
+            onClick={handleDownloadPdf}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-60"
+            disabled={pdfGenerating}
+          >
+            <FileText className={`w-4 h-4 ${pdfGenerating ? 'animate-pulse' : ''}`} />
+            {pdfGenerating ? 'Generando...' : 'PDF'}
+          </button>
+          <button
+            onClick={() => setShowEmailModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            <Send className="w-4 h-4" />
+            Enviar PDF
           </button>
           {editedRows.size > 0 && (
             <button
@@ -879,6 +1500,7 @@ export default function PuntuacionesManager() {
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

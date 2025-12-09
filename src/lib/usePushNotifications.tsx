@@ -132,7 +132,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Crear suscripción
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        // Ensure BufferSource type by passing the underlying ArrayBuffer
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
       });
 
       // Guardar suscripción en localStorage (en producción: enviar al servidor)
@@ -205,7 +206,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     const defaultOptions: NotificationOptions = {
       icon: '/icon-192.png',
       badge: '/favicon-32x32.png',
-      vibrate: [200, 100, 200],
+      // 'vibrate' is not in TS NotificationOptions; cast for runtime support
+      ...( { vibrate: [200, 100, 200] } as unknown as NotificationOptions ),
       tag: `virtus-${Date.now()}`,
       requireInteraction: false,
       ...options,
@@ -285,12 +287,14 @@ export function sendNotification(title: string, body: string, data?: any) {
       body,
       icon: '/icon-192.png',
       badge: '/favicon-32x32.png',
-      vibrate: [200, 100, 200],
+      // 'vibrate' is not in TS NotificationOptions; cast for runtime support
+      ...( { vibrate: [200, 100, 200] } as unknown as NotificationOptions ),
       data,
-      actions: [
+      // Extend with actions via cast to satisfy TS
+      ...( { actions: [
         { action: 'open', title: 'Abrir' },
         { action: 'close', title: 'Cerrar' },
-      ],
+      ] } as unknown as NotificationOptions ),
     });
   });
 }

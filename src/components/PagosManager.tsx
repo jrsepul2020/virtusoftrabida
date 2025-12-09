@@ -9,24 +9,19 @@ import {
   Search,
   Filter,
   Download,
-  Mail,
   CheckCircle,
   Clock,
   AlertCircle,
   XCircle,
-  Euro,
-  Calendar,
-  Building2,
   RefreshCw,
   Send,
   Eye,
-  FileText,
   TrendingUp,
   PieChart,
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
-import { showSuccess, showError, showWarning } from '../lib/toast';
+import { showSuccess, showError } from '../lib/toast';
 import * as XLSX from 'xlsx';
 
 interface Pago {

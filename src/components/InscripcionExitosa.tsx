@@ -399,19 +399,19 @@ export function InscripcionExitosa({
                 <div className="flex items-start gap-3">
                   <span className="bg-purple-100 text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
                   <p className="text-gray-700">
-                    Visite nuestra página web: <a href="https://concursovirtusofraba.com" className="text-primary-600 hover:underline font-medium">concursovirtusofraba.com</a>
+                    Para cualquier consulta sobre su inscripción, contacte con nosotros por email o teléfono
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="bg-purple-100 text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
                   <p className="text-gray-700">
-                    Busque la sección "Consultar inscripción" e introduzca su código de seguimiento
+                    Proporcione siempre su código de seguimiento <strong>#{pedido}</strong> para agilizar la consulta
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="bg-purple-100 text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
                   <p className="text-gray-700">
-                    Podrá ver el estado de sus muestras, pagos y cualquier actualización
+                    Le informaremos del estado de pago, recepción de muestras y fechas del concurso por email
                   </p>
                 </div>
               </div>

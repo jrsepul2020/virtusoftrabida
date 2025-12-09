@@ -328,7 +328,8 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
     total: inscripciones.length,
     revisadas: inscripciones.filter(i => i.revisada).length,
     pendientes: inscripciones.filter(i => !i.revisada).length,
-    pagadas: inscripciones.filter(i => i.status === 'pagado').length
+    pagadas: inscripciones.filter(i => i.status === 'pagado').length,
+    totalMuestras: inscripciones.reduce((acc, i) => acc + (i.muestras_count || 0), 0)
   };
 
   if (loading) {
@@ -349,35 +350,41 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
 
   return (
     <div className="space-y-4">
-      {/* Estadísticas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div 
-          onClick={() => { setFilterRevisada('all'); setFilterStatus('all'); }}
-          className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-gray-300"
-        >
-          <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
-          <div className="text-sm text-gray-500">Total inscripciones</div>
-        </div>
-        <div 
-          onClick={() => { setFilterRevisada('revisada'); setFilterStatus('all'); }}
-          className="bg-green-50 rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-green-400"
-        >
-          <div className="text-2xl font-bold text-green-600">{stats.revisadas}</div>
-          <div className="text-sm text-green-600">Revisadas</div>
-        </div>
-        <div 
-          onClick={() => { setFilterRevisada('pendiente'); setFilterStatus('all'); }}
-          className="bg-red-50 rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-red-400"
-        >
-          <div className="text-2xl font-bold text-red-600">{stats.pendientes}</div>
-          <div className="text-sm text-red-600">Pendientes revisión</div>
-        </div>
-        <div 
-          onClick={() => { setFilterStatus('pagado'); setFilterRevisada('all'); }}
-          className="bg-blue-50 rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow border-2 border-transparent hover:border-blue-400"
-        >
-          <div className="text-2xl font-bold text-blue-600">{stats.pagadas}</div>
-          <div className="text-sm text-blue-600">Pagadas</div>
+      {/* Estadísticas compactas en una fila */}
+      <div className="bg-white rounded-lg shadow p-3">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <button 
+            onClick={() => { setFilterRevisada('all'); setFilterStatus('all'); }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <span className="text-gray-600">Total:</span>
+            <span className="font-bold text-gray-800">{stats.total}</span>
+          </button>
+          <button 
+            onClick={() => { setFilterRevisada('pendiente'); setFilterStatus('all'); }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
+          >
+            <span className="text-red-600">⏳ Pendientes:</span>
+            <span className="font-bold text-red-700">{stats.pendientes}</span>
+          </button>
+          <button 
+            onClick={() => { setFilterRevisada('revisada'); setFilterStatus('all'); }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+          >
+            <span className="text-green-600">✅ Revisadas:</span>
+            <span className="font-bold text-green-700">{stats.revisadas}</span>
+          </button>
+          <button 
+            onClick={() => { setFilterStatus('pagado'); setFilterRevisada('all'); }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+          >
+            <span className="text-blue-600">💳 Pagadas:</span>
+            <span className="font-bold text-blue-700">{stats.pagadas}</span>
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50">
+            <span className="text-amber-600">🍷 Muestras:</span>
+            <span className="font-bold text-amber-700">{stats.totalMuestras}</span>
+          </div>
         </div>
       </div>
 
@@ -588,11 +595,6 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
             No se encontraron inscripciones con los filtros seleccionados
           </div>
         )}
-      </div>
-
-      {/* Contador */}
-      <div className="text-sm text-gray-500 text-center">
-        Mostrando {filteredInscripciones.length} de {inscripciones.length} inscripciones
       </div>
 
       {/* Modal */}

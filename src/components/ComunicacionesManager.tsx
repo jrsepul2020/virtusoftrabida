@@ -13,8 +13,6 @@ import {
   Plus,
   Edit2,
   Trash2,
-  Copy,
-  Eye,
   Clock,
   CheckCircle,
   AlertCircle,
@@ -164,25 +162,13 @@ export default function ComunicacionesManager() {
       const savedPlantillas = localStorage.getItem('email_plantillas');
       if (savedPlantillas) {
         setPlantillas(JSON.parse(savedPlantillas));
-      } else {
         // Crear plantillas por defecto
         const defaultPlantillas = PLANTILLAS_DEFAULT.map((p, i) => ({
           ...p,
-          id: `default-${i}`,
-          created_at: new Date().toISOString()
         }));
-        setPlantillas(defaultPlantillas);
-        localStorage.setItem('email_plantillas', JSON.stringify(defaultPlantillas));
       }
-
-      // Cargar empresas
-      const { data: empresasData } = await supabase
-        .from('empresas')
-        .select('id, name, email, status, pago_confirmado')
-        .order('name');
-      
       // Mapear name a nombre_empresa para mantener compatibilidad
-      const empresasMapeadas = (empresasData || []).map(e => ({
+      const empresasMapeadas = (empresas || []).map((e: any) => ({
         ...e,
         nombre_empresa: e.name || 'Sin nombre'
       }));

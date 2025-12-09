@@ -16,7 +16,6 @@ import {
   Copy,
   Ruler,
   FileText,
-  ArrowUpDown,
   Check,
   X
 } from 'lucide-react';

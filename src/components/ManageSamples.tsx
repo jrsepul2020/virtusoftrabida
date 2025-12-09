@@ -434,15 +434,21 @@ export default function ManageSamples() {
               </tr>
             </thead>
             <tbody>
-              {filteredSamples.map((sample, index) => (
+              {filteredSamples.map((sample, index) => {
+                const codigoNum = parseInt(sample.codigotexto || sample.codigo || '0', 10);
+                const isLowCode = !isNaN(codigoNum) && codigoNum <= 999;
+                return (
                 <tr 
                   key={sample.id} 
                   className={`border-b border-gray-200 hover:bg-blue-50 ${
-                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                    isLowCode ? 'bg-red-100 border-l-4 border-l-red-500' : (index % 2 === 0 ? 'bg-white' : 'bg-gray-50')
                   } ${editedRows.has(sample.id) ? 'bg-yellow-50' : ''}`}
                 >
                   <td className="px-2 py-1 border-r border-gray-200 font-mono">
-                    {renderEditableCell(sample, 'codigotexto', sample.codigotexto || sample.codigo, 'text', 'w-16')}
+                    <div className="flex items-center gap-1">
+                      {isLowCode && <span className="text-red-600 font-bold text-xs">M</span>}
+                      {renderEditableCell(sample, 'codigotexto', sample.codigotexto || sample.codigo, 'text', 'w-16')}
+                    </div>
                   </td>
                   <td className="px-2 py-1 border-r border-gray-200">
                     {renderEditableCell(sample, 'nombre', sample.nombre)}
@@ -487,7 +493,7 @@ export default function ManageSamples() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

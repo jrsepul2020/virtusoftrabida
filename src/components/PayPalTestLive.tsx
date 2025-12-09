@@ -27,6 +27,12 @@ export default function PayPalTestLive() {
   const [payments, setPayments] = useState<TestPayment[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(true);
   
+  // Estado para transacciones reales de PayPal
+  const [realPayPalTransactions, setRealPayPalTransactions] = useState<any[]>([]);
+  const [syncingPayPal, setSyncingPayPal] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [syncMessage, setSyncMessage] = useState('');
+  
   const paypalRef = useRef<HTMLDivElement>(null);
   const buttonRendered = useRef(false);
 
@@ -225,6 +231,68 @@ export default function PayPalTestLive() {
       }
     } catch (error) {
       console.error('Error:', error);
+    }
+  };
+
+  // Sincronizar con PayPal API para obtener transacciones reales
+  const syncPayPalTransactions = async () => {
+    if (!paypalConfig) {
+      setSyncMessage('Configuración de PayPal no disponible');
+      return;
+    }
+
+    setSyncingPayPal(true);
+    setSyncMessage('Conectando con PayPal...');
+
+    try {
+      // Llamar a la función edge de Supabase que se conecta a PayPal API
+      const { data, error } = await supabase.functions.invoke('paypal-transactions', {
+        body: {
+          start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // últimos 30 días
+          end_date: new Date().toISOString()
+        }
+      });
+
+      if (error) {
+        console.error('Error calling PayPal function:', error);
+        setSyncMessage('Error: ' + (error.message || 'No se pudo conectar con PayPal'));
+        
+        // Fallback: intentar con endpoint local si existe
+        try {
+          const response = await fetch('/api/paypal-transactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              client_id: paypalConfig.client_id,
+              start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+              end_date: new Date().toISOString()
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            setRealPayPalTransactions(result.transactions || []);
+            setLastSyncTime(new Date());
+            setSyncMessage(`✅ ${result.transactions?.length || 0} transacciones sincronizadas`);
+          } else {
+            throw new Error('API endpoint no disponible');
+          }
+        } catch (fallbackError) {
+          setSyncMessage('⚠️ Función de sincronización no configurada. Ver instrucciones abajo.');
+        }
+        return;
+      }
+
+      setRealPayPalTransactions(data?.transactions || []);
+      setLastSyncTime(new Date());
+      setSyncMessage(`✅ ${data?.transactions?.length || 0} transacciones reales sincronizadas`);
+
+    } catch (error: any) {
+      console.error('Error syncing PayPal:', error);
+      setSyncMessage('Error: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setSyncingPayPal(false);
+      setTimeout(() => setSyncMessage(''), 5000);
     }
   };
 
@@ -473,6 +541,119 @@ export default function PayPalTestLive() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Panel de transacciones reales de PayPal */}
+      <div className="mt-6 bg-white rounded-2xl shadow-lg p-6 border border-blue-200">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              Transacciones Reales de PayPal
+            </h2>
+            {lastSyncTime && (
+              <p className="text-xs text-gray-500 mt-1">
+                Última sincronización: {lastSyncTime.toLocaleString('es-ES')}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={syncPayPalTransactions}
+            disabled={syncingPayPal}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md"
+          >
+            {syncingPayPal ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Sincronizando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                Sincronizar con PayPal
+              </>
+            )}
+          </button>
+        </div>
+
+        {syncMessage && (
+          <div className={`mb-4 p-3 rounded-lg ${
+            syncMessage.includes('✅') ? 'bg-green-50 border border-green-200 text-green-700' :
+            syncMessage.includes('⚠️') ? 'bg-yellow-50 border border-yellow-200 text-yellow-700' :
+            'bg-red-50 border border-red-200 text-red-700'
+          }`}>
+            {syncMessage}
+          </div>
+        )}
+
+        {realPayPalTransactions.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <CreditCard className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+            <p>No hay transacciones sincronizadas</p>
+            <p className="text-sm">Haz clic en "Sincronizar" para obtener transacciones reales de PayPal</p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            {realPayPalTransactions.map((transaction, idx) => (
+              <div
+                key={transaction.id || idx}
+                className="bg-blue-50 rounded-lg p-4 border border-blue-200"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">
+                      {transaction.payer?.name?.given_name} {transaction.payer?.name?.surname || ''}
+                    </p>
+                    <p className="text-sm text-gray-600">{transaction.payer?.email_address}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {transaction.description || transaction.items?.[0]?.description || 'Sin descripción'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(transaction.create_time || transaction.update_time).toLocaleString('es-ES')}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-blue-600">
+                      {transaction.amount?.value || transaction.purchase_units?.[0]?.amount?.value} {transaction.amount?.currency_code || transaction.purchase_units?.[0]?.amount?.currency_code || 'EUR'}
+                    </p>
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                      transaction.status === 'COMPLETED' || transaction.status === 'SUCCESS'
+                        ? 'bg-green-100 text-green-700' 
+                        : transaction.status === 'PENDING'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {transaction.status}
+                    </span>
+                  </div>
+                </div>
+                {transaction.id && (
+                  <p className="text-xs text-gray-400 mt-2 font-mono break-all">
+                    ID: {transaction.id}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Instrucciones para configurar la sincronización */}
+        <div className="mt-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <h4 className="font-semibold text-blue-800 mb-2">📘 Configurar sincronización con PayPal:</h4>
+          <div className="text-sm text-blue-700 space-y-2">
+            <p>Para que la sincronización funcione, necesitas crear una función edge en Supabase:</p>
+            <ol className="list-decimal list-inside space-y-1 ml-2">
+              <li>Ve a tu proyecto Supabase → Edge Functions</li>
+              <li>Crea una función llamada <code className="bg-blue-100 px-1 rounded">paypal-transactions</code></li>
+              <li>La función debe usar PayPal REST API para obtener transacciones</li>
+              <li>Necesitas CLIENT_ID y SECRET de PayPal en las variables de entorno</li>
+              <li>API endpoint: <code className="bg-blue-100 px-1 rounded">https://api-m.paypal.com/v1/reporting/transactions</code></li>
+            </ol>
+            <p className="mt-2 text-xs">
+              Alternativamente, puedes crear un endpoint local en <code className="bg-blue-100 px-1 rounded">/api/paypal-transactions</code>
+            </p>
+          </div>
         </div>
       </div>
 

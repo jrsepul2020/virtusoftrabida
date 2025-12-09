@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Settings, Save, Plus, Edit2, Trash2, X, Award } from 'lucide-react';
+import { Settings, Save, Plus, Edit2, Trash2, X, Award, Database, Monitor } from 'lucide-react';
 
 interface StatusConfig {
   id: string;
@@ -21,7 +21,11 @@ interface MedalConfig {
   activo: boolean;
 }
 
-export default function ConfiguracionManager() {
+interface ConfiguracionManagerProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function ConfiguracionManager({ onNavigate }: ConfiguracionManagerProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [numeroMesas, setNumeroMesas] = useState('5');
@@ -802,6 +806,37 @@ export default function ConfiguracionManager() {
               Añadir Nuevo Estado
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Herramientas del Sistema */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">🔧 Herramientas del Sistema</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            onClick={() => onNavigate?.('backup')}
+            className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-colors"
+          >
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <Database className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-gray-800">Respaldos</p>
+              <p className="text-sm text-gray-500">Exportar e importar datos</p>
+            </div>
+          </button>
+          <button
+            onClick={() => onNavigate?.('pantallas')}
+            className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl hover:from-purple-100 hover:to-pink-100 transition-colors"
+          >
+            <div className="p-2 bg-purple-600 rounded-lg">
+              <Monitor className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-gray-800">Pantallas</p>
+              <p className="text-sm text-gray-500">Explorador de componentes</p>
+            </div>
+          </button>
         </div>
       </div>
     </div>

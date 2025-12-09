@@ -126,8 +126,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
-    { id: 'backup', label: 'Respaldos', icon: Database },
-    { id: 'pantallas', label: 'Pantallas', icon: Monitor },
   ];
 
   return (
@@ -322,7 +320,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
-            {activeTab === 'configuracion' && <SettingsManager />}
+            {activeTab === 'configuracion' && <SettingsManager onNavigate={(tab) => setActiveTab(tab as Tab)} />}
             {activeTab === 'usuarios' && <UsuariosManager />}
             {activeTab === 'backup' && <BackupManager />}
             {activeTab === 'pantallas' && <PantallasManager key={pantallasKey} />}

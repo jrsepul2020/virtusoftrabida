@@ -52,6 +52,12 @@ export default function Chequeo() {
   const itemsPerPage = 50;
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
 
+  // Barcode scanner (keyboard HID mode)
+  const scannerInputRef = useRef<HTMLInputElement | null>(null);
+  const [scanBuffer, setScanBuffer] = useState('');
+  const scanTimerRef = useRef<any>(null);
+  const [lastScanned, setLastScanned] = useState<string>('');
+
   const formatDate = (d?: string | null) => {
     if (!d) return '-';
     try {
@@ -79,6 +85,10 @@ export default function Chequeo() {
 
   useEffect(() => {
     fetchSamples();
+    // Auto-focus scanner input on mount
+    if (scannerInputRef.current) {
+      scannerInputRef.current.focus();
+    }
   }, []);
 
   useEffect(() => {
@@ -185,6 +195,8 @@ export default function Chequeo() {
           }
         }
       } catch (e) { /* ignore */ }
+      // Re-focus scanner input after stopping camera
+      setTimeout(() => scannerInputRef.current?.focus(), 100);
     }
   };
 
@@ -192,6 +204,7 @@ export default function Chequeo() {
     // normalize numeric value to digits
     const digits = (rawValue || '').toString().replace(/\D/g, '');
     const ean = digits.padStart(13, '0').slice(-13);
+    setLastScanned(ean);
     setMessage(`Detectado: ${ean}. Buscando muestra...`);
 
     try {
@@ -230,10 +243,42 @@ export default function Chequeo() {
       // refresh samples list
       await fetchSamples();
       setTimeout(() => setMessage(null), 1500);
+      // Re-focus scanner input after processing
+      setTimeout(() => scannerInputRef.current?.focus(), 100);
     } catch (err) {
       console.error('Error procesando detección', err);
       setMessage('Error procesando detección');
       setTimeout(() => setMessage(null), 2000);
+      // Re-focus scanner input after error
+      setTimeout(() => scannerInputRef.current?.focus(), 100);
+    }
+  };
+
+  // Handle scanner input (keyboard HID mode)
+  const handleScannerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Clear any pending timer
+    if (scanTimerRef.current) {
+      clearTimeout(scanTimerRef.current);
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const code = scanBuffer.trim();
+      if (code) {
+        handleDetected(code);
+      }
+      setScanBuffer('');
+      (e.target as HTMLInputElement).value = '';
+    } else if (e.key.length === 1) {
+      // Accumulate printable characters
+      const newBuffer = scanBuffer + e.key;
+      setScanBuffer(newBuffer);
+      // Auto-clear buffer after 100ms of no input (for manual typing detection)
+      scanTimerRef.current = setTimeout(() => {
+        setScanBuffer('');
+      }, 100);
+    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+      setScanBuffer(prev => prev.slice(0, -1));
     }
   };
 
@@ -477,7 +522,38 @@ export default function Chequeo() {
 
   return (
     <div>
+      {/* Hidden input for barcode scanner (keyboard HID mode) */}
+      <input
+        ref={scannerInputRef}
+        type="text"
+        onKeyDown={handleScannerKeyDown}
+        onBlur={() => {
+          // Auto-refocus if not scanning with camera
+          if (!scanning) {
+            setTimeout(() => scannerInputRef.current?.focus(), 50);
+          }
+        }}
+        className="sr-only"
+        style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+        aria-label="Scanner input"
+        autoComplete="off"
+        placeholder=""
+      />
+
       <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 mb-4">
+        {/* Scanner status indicator */}
+        {lastScanned && (
+          <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <span className="font-semibold text-blue-700">Último escaneado:</span>{' '}
+            <span className="font-mono text-blue-900">{lastScanned}</span>
+          </div>
+        )}
+        {!scanning && (
+          <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+            📡 Lector de códigos activo - Escanee un código de barras
+          </div>
+        )}
+
         <div className="flex flex-col gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />

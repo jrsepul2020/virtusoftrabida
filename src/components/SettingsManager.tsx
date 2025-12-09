@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Settings, Plus, Edit2, Save, Trash2, Activity } from 'lucide-react';
+import { Settings, Plus, Edit2, Save, Trash2, Activity, Database, Monitor, Wrench } from 'lucide-react';
 import DiagnosticoSupabase from './DiagnosticoSupabase';
 
 interface StatusConfig {
@@ -12,13 +12,17 @@ interface StatusConfig {
   is_default: boolean;
 }
 
-export default function SettingsManager() {
+interface SettingsManagerProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   const [statuses, setStatuses] = useState<StatusConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingStatus, setEditingStatus] = useState<StatusConfig | null>(null);
   const [newStatus, setNewStatus] = useState<Partial<StatusConfig> | null>(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico'>('estados');
+  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico' | 'herramientas'>('estados');
 
   // Estados por defecto
   const defaultStatuses: StatusConfig[] = [
@@ -230,6 +234,17 @@ export default function SettingsManager() {
               <Activity className="w-4 h-4" />
               Diagnóstico
             </button>
+            <button
+              onClick={() => setActiveTab('herramientas')}
+              className={`px-6 py-3 font-medium text-sm transition-colors flex items-center gap-2 ${
+                activeTab === 'herramientas'
+                  ? 'border-b-2 border-red-600 text-red-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Wrench className="w-4 h-4" />
+              Herramientas
+            </button>
           </div>
         </div>
 
@@ -288,6 +303,45 @@ export default function SettingsManager() {
 
           {activeTab === 'diagnostico' && (
             <DiagnosticoSupabase />
+          )}
+
+          {activeTab === 'herramientas' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium text-gray-700 mb-4">🔧 Herramientas del Sistema</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Acceda a herramientas avanzadas de administración y mantenimiento del sistema.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  onClick={() => onNavigate?.('backup')}
+                  className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all hover:shadow-md"
+                >
+                  <div className="p-3 bg-blue-600 rounded-xl">
+                    <Database className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-800 text-lg">Respaldos</p>
+                    <p className="text-sm text-gray-500">Exportar e importar datos del sistema</p>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => onNavigate?.('pantallas')}
+                  className="flex items-center gap-4 p-5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl hover:from-purple-100 hover:to-pink-100 transition-all hover:shadow-md"
+                >
+                  <div className="p-3 bg-purple-600 rounded-xl">
+                    <Monitor className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-800 text-lg">Pantallas</p>
+                    <p className="text-sm text-gray-500">Explorador de componentes del sistema</p>
+                  </div>
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
