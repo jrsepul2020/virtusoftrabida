@@ -42,6 +42,7 @@ function getClientIP(req: any): string {
 // ============================================
 // HANDLER PRINCIPAL
 // ============================================
+import { createClient } from '@supabase/supabase-js';
 export default async function handler(req: any, res: any) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -91,7 +92,32 @@ export default async function handler(req: any, res: any) {
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   const SENDER_EMAIL = process.env.SENDER_EMAIL || 'info@internationalvirtus.es';
   const SENDER_NAME = process.env.SENDER_NAME || 'International Virtus La Rábida';
-  const ADMIN_EMAIL = 'jrsepul2000@gmail.com'; // Email del administrador
+  // Determine Supabase connection for server-side lookup of admin email
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+  let ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jrsepul2000@gmail.com'; // fallback
+
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseKey as string);
+      const { data: cfg, error: cfgErr } = await supabase
+        .from('configuracion')
+        .select('valor')
+        .eq('clave', 'email_envio')
+        .maybeSingle();
+
+      if (cfgErr) {
+        console.warn('Warning: could not read configuracion.email_envio', cfgErr.message || cfgErr);
+      } else if (cfg && (cfg as any).valor) {
+        ADMIN_EMAIL = (cfg as any).valor;
+      }
+    } catch (err) {
+      console.warn('Error connecting to Supabase to read admin email:', String(err));
+    }
+  } else {
+    console.warn('Supabase env not found; using ADMIN_EMAIL fallback');
+  }
 
   console.log('🔍 Debug variables de entorno:');
   console.log('BREVO_API_KEY existe:', !!BREVO_API_KEY);
