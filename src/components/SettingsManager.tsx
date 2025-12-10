@@ -213,7 +213,8 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
     { bg: 'bg-indigo-100', text: 'text-indigo-800', name: 'Índigo' },
   ];
 
-  if (loading) {
+  // Solo mostrar loader si estamos cargando estados iniciales
+  if (loading && activeTab === 'estados') {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Cargando configuración...</div>
