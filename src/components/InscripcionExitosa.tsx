@@ -79,6 +79,23 @@ export function InscripcionExitosa({
             ¡Inscripción Realizada con Éxito!
           </h1>
 
+          {/* Mensaje de correo (movido aquí) */}
+          <div className="mt-3 mb-3">
+            <div className="bg-gradient-to-br from-primary-50 to-orange-50 rounded-xl p-4 border border-primary-200 inline-block mx-auto">
+              <div className="flex items-start gap-3">
+                <div className="bg-primary-100 p-2 rounded-lg flex-shrink-0">
+                  <Mail className="w-5 h-5 text-primary-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-primary-800 mb-1">Revise su correo electrónico</h3>
+                  <p className="text-primary-700 text-sm">
+                    Hemos enviado un email a <strong>{company?.email}</strong> con todos los detalles de su inscripción. Si no lo encuentra, revise la carpeta de spam.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Número de pedido */}
           {pedido && (
             <div className="inline-block bg-primary-100 border-2 border-primary-300 rounded-xl px-6 py-3 mt-4">
@@ -341,21 +358,7 @@ export function InscripcionExitosa({
           </div>
         )}
 
-        {/* Mensaje importante */}
-        <div className="bg-gradient-to-br from-primary-50 to-orange-50 rounded-2xl p-6 mb-6 border border-primary-200 avoid-page-break print:break-inside-avoid">
-          <div className="flex items-start gap-3">
-            <div className="bg-primary-100 p-2 rounded-lg flex-shrink-0">
-              <Mail className="w-5 h-5 text-primary-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-primary-800 mb-1">Revise su correo electrónico</h3>
-              <p className="text-primary-700 text-sm">
-                Hemos enviado un email a <strong>{company?.email}</strong> con todos los detalles de su inscripción.
-                Si no lo encuentra, revise la carpeta de spam.
-              </p>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Sección de seguimiento */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 print:hidden">
