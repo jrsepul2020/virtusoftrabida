@@ -67,10 +67,10 @@ export function InscripcionExitosa({
         <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 text-center mb-6 print:shadow-none print:rounded-none">
           {/* Logo principal en lugar del check */}
           <div className="mb-6 flex justify-center">
-            <img 
-              src="/logo-bandera-1.png" 
-              alt="International Virtus Awards" 
-              className="h-18 md:h-32 object-contain"
+            <img
+              src="/logo-bandera-1.png"
+              alt="International Virtus Awards"
+              className="w-36 md:w-48 lg:w-56 object-contain max-w-[240px] print:max-w-[160px]"
             />
           </div>
 
