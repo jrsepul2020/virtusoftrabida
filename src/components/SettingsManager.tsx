@@ -23,7 +23,7 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   const [editingStatus, setEditingStatus] = useState<StatusConfig | null>(null);
   const [newStatus, setNewStatus] = useState<Partial<StatusConfig> | null>(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico' | 'herramientas' | 'email'>('estados');
+  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico' | 'herramientas' | 'email'>('herramientas');
 
   // Configuración general (clave/valor)
   const { data: configData, isLoading: configLoading } = useConfiguracion();
