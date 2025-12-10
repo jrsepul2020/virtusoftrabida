@@ -114,8 +114,8 @@ export function EmpresaScreen({
           </div>
         </div>
         
-        {/* Segunda fila - Teléfono, Móvil, Email, Confirmación Email */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        {/* Segunda fila - Teléfono, Móvil */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-primary-800 font-medium mb-1">Teléfono *</label>
             <div className="flex">
@@ -192,6 +192,10 @@ export function EmpresaScreen({
               <p className="text-red-500 text-sm mt-1">Obligatorio</p>
             )}
           </div>
+        </div>
+
+        {/* Tercera fila - Email y Confirmación Email */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-primary-800 font-medium mb-1">Email *</label>
             <input 
@@ -237,9 +241,7 @@ export function EmpresaScreen({
           </div>
         </div>
 
-        {/* (Confirmación de email movida junto al campo Email) */}
-        
-        {/* Tercera fila - Dirección, Población, CP */}
+        {/* Cuarta fila - Dirección, Población, CP */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 mt-4">
           <div className="lg:col-span-8">
             <label className="block text-primary-800 font-medium mb-1">Dirección *</label>
@@ -277,7 +279,7 @@ export function EmpresaScreen({
           </div>
         </div>
         
-        {/* Cuarta fila - CP, Ciudad, País */}
+        {/* Quinta fila - CP, Ciudad, País */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-12 gap-4 mt-4">
           <div className="lg:col-span-3">
             <label className="block text-primary-800 font-medium mb-1">Código Postal *</label>
@@ -336,7 +338,7 @@ export function EmpresaScreen({
           </div>
         </div>
         
-        {/* Quinta fila - Medio conoció, Página web */}
+        {/* Sexta fila - Medio conoció, Página web */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-primary-800 font-medium mb-1">¿A través de qué medio nos conoció?</label>
@@ -361,7 +363,7 @@ export function EmpresaScreen({
           </div>
         </div>
         
-        {/* Sexta fila - Observaciones y Número de muestras */}
+        {/* Séptima fila - Observaciones y Número de muestras */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
           <div className="lg:col-span-2">
             <label className="block text-primary-800 font-medium mb-1">Observaciones</label>
@@ -404,7 +406,7 @@ export function EmpresaScreen({
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-sm text-gray-700">
               <span>{company.num_muestras} muestra{company.num_muestras !== 1 ? 's' : ''} total</span>
-              <span>({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''} por muestra{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
+              <span>({precio.pagadas} muestra{precio.pagadas !== 1 ? 's' : ''}{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
             </div>
             {precio.gratis > 0 && (
               <div className="text-xs text-green-600 text-right">
@@ -435,7 +437,7 @@ export function EmpresaScreen({
           <button
             type="button"
             onClick={onNext}
-            className="w-full sm:w-auto bg-primary-600 text-white px-8 py-3 sm:py-2 rounded-lg font-semibold hover:bg-primary-700 active:bg-primary-800 transition-colors text-lg sm:text-base"
+            className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-3 sm:py-2 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 transition-all shadow-md hover:shadow-lg text-lg sm:text-base"
           >
             Siguiente
           </button>

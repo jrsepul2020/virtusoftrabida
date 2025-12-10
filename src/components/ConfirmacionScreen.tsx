@@ -102,7 +102,7 @@ export function ConfirmacionScreen({
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm text-gray-700">
                 <span>{company.num_muestras} muestra{company.num_muestras !== 1 ? 's' : ''} total</span>
-                <span>({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''} por muestra{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
+                <span>({precio.pagadas} muestra{precio.pagadas !== 1 ? 's' : ''}{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
               </div>
               {precio.gratis > 0 && (
                 <div className="text-xs text-green-600 text-right font-medium">
@@ -321,7 +321,7 @@ export function ConfirmacionScreen({
                 type="button" 
                 onClick={onPrev} 
                 disabled={loading}
-                className="w-full sm:w-auto bg-gray-500 text-white px-8 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-2 rounded-lg font-semibold hover:from-gray-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Atrás
               </button>
@@ -334,7 +334,7 @@ export function ConfirmacionScreen({
                     e.preventDefault();
                     onSubmit();
                   }} 
-                  className="w-full sm:w-auto bg-primary-600 text-white px-8 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-2 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   {loading ? (
                     <>
@@ -352,7 +352,7 @@ export function ConfirmacionScreen({
                 <button 
                   type="button" 
                   onClick={() => setShowPayPalModal(true)}
-                  className="w-full sm:w-auto bg-blue-600 text-white px-8 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-3 shadow-lg"
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-3"
                 >
                   <CreditCard className="w-5 h-5" />
                   Pagar con PayPal

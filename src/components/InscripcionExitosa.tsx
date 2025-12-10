@@ -305,7 +305,7 @@ export function InscripcionExitosa({
                 <span className="text-gray-600">Muestras a pagar:</span>
                 <span className="font-medium">
                   {precio.pagadas} x 150€{' '}
-                  <span className="text-sm text-gray-500">({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''} por muestra)</span>
+                  <span className="text-sm text-gray-500">({precio.pagadas} muestra{precio.pagadas !== 1 ? 's' : ''})</span>
                 </span>
               </div>
               {precio.gratis > 0 && (
