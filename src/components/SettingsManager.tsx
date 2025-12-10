@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useConfiguracion } from '../lib/queryCache';
 import { Settings, Plus, Edit2, Save, Trash2, Activity, Database, Monitor, Wrench } from 'lucide-react';
 import DiagnosticoSupabase from './DiagnosticoSupabase';
 
@@ -22,7 +23,12 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   const [editingStatus, setEditingStatus] = useState<StatusConfig | null>(null);
   const [newStatus, setNewStatus] = useState<Partial<StatusConfig> | null>(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico' | 'herramientas'>('estados');
+  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico' | 'herramientas' | 'email'>('estados');
+
+  // Configuración general (clave/valor)
+  const { data: configData } = useConfiguracion();
+  const [adminEmail, setAdminEmail] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
 
   // Estados por defecto
   const defaultStatuses: StatusConfig[] = [
@@ -245,6 +251,16 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
               <Wrench className="w-4 h-4" />
               Herramientas
             </button>
+            <button
+              onClick={() => setActiveTab('email')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeTab === 'email'
+                  ? 'border-b-2 border-red-600 text-red-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Email de envío
+            </button>
           </div>
         </div>
 
@@ -340,6 +356,54 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     <p className="text-sm text-gray-500">Explorador de componentes del sistema</p>
                   </div>
                 </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'email' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium text-gray-700 mb-4">Email de envío</h3>
+                <p className="text-sm text-gray-500 mb-4">Dirección de email usada como administrador para recibir inscripciones y notificaciones. Clave: <code>email_envio</code></p>
+                <div className="max-w-lg">
+                  <label className="block text-sm text-gray-700 mb-2">Email administrador</label>
+                  <input
+                    type="email"
+                    value={adminEmail || (configData?.email_envio ?? '')}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="inscripciones@internationalvirtus.com"
+                    className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  />
+                  <div className="flex items-center gap-3 mt-3">
+                    <button
+                      onClick={async () => {
+                        setSavingEmail(true);
+                        try {
+                          const emailToSave = adminEmail || configData?.email_envio || '';
+                          const { error } = await supabase
+                            .from('configuracion')
+                            .upsert({ clave: 'email_envio', valor: emailToSave });
+                          if (error) throw error;
+                          alert('Email guardado correctamente');
+                        } catch (err) {
+                          console.error('Error guardando email de envío', err);
+                          alert('Error guardando email');
+                        } finally {
+                          setSavingEmail(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      {savingEmail ? 'Guardando...' : 'Guardar'}
+                    </button>
+                    <button
+                      onClick={() => setAdminEmail(configData?.email_envio ?? '')}
+                      className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      Restaurar
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
