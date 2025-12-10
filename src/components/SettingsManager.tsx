@@ -26,11 +26,11 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico' | 'herramientas' | 'email'>('estados');
 
   // Configuración general (clave/valor)
-  const { data: configData } = useConfiguracion();
+  const { data: configData, isLoading: configLoading } = useConfiguracion();
   const [adminEmail, setAdminEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
   // Branding / UI settings
-  const [siteTitle, setSiteTitle] = useState('');
+  const [siteTitle, setSiteTitle] = useState('International Virtus La Rábida');
   const [primaryColor, setPrimaryColor] = useState('#0ea5a4');
   const [heroFullscreen, setHeroFullscreen] = useState(false);
   const [savingBranding, setSavingBranding] = useState(false);
