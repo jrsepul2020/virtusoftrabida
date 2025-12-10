@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useConfiguracion } from '../lib/queryCache';
+import { useConfiguracion, queryClient } from '../lib/queryCache';
 import { Settings, Plus, Edit2, Save, Trash2, Activity, Database, Monitor, Wrench } from 'lucide-react';
 import DiagnosticoSupabase from './DiagnosticoSupabase';
 
@@ -29,6 +29,20 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   const { data: configData } = useConfiguracion();
   const [adminEmail, setAdminEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
+  // Branding / UI settings
+  const [siteTitle, setSiteTitle] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#0ea5a4');
+  const [heroFullscreen, setHeroFullscreen] = useState(false);
+  const [savingBranding, setSavingBranding] = useState(false);
+
+  useEffect(() => {
+    if (configData) {
+      setAdminEmail(configData.email_envio ?? '');
+      setSiteTitle(configData.site_title ?? 'International Virtus La Rábida');
+      setPrimaryColor(configData.primary_color ?? '#0ea5a4');
+      setHeroFullscreen(configData.hero_fullscreen === 'true');
+    }
+  }, [configData]);
 
   // Estados por defecto
   const defaultStatuses: StatusConfig[] = [
@@ -356,6 +370,106 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     <p className="text-sm text-gray-500">Explorador de componentes del sistema</p>
                   </div>
                 </button>
+              </div>
+
+              {/* Branding / UI settings */}
+              <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <h4 className="font-medium text-gray-800 mb-3">Branding / UI</h4>
+                <p className="text-sm text-gray-500 mb-4">Ajustes visuales del sitio: título, color principal y comportamiento del hero.</p>
+
+                <div className="space-y-4 max-w-xl">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Título del sitio (`site_title`)</label>
+                    <input
+                      type="text"
+                      value={siteTitle}
+                      onChange={(e) => setSiteTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                      placeholder="International Virtus La Rábida"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Color primario (`primary_color`)</label>
+                    <div className="flex items-center gap-3 mt-1">
+                      <input
+                        type="color"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="w-12 h-10 p-0 border-0 bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="#0ea5a4"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Hero fullscreen (`hero_fullscreen`)</label>
+                      <p className="text-xs text-gray-500">Si está activo, la portada usará `h-screen` para ocupar toda la pantalla.</p>
+                    </div>
+                    <div>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={heroFullscreen}
+                          onChange={(e) => setHeroFullscreen(e.target.checked)}
+                          className="form-checkbox h-5 w-5 text-green-600"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-3">
+                    <button
+                      onClick={async () => {
+                        setSavingBranding(true);
+                        try {
+                          const ops = [
+                            { clave: 'site_title', valor: siteTitle },
+                            { clave: 'primary_color', valor: primaryColor },
+                            { clave: 'hero_fullscreen', valor: heroFullscreen ? 'true' : 'false' },
+                          ];
+
+                          for (const op of ops) {
+                            const { error } = await supabase.from('configuracion').upsert(op);
+                            if (error) throw error;
+                          }
+
+                          // Invalidate config cache so UI updates immediately
+                          queryClient.invalidateQueries({ queryKey: ['configuracion'] });
+
+                          alert('Ajustes de branding guardados');
+                        } catch (err) {
+                          console.error('Error guardando branding settings', err);
+                          alert('Error al guardar los ajustes');
+                        } finally {
+                          setSavingBranding(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      {savingBranding ? 'Guardando...' : 'Guardar ajustes'}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        // Restaurar desde configData
+                        setSiteTitle(configData?.site_title ?? 'International Virtus La Rábida');
+                        setPrimaryColor(configData?.primary_color ?? '#0ea5a4');
+                        setHeroFullscreen(configData?.hero_fullscreen === 'true');
+                      }}
+                      className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      Restaurar
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
