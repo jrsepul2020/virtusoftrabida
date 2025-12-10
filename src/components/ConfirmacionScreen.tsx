@@ -328,7 +328,10 @@ export function ConfirmacionScreen({
                 <button 
                   type="button" 
                   disabled={loading} 
-                  onClick={onSubmit} 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onSubmit();
+                  }} 
                   className="w-full sm:w-auto bg-primary-600 text-white px-8 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   {loading ? (
