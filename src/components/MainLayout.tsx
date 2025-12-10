@@ -22,8 +22,10 @@ export default function MainLayout({ children, view, setView, adminLoggedIn, onA
     );
   }
 
+  const isHomeView = view === 'home';
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className={`flex flex-col ${isHomeView ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       {setView && (
         <Header 
           setView={setView} 
@@ -32,7 +34,7 @@ export default function MainLayout({ children, view, setView, adminLoggedIn, onA
           currentView={view}
         />
       )}
-      <main className="flex-1 min-h-0 flex flex-col overflow-hidden">{children}</main>
+      <main className={`flex-1 min-h-0 flex flex-col ${isHomeView ? 'overflow-hidden' : ''}`}>{children}</main>
     </div>
   );
 }
