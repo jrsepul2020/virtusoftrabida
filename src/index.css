@@ -132,8 +132,32 @@
   page-break-inside: avoid;
 }
 
+/* Force page break before samples section (page 2) */
+.force-page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
+
+/* Force page break after first page content */
+.page-break-after {
+  page-break-after: always;
+  break-after: page;
+}
+
 /* Ensure wide elements shrink on print to avoid overflow */
 @media print {
   img { max-width: 100%; height: auto; }
   .avoid-page-break { display: block; }
+  
+  /* Ensure each section stays together */
+  .bg-white.rounded-2xl { 
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Force samples section to start on page 2 */
+  .force-page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
 }
