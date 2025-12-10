@@ -114,8 +114,8 @@ export function EmpresaScreen({
           </div>
         </div>
         
-        {/* Segunda fila - Teléfono, Móvil, Email */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        {/* Segunda fila - Teléfono, Móvil, Email, Confirmación Email */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           <div>
             <label className="block text-primary-800 font-medium mb-1">Teléfono *</label>
             <div className="flex">
@@ -209,11 +209,9 @@ export function EmpresaScreen({
               <p className="text-red-500 text-sm mt-1">Obligatorio</p>
             )}
           </div>
-        </div>
 
-        {/* Confirmación de email */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-          <div className="lg:col-start-2">
+          {/* Confirmación de Email: colocada a la misma altura que Email */}
+          <div>
             <label className="block text-primary-800 font-medium mb-1">Confirmar Email *</label>
             <input 
               type="email" 
@@ -236,6 +234,8 @@ export function EmpresaScreen({
             )}
           </div>
         </div>
+
+        {/* (Confirmación de email movida junto al campo Email) */}
         
         {/* Tercera fila - Dirección, Población, CP */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 mt-4">
