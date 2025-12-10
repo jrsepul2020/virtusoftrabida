@@ -148,7 +148,7 @@ export default async function handler(req: any, res: any) {
           <li><strong>Email:</strong> ${empresa.email}</li>
           <li><strong>Teléfono:</strong> ${empresa.telefono}</li>
           <li><strong>Número de muestras:</strong> ${empresa.num_muestras}</li>
-          <li><strong>Muestras pagadas:</strong> ${precio.pagadas}</li>
+          <li><strong>Muestras pagadas (pagada${precio.pagadas === 1 ? '' : 's'} por muestra):</strong> ${precio.pagadas}</li>
           <li><strong>Muestras gratis:</strong> ${precio.gratis}</li>
           <li><strong>Total a pagar:</strong> ${precio.total}€</li>
           <li><strong>Método de pago:</strong> ${metodoPago === 'transferencia' ? 'Transferencia bancaria' : 'PayPal'}</li>
@@ -207,7 +207,7 @@ export default async function handler(req: any, res: any) {
         <h3 style="color: #8A754C;">Resumen económico:</h3>
         <ul>
           <li><strong>Número de muestras:</strong> ${empresa.num_muestras}</li>
-          <li><strong>Muestras pagadas:</strong> ${precio.pagadas}</li>
+          <li><strong>Muestras pagadas (pagada${precio.pagadas === 1 ? '' : 's'} por muestra):</strong> ${precio.pagadas}</li>
           <li><strong>Muestras gratis:</strong> ${precio.gratis}</li>
           <li><strong>Total a pagar:</strong> ${precio.total}€</li>
           <li><strong>Método de pago:</strong> ${metodoPago === 'transferencia' ? 'Transferencia bancaria' : 'PayPal'}</li>

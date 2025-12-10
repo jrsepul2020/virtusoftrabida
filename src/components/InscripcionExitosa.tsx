@@ -303,7 +303,10 @@ export function InscripcionExitosa({
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Muestras a pagar:</span>
-                <span className="font-medium">{precio.pagadas} x 150€</span>
+                <span className="font-medium">
+                  {precio.pagadas} x 150€{' '}
+                  <span className="text-sm text-gray-500">({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''} por muestra)</span>
+                </span>
               </div>
               {precio.gratis > 0 && (
                 <div className="flex justify-between items-center text-green-600">
