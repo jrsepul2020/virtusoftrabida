@@ -21,15 +21,14 @@ import PantallasManager from './PantallasManager';
 import BottlePhotosGallery from './BottlePhotosGallery';
 import ResultadosCatas from './ResultadosCatas';
 import PuntuacionesManager from './PuntuacionesManager';
-import PayPalConfigManager from './PayPalConfigManager';
-import PayPalTestLive from './PayPalTestLive';
+import PayPalDashboard from './PayPalDashboard';
 import CategoriasManager from './CategoriasManager';
 import BackupManager from './BackupManager';
 import ComunicacionesManager from './ComunicacionesManager';
 import EtiquetadoMuestras from './EtiquetadoMuestras';
 import UsuariosManager from './UsuariosManager';
 
-type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'paypalTest' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'etiquetado';
+type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'etiquetado';
 
 interface MenuItem {
   id: string;
@@ -121,8 +120,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'dispositivos', label: 'Dispositivos', icon: Smartphone },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
     { id: 'comunicaciones', label: 'Comunicaciones', icon: Send },
-    { id: 'paypal', label: 'PayPal Config', icon: CreditCard },
-    { id: 'paypalTest', label: 'Test PayPal Live', icon: CreditCard, highlight: true },
+    { id: 'paypal', label: 'PAYPAL', icon: CreditCard, highlight: true },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
@@ -315,8 +313,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'catadores' && <CatadoresManager />}
             {activeTab === 'dispositivos' && <DispositivosManager />}
             {activeTab === 'comunicaciones' && <ComunicacionesManager />}
-            {activeTab === 'paypal' && <PayPalConfigManager />}
-            {activeTab === 'paypalTest' && <PayPalTestLive />}
+            {activeTab === 'paypal' && <PayPalDashboard />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
             {activeTab === 'emailTest' && <EmailTest />}
