@@ -13,10 +13,10 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
   }, []);
 
   return (
-    <div className="h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* Imagen de portada virtus-2026 - Desktop (oculta en móvil) */}
       <div 
-        className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="hidden md:block fixed inset-0 bg-cover bg-center bg-no-repeat z-0"
         style={{
           backgroundImage: `url(/virtus-2026-11.webp)`
         }}
@@ -27,7 +27,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
 
       {/* Imagen de portada virtus-2026 - Móvil (oculta en desktop) */}
       <div 
-        className="md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="md:hidden fixed inset-0 bg-cover bg-center bg-no-repeat z-0"
         style={{
           backgroundImage: `url(/virtus14.png)`
         }}
@@ -36,7 +36,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
-      <div className="relative z-10 h-full flex flex-col items-center justify-start md:justify-center text-center px-4 pt-20 md:pt-0">
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-start md:justify-center text-center px-4 pt-20 md:pt-0">
         {/* Título principal - responsive con Cormorant */}
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
           <h1 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-6xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
