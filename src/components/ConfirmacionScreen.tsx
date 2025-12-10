@@ -65,7 +65,9 @@ export function ConfirmacionScreen({
             </div>
             <div>
               <span className="font-medium text-gray-700">Email:</span>
-              <span className="ml-2 text-gray-800 break-all">{company.email}</span>
+              <div className="mt-1">
+                <a className="text-gray-800 break-all" href={`mailto:${company.email}`}>{company.email}</a>
+              </div>
             </div>
             <div>
               <span className="font-medium text-gray-700">Teléfono:</span>
