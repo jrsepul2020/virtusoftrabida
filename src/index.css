@@ -122,3 +122,18 @@
 .transition-all {
   transition: all 0.2s ease-in-out;
 }
+
+/* Prevent page breaks inside important blocks when printing to PDF */
+.avoid-page-break {
+  /* Modern */
+  break-inside: avoid;
+  /* For older browsers and print */
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Ensure wide elements shrink on print to avoid overflow */
+@media print {
+  img { max-width: 100%; height: auto; }
+  .avoid-page-break { display: block; }
+}

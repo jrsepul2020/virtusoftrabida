@@ -115,7 +115,7 @@ export function InscripcionExitosa({
 
         {/* Datos de la empresa */}
         {company && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 avoid-page-break">
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
               <div className="bg-primary-100 p-2 rounded-lg">
                 <Building2 className="w-6 h-6 text-primary-600" />
@@ -195,7 +195,7 @@ export function InscripcionExitosa({
             
             <div className="space-y-4">
               {samples.map((sample, idx) => (
-                <div key={idx} className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                <div key={idx} className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200 avoid-page-break">
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0">
                       <span className="inline-flex items-center justify-center w-8 h-8 bg-primary-600 text-white rounded-full text-sm font-bold shadow">
@@ -292,7 +292,7 @@ export function InscripcionExitosa({
 
         {/* Resumen de pago */}
         {precio && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 avoid-page-break">
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-200">
               <div className="bg-green-100 p-2 rounded-lg">
                 <CreditCard className="w-6 h-6 text-green-600" />
