@@ -136,13 +136,14 @@ export function EmpresaScreen({
                 type="tel" 
                 inputMode="tel"
                 name="telefono" 
+                maxLength={9}
                 value={company.telefono?.replace(/^\+\d+\s?/, '') || ''} 
                 onChange={(e) => {
                   const prefijo = company.telefono?.match(/^\+\d+/)?.[0] || '+34';
                   onChange({ target: { name: 'telefono', value: prefijo + ' ' + e.target.value } } as any);
                 }}
                 placeholder="600 000 000"
-                className={`flex-1 px-4 py-2 rounded-r-lg border ${
+                className={`flex-1 md:flex-none md:w-40 px-4 py-2 rounded-r-lg border ${
                   validationErrors?.telefono 
                     ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
                     : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
@@ -173,13 +174,14 @@ export function EmpresaScreen({
                 type="tel" 
                 inputMode="tel"
                 name="movil" 
+                maxLength={9}
                 value={company.movil?.replace(/^\+\d+\s?/, '') || ''} 
                 onChange={(e) => {
                   const prefijo = company.movil?.match(/^\+\d+/)?.[0] || '+34';
                   onChange({ target: { name: 'movil', value: prefijo + ' ' + e.target.value } } as any);
                 }}
                 placeholder="600 000 000"
-                className={`flex-1 px-4 py-2 rounded-r-lg border ${
+                className={`flex-1 md:flex-none md:w-40 px-4 py-2 rounded-r-lg border ${
                   validationErrors?.movil 
                     ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200' 
                     : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
@@ -402,7 +404,7 @@ export function EmpresaScreen({
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-sm text-gray-700">
               <span>{company.num_muestras} muestra{company.num_muestras !== 1 ? 's' : ''} total</span>
-              <span>({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''}{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
+              <span>({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''} por muestra{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
             </div>
             {precio.gratis > 0 && (
               <div className="text-xs text-green-600 text-right">

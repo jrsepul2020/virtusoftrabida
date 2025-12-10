@@ -100,7 +100,7 @@ export function ConfirmacionScreen({
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm text-gray-700">
                 <span>{company.num_muestras} muestra{company.num_muestras !== 1 ? 's' : ''} total</span>
-                <span>({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''}{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
+                <span>({precio.pagadas} pagada{precio.pagadas !== 1 ? 's' : ''} por muestra{precio.gratis > 0 ? ` + ${precio.gratis} gratis` : ''})</span>
               </div>
               {precio.gratis > 0 && (
                 <div className="text-xs text-green-600 text-right font-medium">
