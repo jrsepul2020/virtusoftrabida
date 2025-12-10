@@ -402,7 +402,7 @@ export function InscripcionExitosa({
                 <div className="flex items-start gap-3">
                   <span className="bg-purple-100 text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
                   <p className="text-gray-700">
-                    Para cualquier consulta sobre su inscripción, contacte con nosotros por email o teléfono
+                    Para cualquier consulta sobre su inscripción, contacte con nosotros por email o teléfono: <a href="mailto:inscripciones@internationalvirtus.com" className="text-primary-700 underline">inscripciones@internationalvirtus.com</a> o <a href="tel:+34655983717" className="text-primary-700 underline">+34 655 98 37 17</a>
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
