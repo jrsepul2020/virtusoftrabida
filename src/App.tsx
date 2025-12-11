@@ -12,7 +12,6 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const CatadorDashboard = lazy(() => import('./components/CatadorDashboard'));
 const UnifiedInscriptionForm = lazy(() => import('./components/UnifiedInscriptionForm'));
 const Reglamento = lazy(() => import('./components/Reglamento'));
-const Normativa = lazy(() => import('./components/Normativa'));
 const ResultadosPublicos = lazy(() => import('./components/ResultadosPublicos'));
 const DiplomasPublicos = lazy(() => import('./components/DiplomasPublicos'));
 
@@ -26,7 +25,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-type View = 'home' | 'adminLogin' | 'admin' | 'catador' | 'inscripcion' | 'reglamento' | 'normativa' | 'resultados' | 'diplomas';
+type View = 'home' | 'adminLogin' | 'admin' | 'catador' | 'inscripcion' | 'reglamento' | 'resultados' | 'diplomas';
 
 function App() {
   const [view, setView] = useState<View>('home');
@@ -211,12 +210,7 @@ function App() {
         </Suspense>
       )}
 
-      {/* Normativa */}
-      {view === 'normativa' && (
-        <Suspense fallback={<LoadingFallback />}>
-          <Normativa />
-        </Suspense>
-      )}
+      {/* Normativa: removed */}
 
       {/* Resultados Públicos */}
       {view === 'resultados' && (

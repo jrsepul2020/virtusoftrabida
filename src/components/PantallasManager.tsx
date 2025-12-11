@@ -23,7 +23,6 @@ import EmailTest from './EmailTest';
 import HeroLanding from './HeroLanding';
 import LoginForm from './LoginForm';
 import Reglamento from './Reglamento';
-import Normativa from './Normativa';
 import ImageUploader from './ImageUploader';
 import Footer from './Footer';
 
@@ -58,7 +57,6 @@ const componentMap: Record<string, ComponentType<any>> = {
   'HeroLanding': () => <HeroLanding onInscribirse={() => {}} />,
   'LoginForm': () => <LoginForm onLogin={() => {}} onBack={() => {}} />,
   'Reglamento': Reglamento,
-  'Normativa': Normativa,
   'ImageUploader': () => <ImageUploader onImageUploaded={() => {}} />,
   'Footer': Footer,
 };
@@ -159,7 +157,7 @@ const allComponents: ComponentInfo[] = [
 
   // Información
   { name: 'Reglamento', path: 'src/components/Reglamento.tsx', category: 'Información', description: '📜 Reglamento completo del concurso: normas, requisitos, proceso de cata.', canPreview: true },
-  { name: 'Normativa', path: 'src/components/Normativa.tsx', category: 'Información', description: '⚖️ Normativa legal aplicable: protección de datos, términos y condiciones.', canPreview: true },
+  
 ];
 
 // Colores por categoría

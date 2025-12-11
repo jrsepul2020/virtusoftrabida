@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { LogOut } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'normativa' | 'resultados' | 'diplomas';
+type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'resultados' | 'diplomas';
 
 export default function Header({
   setView,
@@ -42,7 +42,6 @@ export default function Header({
     { name: t('nav.home'), onClick: () => handleNavigation('home') },
     { name: t('nav.inscripcion'), onClick: () => handleNavigation('inscripcion') },
     { name: t('nav.reglamento'), onClick: () => handleNavigation('reglamento') },
-    { name: t('nav.normativa'), onClick: () => handleNavigation('normativa') },
   ];
 
   return (
@@ -69,7 +68,7 @@ export default function Header({
               <button
                 key={item.name}
                 onClick={item.onClick}
-                className={`${isHomePage ? 'text-[#7A694E] hover:text-[#3C542E] font-semibold' : 'text-gray-700 hover:text-[#8A754C]'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                className={`${isHomePage ? 'text-black hover:text-gray-800 font-semibold' : 'text-black hover:text-gray-800'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
               >
                 {item.name}
               </button>
@@ -79,7 +78,7 @@ export default function Header({
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-              className="px-3 py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+              className="px-3 py-2 text-sm font-semibold text-black border border-gray-200 rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
               aria-label={t('lang.toggle.aria')}
             >
               <span aria-hidden="true" className="text-lg">
@@ -101,7 +100,7 @@ export default function Header({
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-gray-700" aria-label={t('nav.admin')}>
+                <span className="text-sm font-medium text-black" aria-label={t('nav.admin')}>
                   🔧 {t('nav.admin')}
                 </span>
                 <button
@@ -119,7 +118,7 @@ export default function Header({
           <div className="md:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="text-gray-700 hover:text-[#8A754C] inline-flex items-center justify-center p-2 rounded-md focus:outline-none"
+              className="text-black hover:text-gray-800 inline-flex items-center justify-center p-2 rounded-md focus:outline-none"
               aria-label={showMobileMenu ? t('nav.close') : t('nav.open')}
             >
               <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -140,7 +139,7 @@ export default function Header({
                 <button
                   key={item.name}
                   onClick={item.onClick}
-                  className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
+                  className="text-black hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
                 >
                   {item.name}
                 </button>
@@ -148,7 +147,7 @@ export default function Header({
 
               <button
                 onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-                className="w-full text-left px-3 py-2 rounded-md text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 rounded-md text-black border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
                 aria-label={t('lang.toggle.aria')}
               >
                 <span aria-hidden="true" className="text-lg">
@@ -163,14 +162,14 @@ export default function Header({
                 {!isAdminLoggedIn ? (
                   <button
                     onClick={() => handleNavigation('adminLogin')}
-                    className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
+                    className="text-black hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
                     aria-label={t('nav.login')}
                   >
                     {t('nav.login')}
                   </button>
                 ) : (
                   <div className="space-y-2">
-                    <div className="px-3 py-2 text-sm font-medium text-gray-600" aria-label={t('nav.admin')}>
+                    <div className="px-3 py-2 text-sm font-medium text-black" aria-label={t('nav.admin')}>
                       🔧 {t('nav.admin')}
                     </div>
                     <button

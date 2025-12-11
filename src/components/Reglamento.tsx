@@ -11,62 +11,59 @@ export default function Reglamento() {
             <div className="h-1 w-24 bg-[#8A754C] mx-auto"></div>
           </div>
 
-          {/* Content */}
+          {/* Content: reglamento importado desde internationalvirtus.com */}
           <div className="prose prose-lg max-w-none">
-            <p className="text-lg text-gray-700 leading-relaxed mb-6">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
+            <div
+              dangerouslySetInnerHTML={{
+                __html: `
+                  <h1>REGLAMENTO DEL CONCURSO INTERNATIONAL AWARDS “VIRTUS”</h1>
+                  <p><strong>8ª EDICIÓN INTERNACIONAL, LA RÁBIDA 2026</strong></p>
 
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
-              1. Disposiciones Generales
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-            </p>
+                  <h2>ARTÍCULO I.- ORGANIZACIÓN</h2>
+                  <p>El concurso estará organizado por EXCELENCIAS DE HUELVA, S.L. (EDHSL) Organizadora de Eventos. Las sesiones de catas se celebrarán en la ciudad de La Rábida (Huelva) los días 25, 26 y 27 de abril de 2026. El concurso está abierto a todos los vinos, espirituosos y aceites de oliva virgen extra A.O.V.E de los países productores del mundo. El concepto de vino tendrá en cuenta la definición adoptada por la O.I.V.</p>
 
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
-              2. Requisitos de Participación
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur? At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
-            </p>
+                  <h2>ARTÍCULO II.- INSCRIPCIÓN Y ENVÍO DE MUESTRAS</h2>
+                  <p>Cada participante deberá cumplimentar la correspondiente Ficha de Inscripción alojada en la WEB Oficial del Concurso, en la que se hará constar como mínimo los datos: identificación del participante; país de procedencia; categoría del producto según la normativa O.I.V.; variedades; año de cosecha cuando proceda; existencias en bodega; y envío de un mínimo de 3 botellas por marca inscrita. La admisión de muestras para el Concurso cierra el día 20 de ABRIL a las 15.00 horas. Las muestras recibidas con posterioridad perderán el derecho a participar.</p>
 
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
-              3. Proceso de Inscripción
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae.
-            </p>
+                  <h2>ARTÍCULO III.- DESIGNACIÓN DEL PRESIDENTE Y DIRECCIÓN TÉCNICA DEL CONCURSO</h2>
+                  <p>La organización designa al Presidente, Vicepresidente y Dirección Técnica del Concurso, encargados de garantizar el cumplimiento del presente Reglamento y velar por el desarrollo de la preparación y examen organoléptico de las muestras.</p>
 
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
-              4. Criterios de Evaluación
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-            </p>
+                  <h2>ARTÍCULO IV.- CONTROL DE LAS MUESTRAS RECIBIDAS</h2>
+                  <p>La Dirección Técnica adoptará el sistema de control que estime conveniente: verificación de recepción de muestras y documentación, registro de muestras aceptadas o rechazadas, y conservación en condiciones adecuadas.</p>
 
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
-              5. Premiación y Reconocimientos
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
-            </p>
+                  <h2>ARTÍCULO V.- DESIGNACIÓN DE LOS COMPONENTES DEL JURADO</h2>
+                  <p>La Dirección Técnica decide el número de Jurados y designa a sus miembros. Cada Jurado estará compuesto por cinco miembros expertos en análisis sensorial, con al menos tres catadores de países distintos al organizador.</p>
 
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
-              6. Disposiciones Finales
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-6">
-              Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?
-            </p>
+                  <h2>ARTÍCULO VI.- FUNCIONES ESPECÍFICAS DE LOS PRESIDENTES DEL JURADO</h2>
+                  <p>El Presidente de cada Jurado garantizará el cumplimiento de las normas del Reglamento durante las sesiones de cata y podrá ordenar repeticiones de examen o proponer exclusiones cuando proceda.</p>
 
-            <div className="bg-gray-50 rounded-lg p-6 mt-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Información de Contacto
-              </h3>
-              <p className="text-gray-700">
-                Para consultas adicionales sobre este reglamento, puede contactar con el comité organizador a través de los canales oficiales de comunicación establecidos para el evento.
-              </p>
-            </div>
+                  <h2>ARTÍCULO VII.- FUNCIONES DE LA SECRETARÍA TÉCNICA</h2>
+                  <p>La Secretaría Técnica controlará la organización de las sesiones de cata, el orden de presentación de muestras y las condiciones ambientales, garantizando el anonimato y la integridad del proceso.</p>
+
+                  <h2>ARTÍCULO VIII.- ORDEN DE PRESENTACIÓN DE LAS MUESTRAS EN LAS SESIONES DE CATA</h2>
+                  <p>Orden general: vinos espumosos, vinos de aguja, blancos, rosados, tintos, vinos de crianza bajo velo y vinos de licor. Dentro de cada grupo, se seguirán criterios de tipo, añada y graduación alcohólica, según lo establecido por la Dirección Técnica.</p>
+
+                  <h2>ARTÍCULO IX.- NORMAS DE FUNCIONAMIENTO DEL JURADO</h2>
+                  <p>Los jurados cumplirán las normas del Reglamento y respetarán el anonimato absoluto de las muestras. Las sesiones tendrán lugar preferentemente en horario de mañana y en número que la Dirección Técnica estime conveniente.</p>
+
+                  <h2>ARTÍCULO X.- FICHA DE CATA</h2>
+                  <p>Para la evaluación se utilizará la ficha de cata de la O.I.V. y la ficha normalizada para AOVE cuando corresponda.</p>
+
+                  <h2>ARTÍCULO XI.- TEMPERATURA DE DEGUSTACIÓN</h2>
+                  <p>Temperaturas aproximadas de servicio: blancos y rosados 10-12 ºC; tintos 15-18 ºC; espumosos 8-10 ºC; aceites 15-18 ºC; espirituosos 15-18 ºC, etc.</p>
+
+                  <h2>ARTÍCULO XII.- INTERNATIONAL AWARDS “VIRTUS”</h2>
+                  <p>Las distinciones otorgadas por la Organizadora son: GREAT GOLD “VIRTUS”, GOLD “VIRTUS” y SILVER “VIRTUS”. Se estipulan límites porcentuales sobre el total de muestras inscritas y la emisión de diplomas acreditativos.</p>
+
+                  <p>Puede descargar el reglamento oficial en PDF: <a href="https://internationalvirtus.com/wp-content/uploads/2025/12/REGLAMENTO-2026.pdf" target="_blank" rel="noopener noreferrer">REGLAMENTO-2026.pdf</a></p>
+
+                  <div class="mt-6">
+                    <h3>Contacto</h3>
+                    <p>EXCELENCIAS DE HUELVA, S.L.<br/>Julio Jimenez, 24<br/>21710 Bollullos Par del Condado, Huelva<br/>CIF: B-21553193<br/>Tel: <a href="tel:+34655983717">+34 655 98 37 17</a> / <a href="tel:+34959410800">+34 959 41 08 00</a><br/>Email: <a href="mailto:info@internationalvirtus.com">info@internationalvirtus.com</a></p>
+                  </div>
+                `
+              }}
+            />
           </div>
         </div>
       </div>

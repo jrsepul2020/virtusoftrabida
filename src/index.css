@@ -52,6 +52,17 @@ textarea:focus-visible {
   animation: slide-up 0.3s ease-out;
 }
 
+/* Subtle float animation for prominent CTA buttons */
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+.animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}
+
 /* Utility classes for PWA */
 .line-clamp-2 {
   display: -webkit-box;

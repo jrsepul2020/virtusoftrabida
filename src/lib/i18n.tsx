@@ -78,7 +78,7 @@ const messages: Record<Lang, Messages> = {
     'tracking.copy': 'Copiar',
     'order.number': 'Número de Pedido',
     'success.email_heading': 'Revise su correo electrónico',
-    'success.check_email_to': 'Hemos enviado un email a {email} con todos los detalles de su inscripción. Si no lo encuentra, revise la carpeta de spam.',
+    'success.check_email_to': 'Hemos enviado un email a {email} con los detalles de su inscripción. Consulte la sección "¿Cómo consultar el estado de mi inscripción?" más abajo para más información o contacte: inscripciones@internationalvirtus.com',
     // Modal / errores
     'modal.error.fields_required': 'Campos obligatorios',
     'modal.error.fill_required': 'Por favor, complete todos los campos obligatorios marcados con *',
@@ -91,7 +91,6 @@ const messages: Record<Lang, Messages> = {
     'payment.transfer': 'Transferencia bancaria',
     'payment.transfer.desc': 'Pago tradicional mediante transferencia',
     'payment.paypal': 'Pagar con PayPal',
-    'payment.paypal.desc': 'Pago online rápido y seguro',
 
     // Éxito
     'success.title': '¡Inscripción Realizada con Éxito!',
@@ -108,7 +107,7 @@ const messages: Record<Lang, Messages> = {
     'nav.login': 'Login Admin',
     'nav.logout': 'Cerrar Sesión',
     'nav.admin': 'Administrador',
-    'hero.title': 'INTERNATIONAL VIRTUS AWARDS',
+    'hero.title': 'INTERNATIONAL AWARDS VIRTUS',
     'hero.subtitle1': 'LA RABIDA 2026',
     'hero.subtitle2': 'IBEROAMERICANO',
     'hero.cta': '¡INSCRÍBETE AHORA!',
@@ -140,6 +139,12 @@ const messages: Record<Lang, Messages> = {
     'step.empresa': 'Empresa',
     'step.muestras': 'Muestras',
     'step.confirmacion': 'Confirmación',
+    // Consentimientos
+    'form.company.accept_rules': 'Acepto el Reglamento *',
+    'form.company.accept_rules_desc': 'He leído y acepto el Reglamento del concurso y sus condiciones.',
+    'form.company.consent_marketing': 'Acepto recibir comunicaciones comerciales (opcional)',
+    'form.company.accept_marketing': 'acepto recibir comunicaciones de marketing de virtus',
+    'form.company.accept_marketing_desc': 'acepto recibir comunicaciones de marketing de virtus',
     // Resumen y pagos
     'summary.payment.title': 'Resumen de Pago',
     'summary.pay_label': 'Muestras a pagar:',
@@ -149,7 +154,7 @@ const messages: Record<Lang, Messages> = {
     'summary.payment_method_label': 'Método de pago:',
     // Tracking / post-success copy
     'tracking.intro': 'Puede consultar el estado de su inscripción en cualquier momento:',
-    'tracking.step1': 'Para cualquier consulta sobre su inscripción, contacte con nosotros por email o teléfono: {email} o {phone}',
+    'tracking.step1': 'Para cualquier consulta sobre su inscripción, contacte con nosotros por email: inscripciones@internationalvirtus.com o por teléfono: {phone}',
     'tracking.step2': 'Proporcione siempre su código de seguimiento #{pedido} para agilizar la consulta',
     'tracking.step3': 'Le informaremos del estado de pago, recepción de muestras y fechas del concurso por email',
     'tracking.tip': '💡 Consejo: Guarde este código junto con el email de confirmación. Lo necesitará para cualquier consulta sobre su inscripción.',
@@ -262,20 +267,13 @@ const messages: Record<Lang, Messages> = {
     'tracking.copy': 'Copy',
     'order.number': 'Order Number',
     'success.email_heading': 'Check your email',
-    'success.check_email_to': 'We have sent an email to {email} with your registration details. If you do not see it, check your spam folder.',
+    'success.check_email_to': 'We have sent an email to {email} with your registration details. See the "How to check the status of my registration" section below for more information or contact: inscripciones@internationalvirtus.com',
     // Modal / errors
     'modal.error.fields_required': 'Required fields',
     'modal.error.fill_required': 'Please complete all required fields marked with *',
     'modal.error.emails_mismatch': 'Emails do not match',
     'modal.error.emails_mismatch_msg': 'The email and its confirmation must be identical',
     'modal.error.samples_required': 'Please complete all required sample fields marked with *',
-
-    // Payment
-    'form.payment.title': 'Select your payment method',
-    'payment.transfer': 'Bank transfer',
-    'payment.transfer.desc': 'Traditional payment via bank transfer',
-    'payment.paypal': 'Pay with PayPal',
-    'payment.paypal.desc': 'Fast and secure online payment',
 
     // Success
     'success.title': 'Registration Completed Successfully!',
@@ -292,7 +290,7 @@ const messages: Record<Lang, Messages> = {
     'nav.login': 'Admin Login',
     'nav.logout': 'Log Out',
     'nav.admin': 'Administrator',
-    'hero.title': 'INTERNATIONAL VIRTUS AWARDS',
+    'hero.title': 'INTERNATIONAL AWARDS VIRTUS',
     'hero.subtitle1': 'LA RABIDA 2026',
     'hero.subtitle2': 'IBERO-AMERICAN',
     'hero.cta': 'REGISTER NOW!',
@@ -303,7 +301,7 @@ const messages: Record<Lang, Messages> = {
     'lang.toggle': 'ES',
     'lang.toggle.aria': 'Switch to Spanish',
     'skip.link': 'Skip to main content',
-    'footer.rights': '© 2025 International Virtus Awards. All rights reserved.',
+    'footer.rights': '© 2026 International Awards Virtus. All rights reserved.',
     // Company screen notes and labels
     'company.note.line1': 'Submit unlimited samples. Each sample costs {price} €. Send {bottles} bottles per sample.',
     'company.note.line2': 'For every {per} samples registered, one is FREE.',
@@ -324,6 +322,12 @@ const messages: Record<Lang, Messages> = {
     'step.empresa': 'Company',
     'step.muestras': 'Samples',
     'step.confirmacion': 'Confirmation',
+    // Consents
+    'form.company.accept_rules': 'I accept the Rules *',
+    'form.company.accept_rules_desc': 'I have read and accept the competition rules and terms.',
+    'form.company.consent_marketing': 'I agree to receive marketing communications (optional)',
+    'form.company.accept_marketing': 'I accept to receive marketing communications from Virtus',
+    'form.company.accept_marketing_desc': 'I accept to receive marketing communications from Virtus',
     // Summary and payments
     'summary.payment.title': 'Payment Summary',
     'summary.pay_label': 'Samples to pay:',
@@ -333,7 +337,7 @@ const messages: Record<Lang, Messages> = {
     'summary.payment_method_label': 'Payment method:',
     // Tracking / post-success copy
     'tracking.intro': 'You can check the status of your registration at any time:',
-    'tracking.step1': 'For any inquiry about your registration, contact us by email or phone: {email} or {phone}',
+    'tracking.step1': 'For any inquiry about your registration, contact us by email: inscripciones@internationalvirtus.com or by phone: {phone}',
     'tracking.step2': 'Always provide your tracking code #{pedido} to speed up the inquiry',
     'tracking.step3': 'We will inform you of payment status, sample reception and competition dates by email',
     'tracking.tip': '💡 Tip: Save this code along with the confirmation email. You will need it for any inquiry about your registration.',

@@ -71,7 +71,7 @@ export function InscripcionExitosa({
           <div className="mb-6 flex justify-center">
             <img
               src="/logo-bandera-1.png"
-              alt="International Virtus Awards"
+              alt="International Awards Virtus"
               className="w-36 md:w-48 lg:w-56 object-contain max-w-[240px] print:max-w-[160px]"
               loading="lazy"
               decoding="async"

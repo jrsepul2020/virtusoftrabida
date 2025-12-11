@@ -58,9 +58,7 @@ export const empresaSchema = z.object({
   codigo_postal: z.string().max(10).optional().or(z.literal('')),
   pais: z.string().min(1, 'Selecciona un país'),
   web: urlSchema,
-  acepta_normativa: z.boolean().refine(val => val === true, {
-    message: 'Debes aceptar la normativa',
-  }),
+  // Nota: el campo `acepta_normativa` fue eliminado intencionalmente.
 });
 
 export type EmpresaFormData = z.infer<typeof empresaSchema>;

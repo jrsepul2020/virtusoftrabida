@@ -28,7 +28,6 @@ describe('Validation Schemas', () => {
       nombre_empresa: 'Bodega Test',
       email: 'info@bodega.com',
       pais: 'España',
-      acepta_normativa: true,
     };
 
     it('valida empresa correcta', () => {
@@ -45,14 +44,7 @@ describe('Validation Schemas', () => {
       expect(result.errors?.nombre_empresa).toBeDefined();
     });
 
-    it('rechaza empresa sin aceptar normativa', () => {
-      const result = validateData(empresaSchema, { 
-        ...validEmpresa, 
-        acepta_normativa: false 
-      });
-      expect(result.success).toBe(false);
-      expect(result.errors?.acepta_normativa).toBeDefined();
-    });
+    // Nota: la validación de `acepta_normativa` fue eliminada.
 
     it('valida email correcto', () => {
       const result = validateData(empresaSchema, { 

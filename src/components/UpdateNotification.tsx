@@ -163,7 +163,6 @@ export function VersionBadge({ currentView }: { currentView?: string }) {
     admin: 'Panel Admin',
     inscripcion: 'Inscripción',
     reglamento: 'Reglamento',
-    normativa: 'Normativa',
   };
 
   const viewName = currentView ? viewNames[currentView] || currentView : '';
