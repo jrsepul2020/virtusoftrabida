@@ -1,5 +1,5 @@
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useId } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -23,8 +23,9 @@ export default function Modal({
   if (!isOpen) return null;
 
   // IDs for accessibility associations
-  const labelId = useMemo(() => `modal-title-${Math.random().toString(36).slice(2, 8)}`, []);
-  const descriptionId = useMemo(() => `modal-desc-${Math.random().toString(36).slice(2, 8)}`, []);
+  const baseId = useId();
+  const labelId = `${baseId}-title`;
+  const descriptionId = `${baseId}-desc`;
 
   // Close with Escape for keyboard users
   useEffect(() => {

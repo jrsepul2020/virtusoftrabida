@@ -265,13 +265,25 @@ export default function UnifiedInscriptionForm({
     
     setCompanyValidationErrors(errors);
     
+    // Log para depuración local
+    if (Object.keys(errors).length > 0) {
+      console.warn('Validación empresa fallida, campos con error:', errors);
+    }
+
     // Mostrar mensaje específico si los emails no coinciden
     if (errors.email_confirmation && !errors.email) {
       showModal('error', t('modal.error.emails_mismatch'), t('modal.error.emails_mismatch_msg'));
       return false;
     }
-    
-    return Object.keys(errors).length === 0;
+
+    // Si hay errores, mostrar modal con lista de campos (útil en local)
+    if (Object.keys(errors).length > 0) {
+      const fields = Object.keys(errors).map(k => `• ${k}`).join('\n');
+      showModal('error', t('modal.error.fields_required'), `${t('modal.error.fill_required')}\n\n${fields}`);
+      return false;
+    }
+
+    return true;
   };
 
   // Navegación entre pasos
@@ -289,7 +301,7 @@ export default function UnifiedInscriptionForm({
   const isVino = (categoria: string) => categoria?.toUpperCase().includes('VINO');
   const requiresGrado = (categoria: string) => !isVinoSinAlcohol(categoria) && !isAceite(categoria);
   const isValidEmail = (email: string) => /.+@.+\..+/.test(email.trim());
-  const isValidPhone = (phone: string) => /^\+?[0-9\s-]{7,15}$/.test(phone.trim());
+  const isValidPhone = (phone: string) => /^[+()0-9\s.\-]{7,20}$/.test(phone.trim());
   const isValidPostal = (postal: string) => /^[0-9A-Za-z\s-]{3,10}$/.test(postal.trim());
 
   // Validación del paso Muestras

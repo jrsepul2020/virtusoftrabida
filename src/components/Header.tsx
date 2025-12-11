@@ -76,6 +76,23 @@ export default function Header({
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
+            {import.meta.env.DEV ? (
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.setItem('admin_unlocked', '1');
+                    location.reload();
+                  } catch (e) {
+                    /* ignore */
+                  }
+                }}
+                className="px-3 py-2 text-sm font-semibold text-white bg-gray-800 rounded-md hover:bg-gray-900"
+                aria-label="Admin local"
+                title="Desbloquear admin (solo en local)"
+              >
+                Admin local
+              </button>
+            ) : null}
             <button
               onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
               className="px-3 py-2 text-sm font-semibold text-black border border-gray-200 rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
@@ -149,6 +166,21 @@ export default function Header({
               </button>
 
               <div className="border-t border-gray-200 pt-2 space-y-1">
+                {import.meta.env.DEV ? (
+                  <button
+                    onClick={() => {
+                      try {
+                        localStorage.setItem('admin_unlocked', '1');
+                        location.reload();
+                      } catch (e) {
+                        /* ignore */
+                      }
+                    }}
+                    className="text-sm text-left w-full px-3 py-2 rounded-md bg-gray-800 text-white"
+                  >
+                    Admin local
+                  </button>
+                ) : null}
                 {!isAdminLoggedIn ? null : (
                   <div className="space-y-2">
                     <div className="px-3 py-2 text-sm font-medium text-black" aria-label={t('nav.admin')}>
