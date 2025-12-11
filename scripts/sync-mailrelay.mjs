@@ -71,7 +71,61 @@ async function mailrelayCreateSubscriber(company) {
 
   if (!res.ok) {
     const txt = await res.text();
-    throw new Error(`Mailrelay API error ${res.status}: ${txt}`);
+    const err = new Error(`Mailrelay API error ${res.status}: ${txt}`);
+    err.status = res.status;
+    err.body = txt;
+    throw err;
+  }
+
+  return res.json();
+}
+
+async function mailrelayFindSubscriberByEmail(email) {
+  const url = `${MAILRELAY_API_BASE.replace(/\/+$/,'')}/subscribers?email=${encodeURIComponent(email)}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'X-Auth-Token': MAILRELAY_API_KEY,
+      'Authorization': `Bearer ${MAILRELAY_API_KEY}`,
+    },
+  });
+
+  if (!res.ok) {
+    // Not found or other error
+    const txt = await res.text();
+    return null;
+  }
+
+  try {
+    const data = await res.json();
+    // API may return array or object; try to extract id
+    if (Array.isArray(data) && data.length > 0) return data[0];
+    if (data && data.id) return data;
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function mailrelayUpdateSubscriber(id, payload) {
+  const url = `${MAILRELAY_API_BASE.replace(/\/+$/,'')}/subscribers/${encodeURIComponent(id)}`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Auth-Token': MAILRELAY_API_KEY,
+      'Authorization': `Bearer ${MAILRELAY_API_KEY}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    const err = new Error(`Mailrelay update error ${res.status}: ${txt}`);
+    err.status = res.status;
+    err.body = txt;
+    throw err;
   }
 
   return res.json();
@@ -150,11 +204,45 @@ CREATE TABLE mailrelay_sync (
   for (const comp of candidates) {
     try {
       console.log('Sincronizando:', comp.id, comp.email);
-      const res = await mailrelayCreateSubscriber(comp);
-      console.log('Mailrelay response:', res);
+      let res;
+      try {
+        res = await mailrelayCreateSubscriber(comp);
+        console.log('Mailrelay create response:', res);
+      } catch (err) {
+        // Manejar caso de suscriptor ya existe (422)
+        if (err && err.status === 422) {
+          console.warn('Subscriber exists; attempting to find and update by email for', comp.email);
+          const existing = await mailrelayFindSubscriberByEmail(comp.email);
+          if (existing && existing.id) {
+            try {
+              const payload = {
+                name: comp.name || comp.contact_person || comp.nombre_empresa || '',
+                custom_fields: {
+                  empresa_id: comp.id,
+                  telefono: comp.phone || comp.telefono || null,
+                  movil: comp.movil || null,
+                  conocimiento: comp.conocimiento || null,
+                },
+                lists: MAILRELAY_LIST_ID ? [MAILRELAY_LIST_ID] : undefined,
+              };
+              const upd = await mailrelayUpdateSubscriber(existing.id, payload);
+              console.log('Updated existing subscriber:', upd);
+              res = upd;
+            } catch (uErr) {
+              console.error('Failed to update existing subscriber for', comp.email, uErr.message || uErr);
+              throw uErr;
+            }
+          } else {
+            console.warn('Could not find existing subscriber by email to update for', comp.email);
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
 
       if (tableExists) {
-        const upsert = await supabase.from('mailrelay_sync').insert([{ empresa_id: comp.id, mailrelay_id: res.id || null, synced: true }]).onConflict('empresa_id');
+        const upsert = await supabase.from('mailrelay_sync').insert([{ empresa_id: comp.id, mailrelay_id: res?.id || null, synced: true }]).onConflict('empresa_id');
         if (upsert.error) {
           console.warn('No se pudo insertar estado de sync en DB:', upsert.error.message || upsert.error);
         } else {
