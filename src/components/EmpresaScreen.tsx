@@ -8,6 +8,7 @@ export function EmpresaScreen({
   company,
   onChange,
   onNext,
+  onReset,
   precio,
   validationErrors = {},
   isManualInscription = false,
@@ -17,6 +18,7 @@ export function EmpresaScreen({
   company: CompanyData;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onNext: () => void;
+  onReset?: () => void;
   precio: { pagadas: number; gratis: number; total: number };
   validationErrors?: {[key: string]: boolean};
   isManualInscription?: boolean;
@@ -435,13 +437,26 @@ export function EmpresaScreen({
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={onNext}
-          className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-3 sm:py-2 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 transition-all shadow-md hover:shadow-lg text-lg sm:text-base"
-        >
-          {t('button.next')}
-        </button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => {
+              const ok = typeof window !== 'undefined' ? window.confirm('¿Borrar todos los datos del formulario y empezar de cero?') : true;
+              if (ok) onReset?.();
+            }}
+            className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+          >
+            Limpiar
+          </button>
+
+          <button
+            type="button"
+            onClick={onNext}
+            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-3 sm:py-2 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 transition-all shadow-md hover:shadow-lg text-lg sm:text-base"
+          >
+            {t('button.next')}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -788,6 +788,7 @@ export default function UnifiedInscriptionForm({
           company={company}
           onChange={handleCompanyChange}
           onNext={handleCompanyNext}
+          onReset={handleReset}
           precio={calculatePrice(company.num_muestras)}
           validationErrors={companyValidationErrors}
           isManualInscription={isManualInscription}

@@ -76,7 +76,7 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
 
-  const { empresa, muestras, precio, metodoPago } = payload;
+  const { empresa, muestras, precio, metodoPago, pedido } = payload;
   
   if (!empresa || !empresa.email || !empresa.nombre_empresa) {
     return res.status(400).json({ error: 'Missing empresa data' });
@@ -207,7 +207,7 @@ export default async function handler(req: any, res: any) {
   const adminEmailBody = {
     sender: { email: SENDER_EMAIL, name: SENDER_NAME },
     to: [{ email: ADMIN_EMAIL, name: 'Administrador' }],
-    subject: `Nueva inscripción: ${empresa.nombre_empresa} - ${empresa.num_muestras} muestras`,
+    subject: `${pedido ? `Pedido ${pedido} - ` : ''}Nueva inscripción: ${empresa.nombre_empresa} - ${empresa.num_muestras} muestras`,
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #4B3A2A;">Nueva inscripción recibida</h2>
