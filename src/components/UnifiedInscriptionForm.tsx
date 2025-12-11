@@ -7,6 +7,7 @@ import { CompanyData, SampleData, PaymentMethod } from './types';
 import { supabase } from '../lib/supabase';
 import { User } from 'lucide-react';
 import Modal from './Modal';
+import { useI18n } from '../lib/i18n';
 
 type FormStep = 'empresa' | 'muestras' | 'confirmacion' | 'exitosa';
 
@@ -33,6 +34,7 @@ export default function UnifiedInscriptionForm({
   const [modalType, setModalType] = useState<'error' | 'success' | 'info'>('info');
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
+  const { t } = useI18n();
   
   // Función para mostrar modal
   const showModal = (type: 'error' | 'success' | 'info', title: string, message: string) => {
@@ -243,23 +245,25 @@ export default function UnifiedInscriptionForm({
     if (!company.nif?.trim()) errors.nif = true;
     if (!company.nombre_empresa?.trim()) errors.nombre_empresa = true;
     if (!company.persona_contacto?.trim()) errors.persona_contacto = true;
-    if (!company.telefono?.trim()) errors.telefono = true;
-    if (!company.movil?.trim()) errors.movil = true;
-    if (!company.email?.trim()) errors.email = true;
+    if (!company.telefono?.trim() || !isValidPhone(company.telefono)) errors.telefono = true;
+    if (!company.movil?.trim() || !isValidPhone(company.movil)) errors.movil = true;
+    if (!company.email?.trim() || !isValidEmail(company.email)) errors.email = true;
     // Validar que los emails coincidan
     if (company.email?.trim() !== emailConfirmation?.trim()) errors.email_confirmation = true;
     if (!company.direccion?.trim()) errors.direccion = true;
     if (!company.poblacion?.trim()) errors.poblacion = true;
-    if (!company.codigo_postal?.trim()) errors.codigo_postal = true;
+    if (!company.codigo_postal?.trim() || !isValidPostal(company.codigo_postal)) errors.codigo_postal = true;
     if (!company.ciudad?.trim()) errors.ciudad = true;
     if (!company.pais?.trim()) errors.pais = true;
     if (!company.num_muestras || company.num_muestras < 1) errors.num_muestras = true;
+    // Medio por el que nos conoció (obligatorio ahora)
+    if (!company.medio_conocio?.trim()) errors.medio_conocio = true;
     
     setCompanyValidationErrors(errors);
     
     // Mostrar mensaje específico si los emails no coinciden
     if (errors.email_confirmation && !errors.email) {
-      showModal('error', 'Emails no coinciden', 'El email y su confirmación deben ser iguales');
+      showModal('error', t('modal.error.emails_mismatch'), t('modal.error.emails_mismatch_msg'));
       return false;
     }
     
@@ -271,14 +275,18 @@ export default function UnifiedInscriptionForm({
     if (validateCompanyStep()) {
       setCurrentStep('muestras');
     } else {
-      showModal('error', 'Campos obligatorios', 'Por favor, complete todos los campos obligatorios marcados con *');
+      showModal('error', t('modal.error.fields_required'), t('modal.error.fill_required'));
     }
   };
 
-  // Helper functions para determinar campos según categoría
+  // Helper functions para determinar campos según categoría y validaciones básicas
   const isAceite = (categoria: string) => categoria?.toUpperCase().includes('ACEITE');
   const isVinoSinAlcohol = (categoria: string) => categoria?.toUpperCase() === 'VINO SIN ALCOHOL';
+  const isVino = (categoria: string) => categoria?.toUpperCase().includes('VINO');
   const requiresGrado = (categoria: string) => !isVinoSinAlcohol(categoria) && !isAceite(categoria);
+  const isValidEmail = (email: string) => /.+@.+\..+/.test(email.trim());
+  const isValidPhone = (phone: string) => /^\+?[0-9\s-]{7,15}$/.test(phone.trim());
+  const isValidPostal = (postal: string) => /^[0-9A-Za-z\s-]{3,10}$/.test(postal.trim());
 
   // Validación del paso Muestras
   const validateSamplesStep = (): boolean => {
@@ -297,6 +305,38 @@ export default function UnifiedInscriptionForm({
       if (requiresGrado(sample.categoria) && !sample.grado_alcoholico?.toString().trim()) {
         errors[`muestra_${idx}_grado_alcoholico`] = true;
       }
+
+      // Validaciones numéricas y condicionales
+      if (sample.anio) {
+        const yearNum = parseInt(sample.anio.toString());
+        if (Number.isNaN(yearNum) || yearNum < 1900 || yearNum > new Date().getFullYear() + 1) {
+          errors[`muestra_${idx}_anio`] = true;
+        }
+      }
+      if (sample.azucar) {
+        const sugar = parseFloat(sample.azucar.toString().replace(',', '.'));
+        if (Number.isNaN(sugar) || sugar < 0) {
+          errors[`muestra_${idx}_azucar`] = true;
+        }
+      }
+      if (sample.existencias) {
+        const exist = parseInt(sample.existencias.toString());
+        if (Number.isNaN(exist) || exist < 1) {
+          errors[`muestra_${idx}_existencias`] = true;
+        }
+      }
+      if (requiresGrado(sample.categoria) && sample.grado_alcoholico) {
+        const grado = parseFloat(sample.grado_alcoholico.toString().replace(',', '.'));
+        if (Number.isNaN(grado) || grado <= 0) {
+          errors[`muestra_${idx}_grado_alcoholico`] = true;
+        }
+      }
+      if (isAceite(sample.categoria) && !sample.tipo_aceituna?.trim()) {
+        errors[`muestra_${idx}_tipo_aceituna`] = true;
+      }
+      if (isVino(sample.categoria) && !isVinoSinAlcohol(sample.categoria) && !sample.tipo_uva?.trim()) {
+        errors[`muestra_${idx}_tipo_uva`] = true;
+      }
     });
     
     setSamplesValidationErrors(errors);
@@ -307,7 +347,7 @@ export default function UnifiedInscriptionForm({
     if (validateSamplesStep()) {
       setCurrentStep('confirmacion');
     } else {
-      showModal('error', 'Campos obligatorios', 'Por favor, complete todos los campos obligatorios de las muestras marcados con *');
+      showModal('error', t('modal.error.fields_required'), t('modal.error.samples_required'));
     }
   };
 
@@ -616,17 +656,14 @@ export default function UnifiedInscriptionForm({
               </div>
               <div>
                 <h3 className={`font-semibold ${isManualInscription ? 'text-orange-800' : 'text-blue-800'}`}>
-                  {isManualInscription ? '🏷️ Inscripción Manual' : '💻 Inscripción Automática'}
+                  {isManualInscription ? t('admin.manual.title') : t('admin.automatic.title')}
                 </h3>
                 <p className={`text-sm ${isManualInscription ? 'text-orange-600' : 'text-blue-600'}`}>
-                  {isManualInscription 
-                    ? 'Se generarán códigos únicos (1-999) para cada muestra'
-                    : 'Inscripción estándar sin códigos especiales'
-                  }
+                  {isManualInscription ? t('admin.manual.description') : t('admin.automatic.description')}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border">
+              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border">
               <input
                 type="checkbox"
                 id="manual-inscription"
@@ -635,23 +672,23 @@ export default function UnifiedInscriptionForm({
                 className="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
               />
               <label htmlFor="manual-inscription" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
-                Muestra Manual
+                {t('admin.manual.title')}
               </label>
             </div>
           </div>
           
-          {isManualInscription && (
+              {isManualInscription && (
             <div className="mt-3 p-3 bg-orange-100 rounded-lg border border-orange-200">
               <div className="flex items-start gap-2">
                 <div className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center mt-0.5">
                   <span className="text-orange-600 text-xs font-bold">!</span>
                 </div>
                 <div className="text-sm text-orange-700">
-                  <p className="font-medium">Características de la inscripción manual:</p>
+                  <p className="font-medium">{t('admin.manual.features_title')}</p>
                   <ul className="mt-1 space-y-1 text-xs">
-                    <li>• Se asignará un código único del 1 al 999 a cada muestra</li>
-                    <li>• La inscripción se marcará como "manual" en la base de datos</li>
-                    <li>• Ideal para inscripciones presenciales o telefónicas</li>
+                    <li>• {t('admin.manual.features.item1')}</li>
+                    <li>• {t('admin.manual.features.item2')}</li>
+                    <li>• {t('admin.manual.features.item3')}</li>
                   </ul>
                 </div>
               </div>
@@ -679,41 +716,52 @@ export default function UnifiedInscriptionForm({
         
         {/* Pasos */}
         <div className="flex items-center justify-between">
-          <div className={`flex items-center ${currentStep === 'empresa' ? 'text-primary-600' : currentStep !== 'empresa' ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center ${currentStep === 'empresa' ? 'text-primary-600' : currentStep !== 'empresa' ? 'text-green-600' : 'text-gray-400'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
               currentStep === 'empresa' ? 'bg-primary-600 text-white' : currentStep !== 'empresa' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               {currentStep !== 'empresa' ? '✓' : '1'}
             </div>
-            <span className="ml-2 text-sm font-medium hidden sm:inline">Empresa</span>
+            <span className="ml-2 text-sm font-medium hidden sm:inline">{t('step.empresa')}</span>
           </div>
           
           <div className="flex-1 h-0.5 mx-2 bg-gray-200">
             <div className={`h-full transition-all duration-300 ${currentStep !== 'empresa' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: currentStep !== 'empresa' ? '100%' : '0%' }} />
           </div>
           
-          <div className={`flex items-center ${currentStep === 'muestras' ? 'text-primary-600' : currentStep === 'confirmacion' ? 'text-green-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center ${currentStep === 'muestras' ? 'text-primary-600' : currentStep === 'confirmacion' ? 'text-green-600' : 'text-gray-400'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
               currentStep === 'muestras' ? 'bg-primary-600 text-white' : currentStep === 'confirmacion' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               {currentStep === 'confirmacion' ? '✓' : '2'}
             </div>
-            <span className="ml-2 text-sm font-medium hidden sm:inline">Muestras</span>
+            <span className="ml-2 text-sm font-medium hidden sm:inline">{t('step.muestras')}</span>
           </div>
           
           <div className="flex-1 h-0.5 mx-2 bg-gray-200">
             <div className={`h-full transition-all duration-300 ${currentStep === 'confirmacion' ? 'bg-green-500' : 'bg-gray-200'}`} style={{ width: currentStep === 'confirmacion' ? '100%' : '0%' }} />
           </div>
           
-          <div className={`flex items-center ${currentStep === 'confirmacion' ? 'text-primary-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center ${currentStep === 'confirmacion' ? 'text-primary-600' : 'text-gray-400'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
               currentStep === 'confirmacion' ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               3
             </div>
-            <span className="ml-2 text-sm font-medium hidden sm:inline">Confirmación</span>
+            <span className="ml-2 text-sm font-medium hidden sm:inline">{t('step.confirmacion')}</span>
           </div>
         </div>
+      </div>
+
+      {/* Contacto de soporte visible en todos los pasos */}
+      <div className="mb-4 text-xs sm:text-sm text-gray-600 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+        <span className="font-semibold text-gray-700">{t('support.contact_label')}</span>
+        <a
+          href="mailto:inscripciones@internationalvirtus.com"
+          className="text-primary-700 underline underline-offset-2"
+        >
+          inscripciones@internationalvirtus.com
+        </a>
       </div>
 
       {/* Contenido de los pasos */}

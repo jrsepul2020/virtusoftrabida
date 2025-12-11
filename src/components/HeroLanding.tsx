@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 interface HeroLandingProps {
   onInscribirse: () => void;
@@ -7,6 +8,7 @@ interface HeroLandingProps {
 
 export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setIsVisible(true);
@@ -41,7 +43,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
           <h1 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-6xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
             <span className="text-white drop-shadow-3xl">
-              INTERNATIONAL VIRTUS AWARDS
+              {t('hero.title')}
             </span>
           </h1>
         </div>
@@ -49,14 +51,14 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
            <h2 className="text-lg sm:text-5xl md:text-6xl lg:text-7xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Lato', serif" }}>
             <span className="text-white drop-shadow-3xl">
-              LA RABIDA 2026
+              {t('hero.subtitle1')}
             </span>          
           </h2>
         </div>
         <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
           <h2 className="text-xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-3xl font-black tracking-tight leading-tight" >
             <span className="text-white drop-shadow-3xl">
-              IBEROAMERICANO
+              {t('hero.subtitle2')}
             </span>          
           </h2>
         </div>
@@ -67,13 +69,13 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
             onClick={onInscribirse}
             className="group relative px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white rounded-xl overflow-hidden transition-all duration-500 transform hover:scale-105 shadow-xl"
           >
-            {/* Fondo rojo destacado del botón */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-700"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-red-700 to-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            {/* Fondo rojo destacado del botón con mayor contraste */}
+            <div className="absolute inset-0 bg-gradient-to-r from-red-700 to-red-800"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-red-800 to-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
             {/* Contenido del botón */}
             <span className="relative flex items-center gap-2 sm:gap-3">
-              ¡INSCRÍBETE AHORA!
+              {t('hero.cta')}
               <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-2 transition-transform duration-300" />
             </span>
           </button>
@@ -82,14 +84,14 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         {/* Subtítulo con animación - responsive */}
         <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
           <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold leading-tight px-4">
-            <span className="text-white drop-shadow-lg">CONCURSO INTERNACIONAL DE</span>
+            <span className="text-white drop-shadow-lg">{t('hero.tagline.line1')}</span>
             <br />
             <span className="text-yellow-300 drop-shadow-lg">
-              VINOS, ESPIRITUOSOS
+              {t('hero.tagline.line2')}
             </span>
-            <span className="text-white drop-shadow-lg"> Y </span>
+            <span className="text-white drop-shadow-lg"> {t('hero.tagline.line3')} </span>
             <span className="text-yellow-300 drop-shadow-lg">
-              ACEITE VIRGEN EXTRA
+              {t('hero.tagline.line4')}
             </span>
           </h2>
         </div>

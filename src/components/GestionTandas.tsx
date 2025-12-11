@@ -208,7 +208,7 @@ export default function GestionTandas() {
                       Concurso Internacional Vinos, Espirituosos y Aceite de Oliva Virgen Extra - LA RABIDA 2026
                     </div>
                     <div className="flex justify-center mb-4">
-                      <img src="/logo-bandera-1.png" alt="Logo" className="w-48 h-auto" />
+                      <img src="/logo-bandera-1.png" alt="Logo" className="w-48 h-auto" loading="lazy" decoding="async" />
                     </div>
                   </div>
 
@@ -241,7 +241,7 @@ export default function GestionTandas() {
 
                   <div className="flex justify-between items-center mt-10 pt-5 border-t border-gray-300">
                     <div className="flex items-center">
-                      <img src="/logo-bandera-1.png" alt="Logo" className="w-40 h-auto" />
+                      <img src="/logo-bandera-1.png" alt="Logo" className="w-40 h-auto" loading="lazy" decoding="async" />
                     </div>
                     <div className="text-xs text-gray-800">
                       {new Date().toLocaleDateString('es-ES')}<br/>

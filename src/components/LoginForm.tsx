@@ -96,12 +96,13 @@ export default function LoginForm({ onLogin, onBack }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="login-title" aria-describedby="login-subtitle">
       <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md relative transform transition-all scale-100 opacity-100">
         {/* Botón de cerrar */}
         <button
           onClick={onBack}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Cerrar formulario de login"
         >
           <X className="w-6 h-6" />
         </button>
@@ -111,16 +112,16 @@ export default function LoginForm({ onLogin, onBack }: Props) {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full mb-4 shadow-lg">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+          <h2 id="login-title" className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
             Panel de Administración
           </h2>
-          <p className="text-gray-500 text-sm">
+          <p id="login-subtitle" className="text-gray-500 text-sm">
             Acceso exclusivo para administradores
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm" role="alert" aria-live="assertive">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"></div>
               {error}
@@ -140,7 +141,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all bg-gray-50 focus:bg-white text-base"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-gray-50 focus:bg-white text-base"
                 placeholder="admin@ejemplo.com"
               />
             </div>
@@ -157,7 +158,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all bg-gray-50 focus:bg-white text-base"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-gray-50 focus:bg-white text-base"
                 placeholder="••••••••••••"
               />
             </div>
@@ -166,7 +167,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-3 sm:py-4 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-gradient-to-r from-red-700 to-red-800 text-white py-3 sm:py-4 rounded-xl hover:from-red-800 hover:to-red-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-3">

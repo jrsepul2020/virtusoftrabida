@@ -1,5 +1,6 @@
-import { useState, Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { LogOut } from "lucide-react";
+import { useI18n } from "../lib/i18n";
 
 type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'normativa' | 'resultados' | 'diplomas';
 
@@ -15,49 +16,55 @@ export default function Header({
   currentView?: View;
 }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const { t, lang, setLang } = useI18n();
 
-  // Usar los props para determinar el estado de autenticación
   const isAdminLoggedIn = adminLoggedIn || false;
+  const isHomePage = currentView === 'home';
+
+  const handleNavigation = (view: View) => {
+    setView(view);
+    setShowMobileMenu(false);
+  };
 
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
     } else {
-      // Fallback al método anterior si no se pasa onLogout
       if (isAdminLoggedIn) {
         localStorage.removeItem('adminLoggedIn');
       }
       setView('home');
     }
+    setShowMobileMenu(false);
   };
 
   const menuItems = [
-    { name: "Inicio", onClick: () => setView('home') },
-    { name: "Inscripción", onClick: () => setView('inscripcion') },
-    { name: "Reglamento", onClick: () => setView('reglamento') },
-    { name: "Normativa", onClick: () => setView('normativa') },
-    { name: "Resultados", onClick: () => setView('resultados') },
-    { name: "Diplomas", onClick: () => setView('diplomas') },
+    { name: t('nav.home'), onClick: () => handleNavigation('home') },
+    { name: t('nav.inscripcion'), onClick: () => handleNavigation('inscripcion') },
+    { name: t('nav.reglamento'), onClick: () => handleNavigation('reglamento') },
+    { name: t('nav.normativa'), onClick: () => handleNavigation('normativa') },
   ];
 
-  const isHomePage = currentView === 'home';
-  
   return (
     <header className={`${isHomePage ? 'bg-transparent absolute top-0 left-0 right-0' : 'bg-white shadow-md'} relative z-50 transition-all duration-300`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo */}
-          <div className="flex items-center cursor-pointer" onClick={() => setView('home')}>
+          <button
+            type="button"
+            className="flex items-center cursor-pointer focus:outline-none"
+            onClick={() => handleNavigation('home')}
+            aria-label={t('nav.home')}
+          >
             <img
               src="/logo-bandera-1.png"
               alt="International Virtus"
               className="h-10 w-auto"
+              loading="lazy"
+              decoding="async"
             />
+          </button>
 
-          </div>
-
-          {/* Navigation Desktop */}
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex space-x-6" aria-label={t('nav.label')}>
             {menuItems.map((item) => (
               <button
                 key={item.name}
@@ -69,110 +76,110 @@ export default function Header({
             ))}
           </nav>
 
-          {/* Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
+            <button
+              onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+              className="px-3 py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+              aria-label={t('lang.toggle.aria')}
+            >
+              <span aria-hidden="true" className="text-lg">
+                {lang === 'es' ? '🇪🇸' : '🇬🇧'}
+              </span>
+              <span className="text-xs uppercase tracking-wide">
+                {lang === 'es' ? 'ES' : 'EN'}
+              </span>
+            </button>
             {!isAdminLoggedIn ? (
-              // Mostrar botón de login admin cuando nadie está logueado
               <div className="relative">
                 <button
-                  onClick={() => setView('adminLogin')}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+                  onClick={() => handleNavigation('adminLogin')}
+                  className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md transition-colors"
+                  aria-label={t('nav.login')}
                 >
-                  Login Admin
+                  {t('nav.login')}
                 </button>
               </div>
             ) : (
-              // Mostrar información del usuario y botón de logout
               <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-gray-700">
-                  🔧 Administrador
+                <span className="text-sm font-medium text-gray-700" aria-label={t('nav.admin')}>
+                  🔧 {t('nav.admin')}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2"
+                  className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2"
+                  aria-label={t('nav.logout')}
                 >
                   <LogOut size={16} />
-                  <span>Cerrar Sesión</span>
+                  <span>{t('nav.logout')}</span>
                 </button>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               className="text-gray-700 hover:text-[#8A754C] inline-flex items-center justify-center p-2 rounded-md focus:outline-none"
+              aria-label={showMobileMenu ? t('nav.close') : t('nav.open')}
             >
-              <svg
-                className="h-6 w-6"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                 {showMobileMenu ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {showMobileMenu && (
           <div className="md:hidden border-t border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {menuItems.map((item) => (
                 <button
                   key={item.name}
-                  onClick={() => {
-                    item.onClick();
-                    setShowMobileMenu(false);
-                  }}
+                  onClick={item.onClick}
                   className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
                 >
                   {item.name}
                 </button>
               ))}
+
+              <button
+                onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+                className="w-full text-left px-3 py-2 rounded-md text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+                aria-label={t('lang.toggle.aria')}
+              >
+                <span aria-hidden="true" className="text-lg">
+                  {lang === 'es' ? '🇪🇸' : '🇬🇧'}
+                </span>
+                <span className="text-xs uppercase tracking-wide">
+                  {lang === 'es' ? 'ES' : 'EN'}
+                </span>
+              </button>
+
               <div className="border-t border-gray-200 pt-2 space-y-1">
                 {!isAdminLoggedIn ? (
-                  // Mostrar botón de login admin en móvil
                   <button
-                    onClick={() => {
-                      setView('adminLogin');
-                      setShowMobileMenu(false);
-                    }}
+                    onClick={() => handleNavigation('adminLogin')}
                     className="text-gray-700 hover:text-[#8A754C] block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
+                    aria-label={t('nav.login')}
                   >
-                    Login Admin
+                    {t('nav.login')}
                   </button>
                 ) : (
-                  // Mostrar información y logout en móvil
                   <div className="space-y-2">
-                    <div className="px-3 py-2 text-sm font-medium text-gray-600">
-                      🔧 Administrador
+                    <div className="px-3 py-2 text-sm font-medium text-gray-600" aria-label={t('nav.admin')}>
+                      🔧 {t('nav.admin')}
                     </div>
                     <button
-                      onClick={() => {
-                        handleLogout();
-                        setShowMobileMenu(false);
-                      }}
-                      className="text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-base font-medium transition-colors w-full flex items-center space-x-2"
+                      onClick={handleLogout}
+                      className="text-red-700 hover:text-red-800 px-3 py-2 rounded-md text-base font-medium transition-colors w-full flex items-center space-x-2"
+                      aria-label={t('nav.logout')}
                     >
                       <LogOut size={16} />
-                      <span>Cerrar Sesión</span>
+                      <span>{t('nav.logout')}</span>
                     </button>
                   </div>
                 )}

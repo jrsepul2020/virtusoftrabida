@@ -105,6 +105,13 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Ocultar temporalmente vistas de resultados y diplomas (solo accesibles públicamente)
+  useEffect(() => {
+    if (view === 'resultados' || view === 'diplomas') {
+      setView('home');
+    }
+  }, [view]);
+
   const handleAdminLogin = (success: boolean, role?: string) => {
     console.log('🔐 handleAdminLogin llamado:', { success, role });
     
@@ -236,8 +243,10 @@ function App() {
       {/* Version Badge */}
       <VersionBadge currentView={view} />
 
-      {/* Toast Notifications */}
-      <Toaster position="top-right" />
+      {/* Toast Notifications with aria-live wrapper */}
+      <div role="status" aria-live="polite">
+        <Toaster position="top-right" />
+      </div>
     </MainLayout>
   );
 }

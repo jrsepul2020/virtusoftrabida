@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import Header from './Header';
+import { useI18n } from '../lib/i18n';
 
 type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'normativa' | 'resultados' | 'diplomas';
 
@@ -12,12 +13,14 @@ type Props = {
 };
 
 export default function MainLayout({ children, view, setView, adminLoggedIn, onAdminLogout }: Props) {
+  const { t } = useI18n();
   const isAdminView = view === 'admin';
 
   if (isAdminView) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-100">
-        <main className="flex-1 min-h-0 flex">{children}</main>
+        <a href="#main-content" className="skip-link">{t('skip.link')}</a>
+        <main id="main-content" className="flex-1 min-h-0 flex">{children}</main>
       </div>
     );
   }
@@ -26,6 +29,7 @@ export default function MainLayout({ children, view, setView, adminLoggedIn, onA
 
   return (
     <div className={`flex flex-col ${isHomeView ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+      <a href="#main-content" className="skip-link">{t('skip.link')}</a>
       {setView && (
         <Header 
           setView={setView} 
@@ -34,7 +38,13 @@ export default function MainLayout({ children, view, setView, adminLoggedIn, onA
           currentView={view}
         />
       )}
-      <main className={`flex-1 min-h-0 flex flex-col ${isHomeView ? 'overflow-hidden' : ''}`}>{children}</main>
+      <main
+        id="main-content"
+        className={`flex-1 min-h-0 flex flex-col ${isHomeView ? 'overflow-hidden' : ''}`}
+        tabIndex={-1}
+      >
+        {children}
+      </main>
     </div>
   );
 }

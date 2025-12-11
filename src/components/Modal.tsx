@@ -1,4 +1,5 @@
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -20,6 +21,22 @@ export default function Modal({
   onConfirm 
 }: ModalProps) {
   if (!isOpen) return null;
+
+  // IDs for accessibility associations
+  const labelId = useMemo(() => `modal-title-${Math.random().toString(36).slice(2, 8)}`, []);
+  const descriptionId = useMemo(() => `modal-desc-${Math.random().toString(36).slice(2, 8)}`, []);
+
+  // Close with Escape for keyboard users
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
   const handleConfirm = () => {
     if (onConfirm) {
@@ -66,11 +83,12 @@ export default function Modal({
   const colors = getColors();
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby={labelId} aria-describedby={descriptionId}>
       {/* Overlay */}
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
+        aria-hidden="true"
       ></div>
       
       {/* Modal */}
@@ -81,7 +99,7 @@ export default function Modal({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {getIcon()}
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 id={labelId} className="text-lg font-medium text-gray-900">
                   {title}
                 </h3>
               </div>
@@ -96,7 +114,7 @@ export default function Modal({
 
           {/* Content */}
           <div className="px-4 py-5 sm:px-6">
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p id={descriptionId} className="text-sm text-gray-700 leading-relaxed">
               {message}
             </p>
           </div>

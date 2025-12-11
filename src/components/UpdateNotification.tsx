@@ -120,7 +120,7 @@ export default function UpdateNotification() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 animate-slide-up">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 animate-slide-up" role="status" aria-live="polite">
       <div className="max-w-md mx-auto bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg shadow-2xl border-2 border-red-500">
         <div className="p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">

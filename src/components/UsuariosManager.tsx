@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { 
   Users, Plus, Search, RefreshCw, Shield, User, Mail, 
   Calendar, Edit2, Trash2, Save, X,
-  Eye, EyeOff, AlertTriangle
+  Eye, EyeOff, AlertTriangle, Lock, KeyRound, QrCode, Clock3, Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -25,6 +25,15 @@ interface NuevoUsuario {
   rol: string;
 }
 
+interface AuditLog {
+  id?: number;
+  action: string;
+  user_id?: string | null;
+  actor_email?: string | null;
+  details?: string | null;
+  created_at?: string;
+}
+
 export default function UsuariosManager() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +42,16 @@ export default function UsuariosManager() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [mfaFactors, setMfaFactors] = useState<any[]>([]);
+  const [loadingMfa, setLoadingMfa] = useState(false);
+  const [enrollingMfa, setEnrollingMfa] = useState(false);
+  const [enrollData, setEnrollData] = useState<{ factorId: string; uri?: string; qr?: string } | null>(null);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [loadingAudit, setLoadingAudit] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
   
   const [nuevoUsuario, setNuevoUsuario] = useState<NuevoUsuario>({
     email: '',
@@ -41,10 +60,12 @@ export default function UsuariosManager() {
     rol: 'Catador'
   });
 
-  const roles = ['Admin', 'Catador'];
+  const roles = ['Admin', 'Presidente', 'Supervisor', 'Catador'];
 
   useEffect(() => {
     fetchUsuarios();
+    fetchMfaFactors();
+    fetchAuditLogs();
   }, []);
 
   const fetchUsuarios = async () => {
@@ -62,6 +83,43 @@ export default function UsuariosManager() {
       toast.error('Error al cargar usuarios');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAuditLogs = async () => {
+    setLoadingAudit(true);
+    setAuditError(null);
+    try {
+      const { data, error } = await supabase
+        .from('auditoria_usuarios')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      setAuditLogs(data || []);
+    } catch (error: any) {
+      console.error('Error cargando auditoría:', error);
+      if (error?.code === '42P01') {
+        setAuditError('Tabla auditoria_usuarios no existe. Puedes crearla para registrar acciones.');
+      } else {
+        setAuditError('No se pudo cargar el historial de acciones');
+      }
+    } finally {
+      setLoadingAudit(false);
+    }
+  };
+
+  const logAudit = async (entry: AuditLog) => {
+    try {
+      const { error } = await supabase.from('auditoria_usuarios').insert(entry);
+      if (error) throw error;
+      fetchAuditLogs();
+    } catch (error: any) {
+      if (error?.code === '42P01') {
+        setAuditError('Tabla auditoria_usuarios no existe.');
+      } else {
+        console.warn('No se pudo registrar auditoría:', error.message);
+      }
     }
   };
 
@@ -101,6 +159,8 @@ export default function UsuariosManager() {
 
       if (dbError) throw dbError;
 
+      logAudit({ action: 'create_user', user_id: authData.user.id, actor_email: authData.user.email, details: `Rol: ${nuevoUsuario.rol}` });
+
       toast.success('Usuario creado correctamente');
       setShowCreateModal(false);
       setNuevoUsuario({ email: '', password: '', nombre: '', rol: 'Catador' });
@@ -132,6 +192,8 @@ export default function UsuariosManager() {
 
       if (error) throw error;
 
+      logAudit({ action: 'update_user', user_id: editingUser.id, details: `Rol: ${editingUser.rol}, Mesa: ${editingUser.mesa}, Puesto: ${editingUser.puesto}` });
+
       toast.success('Usuario actualizado');
       setEditingUser(null);
       fetchUsuarios();
@@ -155,11 +217,97 @@ export default function UsuariosManager() {
 
       if (error) throw error;
 
+      logAudit({ action: 'delete_user', user_id: usuario.id, details: `Email: ${usuario.email}` });
+
       toast.success('Usuario eliminado de la base de datos');
       fetchUsuarios();
     } catch (error: any) {
       console.error('Error eliminando usuario:', error);
       toast.error('Error al eliminar usuario');
+    }
+  };
+
+  const fetchMfaFactors = async () => {
+    setLoadingMfa(true);
+    setMfaError(null);
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      setMfaFactors(data?.all || []);
+    } catch (error: any) {
+      console.error('Error listando factores MFA:', error);
+      setMfaError('No se pudo cargar el estado de 2FA. Verifica que MFA esté habilitado en Supabase.');
+    } finally {
+      setLoadingMfa(false);
+    }
+  };
+
+  const startTotpEnrollment = async () => {
+    setEnrollingMfa(true);
+    setMfaError(null);
+    try {
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+      if (error) throw error;
+
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: data.id });
+      if (challengeError) throw challengeError;
+
+      setEnrollData({ factorId: data.id, uri: data.totp?.uri, qr: data.totp?.qr_code });
+      setChallengeId(challenge.id);
+      toast.success('Escanea el QR y valida el código para activar 2FA');
+    } catch (error: any) {
+      console.error('Error iniciando enrolamiento 2FA:', error);
+      setMfaError(error.message || 'No se pudo iniciar el enrolamiento');
+    } finally {
+      setEnrollingMfa(false);
+    }
+  };
+
+  const verifyTotpEnrollment = async () => {
+    if (!enrollData?.factorId || !challengeId || verificationCode.length < 6) {
+      setMfaError('Ingresa el código de 6 dígitos');
+      return;
+    }
+    setLoadingMfa(true);
+    setMfaError(null);
+    try {
+      const { error } = await supabase.auth.mfa.verify({
+        factorId: enrollData.factorId,
+        code: verificationCode,
+        challengeId
+      });
+      if (error) throw error;
+      toast.success('2FA activada');
+      setEnrollData(null);
+      setChallengeId(null);
+      setVerificationCode('');
+      fetchMfaFactors();
+    } catch (error: any) {
+      console.error('Error verificando 2FA:', error);
+      setMfaError(error.message || 'Código incorrecto');
+    } finally {
+      setLoadingMfa(false);
+    }
+  };
+
+  const disableTotp = async () => {
+    const totpFactor = mfaFactors.find((f) => f.factor_type === 'totp');
+    if (!totpFactor) {
+      toast.error('No hay 2FA TOTP activo');
+      return;
+    }
+    setLoadingMfa(true);
+    setMfaError(null);
+    try {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: totpFactor.id });
+      if (error) throw error;
+      toast.success('2FA desactivada');
+      fetchMfaFactors();
+    } catch (error: any) {
+      console.error('Error desactivando 2FA:', error);
+      setMfaError(error.message || 'No se pudo desactivar 2FA');
+    } finally {
+      setLoadingMfa(false);
     }
   };
 
@@ -171,6 +319,8 @@ export default function UsuariosManager() {
     const normalizedRol = u.rol?.toLowerCase();
     const matchRol = filterRol === 'todos' || 
       (filterRol === 'Admin' && normalizedRol === 'admin') ||
+      (filterRol === 'Presidente' && normalizedRol === 'presidente') ||
+      (filterRol === 'Supervisor' && normalizedRol === 'supervisor') ||
       (filterRol === 'Catador' && normalizedRol === 'catador');
     return matchSearch && matchRol;
   });
@@ -178,6 +328,8 @@ export default function UsuariosManager() {
   // Normalizar rol para mostrar
   const normalizeRol = (rol: string) => {
     if (rol?.toLowerCase() === 'admin') return 'Admin';
+    if (rol?.toLowerCase() === 'presidente') return 'Presidente';
+    if (rol?.toLowerCase() === 'supervisor') return 'Supervisor';
     if (rol?.toLowerCase() === 'catador') return 'Catador';
     return rol;
   };
@@ -190,19 +342,32 @@ export default function UsuariosManager() {
   };
 
   const getRolBadge = (rol: string) => {
-    const isAdmin = rol?.toLowerCase() === 'admin';
+    const roleLower = rol?.toLowerCase();
     const displayRol = normalizeRol(rol);
+    let classes = 'bg-blue-100 text-blue-700';
+    let Icon = User;
+    if (roleLower === 'admin') {
+      classes = 'bg-purple-100 text-purple-700';
+      Icon = Shield;
+    } else if (roleLower === 'presidente') {
+      classes = 'bg-orange-100 text-orange-700';
+      Icon = Shield;
+    } else if (roleLower === 'supervisor') {
+      classes = 'bg-teal-100 text-teal-700';
+      Icon = Shield;
+    }
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-        isAdmin 
-          ? 'bg-purple-100 text-purple-700' 
-          : 'bg-blue-100 text-blue-700'
-      }`}>
-        {isAdmin ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${classes}`}>
+        <Icon className="w-3 h-3" />
         {displayRol}
       </span>
     );
   };
+
+  const totpEnabled = mfaFactors.some((f) => f.factor_type === 'totp');
+  const recentActivity = [...usuarios]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 6);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -294,8 +459,202 @@ export default function UsuariosManager() {
           >
             <option value="todos">Todos los roles</option>
             <option value="Admin">Admin</option>
+            <option value="Presidente">Presidente</option>
+            <option value="Supervisor">Supervisor</option>
             <option value="Catador">Catador</option>
           </select>
+        </div>
+      </div>
+
+      {/* Seguridad (2FA) y actividad */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Lock className="w-5 h-5 text-purple-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Seguridad y 2FA</h3>
+            </div>
+            <span className={`px-2 py-1 text-xs rounded-full ${totpEnabled ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              {totpEnabled ? '2FA activa' : '2FA no activa'}
+            </span>
+          </div>
+
+          <p className="text-sm text-gray-500 mb-3">Protege el acceso de admins con TOTP (Google Authenticator, 1Password, etc.).</p>
+
+          <div className="space-y-3">
+            <div className="border border-gray-100 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-sm text-gray-700 mb-2">
+                <Shield className="w-4 h-4 text-purple-600" />
+                <span>Factores configurados</span>
+              </div>
+              {mfaFactors.length === 0 ? (
+                <p className="text-sm text-gray-500">No hay factores 2FA registrados.</p>
+              ) : (
+                <ul className="space-y-1 text-sm text-gray-700">
+                  {mfaFactors.map((f) => (
+                    <li key={f.id} className="flex items-center gap-2">
+                      <KeyRound className="w-4 h-4 text-purple-600" />
+                      <span className="font-medium">{f.factor_type?.toUpperCase() || 'TOTP'}</span>
+                      {f.created_at && (
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Clock3 className="w-3 h-3" />
+                          {new Date(f.created_at).toLocaleString('es-ES')}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {mfaError && (
+              <div className="bg-red-50 text-red-700 text-sm rounded-lg p-2 border border-red-100">{mfaError}</div>
+            )}
+
+            {enrollData && (
+              <div className="border border-dashed border-purple-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+                  <QrCode className="w-4 h-4 text-purple-600" />
+                  Escanea el código y valida
+                </div>
+                <div className="flex gap-3 items-start flex-wrap">
+                  {enrollData.uri ? (
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(enrollData.uri)}`}
+                      alt="QR 2FA"
+                      className="w-40 h-40 border border-gray-100 rounded"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="w-40 h-40 bg-gray-50 border border-gray-100 rounded flex items-center justify-center text-xs text-gray-500">
+                      QR no disponible
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-[220px] space-y-2">
+                    <p className="text-xs text-gray-500">Si no puedes escanear, usa el secreto:</p>
+                    <div className="font-mono text-sm bg-gray-50 border border-gray-100 rounded px-3 py-2 break-all">
+                      {enrollData.uri || 'otpauth://...'}
+                    </div>
+                    <label className="block text-sm font-medium text-gray-700">Código de 6 dígitos</label>
+                    <input
+                      type="text"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      maxLength={6}
+                      placeholder="123456"
+                    />
+                    <button
+                      onClick={verifyTotpEnrollment}
+                      disabled={loadingMfa}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60"
+                    >
+                      Validar y activar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              {!totpEnabled ? (
+                <button
+                  onClick={startTotpEnrollment}
+                  disabled={enrollingMfa}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60"
+                >
+                  {enrollingMfa ? 'Generando QR...' : 'Habilitar 2FA TOTP'}
+                </button>
+              ) : (
+                <button
+                  onClick={disableTotp}
+                  disabled={loadingMfa}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
+                >
+                  Desactivar 2FA
+                </button>
+              )}
+              <button
+                onClick={fetchMfaFactors}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Actualizar estado
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock3 className="w-5 h-5 text-gray-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Historial reciente</h3>
+          </div>
+          <p className="text-sm text-gray-500 mb-3">Altas recientes (ordenadas por fecha de creación).</p>
+          {recentActivity.length === 0 ? (
+            <p className="text-sm text-gray-500">No hay actividad reciente.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {recentActivity.map((u) => (
+                <li key={u.id} className="py-2 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-700">
+                    {u.nombre?.charAt(0).toUpperCase() || '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{u.nombre || 'Sin nombre'}</p>
+                    <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                  </div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(u.created_at).toLocaleDateString('es-ES')}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Auditoría de acciones</h3>
+            </div>
+            <button
+              onClick={fetchAuditLogs}
+              className="text-sm text-indigo-600 hover:underline"
+            >
+              Refrescar
+            </button>
+          </div>
+          {auditError && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-2 mb-2">
+              {auditError}
+            </div>
+          )}
+          {loadingAudit ? (
+            <p className="text-sm text-gray-500">Cargando auditoría...</p>
+          ) : auditLogs.length === 0 ? (
+            <p className="text-sm text-gray-500">Sin registros de acciones.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {auditLogs.map((log) => (
+                <li key={log.id ?? `${log.action}-${log.created_at}`} className="py-2 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-semibold">
+                    {log.action?.slice(0,2).toUpperCase() || 'AC'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{log.action}</p>
+                    <p className="text-xs text-gray-500 truncate">{log.details}</p>
+                    <p className="text-[11px] text-gray-500 truncate">{log.actor_email || '—'}</p>
+                  </div>
+                  <div className="text-[11px] text-gray-500 whitespace-nowrap">
+                    {log.created_at ? new Date(log.created_at).toLocaleString('es-ES') : ''}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

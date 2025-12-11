@@ -200,6 +200,8 @@ export default function BottlePhotosGallery({ onBack }: BottlePhotosGalleryProps
                   src={sample.foto_botella!}
                   alt={sample.nombre}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect width="200" height="200" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%239ca3af"%3EImagen no disponible%3C/text%3E%3C/svg%3E';
                   }}
@@ -262,6 +264,8 @@ export default function BottlePhotosGallery({ onBack }: BottlePhotosGalleryProps
                     src={selectedImage.url}
                     alt={selectedImage.sample.nombre}
                     className="max-h-[50vh] w-auto object-contain rounded-lg"
+                    loading="lazy"
+                    decoding="async"
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>

@@ -115,6 +115,8 @@ export default function ImageUploader({
             src={preview} 
             alt="Preview" 
             className="w-full max-w-xs h-48 object-cover rounded-lg border-2 border-gray-300 shadow-md cursor-pointer transition-transform hover:scale-[1.02]"
+            loading="lazy"
+            decoding="async"
             onClick={() => setShowModal(true)}
           />
           {/* Overlay con icono de zoom */}
@@ -154,6 +156,8 @@ export default function ImageUploader({
               src={preview} 
               alt="Imagen ampliada" 
               className="w-full h-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+              loading="lazy"
+              decoding="async"
               onClick={(e) => e.stopPropagation()}
             />
           </div>

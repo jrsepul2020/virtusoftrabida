@@ -366,6 +366,8 @@ export default function SampleEditModal({ sample, onClose, onSave }: SampleEditM
                           src={imagePreview} 
                           alt="Vista previa" 
                           className="w-32 h-40 object-contain border border-gray-200 rounded-lg bg-gray-50"
+                          loading="lazy"
+                          decoding="async"
                         />
                         <button
                           type="button"

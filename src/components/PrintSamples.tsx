@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, Printer, CheckSquare, Square, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { Search, Printer, CheckSquare, Square, ChevronDown, ArrowUpDown, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export default function PrintSamples() {
   const [samples, setSamples] = useState<Sample[]>([]);
@@ -13,6 +14,8 @@ export default function PrintSamples() {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [sortField, setSortField] = useState<'codigo' | 'nombre' | 'categoria'>('codigo');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [compactPrint, setCompactPrint] = useState(false);
+  const [showGridLines, setShowGridLines] = useState(true);
 
   useEffect(() => {
     fetchSamples();
@@ -133,6 +136,37 @@ export default function PrintSamples() {
     window.print();
   };
 
+  const exportSelected = (type: 'csv' | 'xlsx') => {
+    if (selectedSamples.size === 0) return;
+    const rows = selectedSamplesList.map((s) => ({
+      Codigo: s.codigo,
+      Nombre: s.nombre,
+      Categoria: s.categoria,
+      Pais: s.pais,
+      Empresa: s.empresa,
+      Anio: s.anio,
+      Grado: s.grado,
+      Azucar: s.azucar,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Muestras');
+
+    if (type === 'xlsx') {
+      XLSX.writeFile(workbook, 'muestras.xlsx');
+    } else {
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'muestras.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const selectedSamplesList = samples.filter(s => selectedSamples.has(s.id));
 
   if (loading) {
@@ -168,6 +202,45 @@ export default function PrintSamples() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
             />
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={compactPrint}
+                onChange={() => setCompactPrint((v) => !v)}
+                className="w-4 h-4 text-primary-600 border-gray-300 rounded"
+              />
+              Vista compacta
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={showGridLines}
+                onChange={() => setShowGridLines((v) => !v)}
+                className="w-4 h-4 text-primary-600 border-gray-300 rounded"
+              />
+              Líneas de tabla
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => exportSelected('csv')}
+              disabled={selectedSamples.size === 0}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" /> CSV
+            </button>
+            <button
+              onClick={() => exportSelected('xlsx')}
+              disabled={selectedSamples.size === 0}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" /> Excel
+            </button>
           </div>
         </div>
 
@@ -281,11 +354,11 @@ export default function PrintSamples() {
           </span>
         </div>
 
-        <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0">
+        <div className={`border ${showGridLines ? 'border-gray-200' : 'border-transparent'} rounded-lg overflow-hidden max-h-96 overflow-y-auto`}>
+          <table className={`min-w-full ${showGridLines ? 'divide-y divide-gray-200' : ''}`}>
+            <thead className={`${showGridLines ? 'bg-gray-50' : ''} sticky top-0`}>
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`${compactPrint ? 'px-3 py-2' : 'px-4 py-3'} text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                   <input
                     type="checkbox"
                     checked={selectedSamples.size === filteredSamples.length && filteredSamples.length > 0}
@@ -293,21 +366,21 @@ export default function PrintSamples() {
                     className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`${compactPrint ? 'px-3 py-2' : 'px-4 py-3'} text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                   Código
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`${compactPrint ? 'px-3 py-2' : 'px-4 py-3'} text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                   Nombre
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`${compactPrint ? 'px-3 py-2' : 'px-4 py-3'} text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                   Categoría
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`${compactPrint ? 'px-3 py-2' : 'px-4 py-3'} text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                   Empresa
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
+            <tbody className={`bg-white ${showGridLines ? 'divide-y divide-gray-100' : ''}`}>
               {filteredSamples.map((sample) => (
                 <tr
                   key={sample.id}
@@ -316,7 +389,7 @@ export default function PrintSamples() {
                     selectedSamples.has(sample.id) ? 'bg-primary-50' : ''
                   }`}
                 >
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className={`${compactPrint ? 'px-3 py-2' : 'px-4 py-3'} whitespace-nowrap`}>
                     <input
                       type="checkbox"
                       checked={selectedSamples.has(sample.id)}
@@ -324,16 +397,16 @@ export default function PrintSamples() {
                       className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                     />
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900">
+                  <td className={`${compactPrint ? 'px-3 py-2 text-xs' : 'px-4 py-3 text-sm'} whitespace-nowrap font-bold text-gray-900`}>
                     {sample.codigo}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
+                  <td className={`${compactPrint ? 'px-3 py-2 text-xs' : 'px-4 py-3 text-sm'} text-gray-900`}>
                     {sample.nombre}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                  <td className={`${compactPrint ? 'px-3 py-2 text-xs' : 'px-4 py-3 text-sm'} whitespace-nowrap text-gray-700`}>
                     {sample.categoria || '-'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className={`${compactPrint ? 'px-3 py-2 text-xs' : 'px-4 py-3 text-sm'} text-gray-700`}>
                     {sample.empresa || '-'}
                   </td>
                 </tr>
@@ -346,7 +419,7 @@ export default function PrintSamples() {
       {/* Print View */}
       <div className="print-only">
         <div className="print-header">
-          <img src="/logo-bandera-1.png" alt="VIRTUS Awards" className="print-logo" />
+          <img src="/logo-bandera-1.png" alt="VIRTUS Awards" className="print-logo" loading="lazy" decoding="async" />
           <h1>Listado de Muestras</h1>
           <p className="print-date">Fecha: {new Date().toLocaleDateString('es-ES', {
             year: 'numeric',

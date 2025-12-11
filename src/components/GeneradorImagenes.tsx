@@ -394,6 +394,8 @@ export default function GeneradorImagenes() {
                           src={muestra.foto_botella} 
                           alt={muestra.nombre || 'Botella'}
                           className="w-12 h-16 object-cover rounded shadow"
+                          loading="lazy"
+                          decoding="async"
                         />
                       ) : (
                         <div className="w-12 h-16 bg-gray-100 rounded flex items-center justify-center">

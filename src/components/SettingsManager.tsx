@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ImageUploader from './ImageUploader';
 import { supabase } from '../lib/supabase';
 import { useConfiguracion, queryClient } from '../lib/queryCache';
 import { Settings, Plus, Edit2, Save, Trash2, Activity, Database, Monitor, Wrench } from 'lucide-react';
@@ -33,7 +34,20 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   const [siteTitle, setSiteTitle] = useState('International Virtus La Rábida');
   const [primaryColor, setPrimaryColor] = useState('#0ea5a4');
   const [heroFullscreen, setHeroFullscreen] = useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [faviconUrl, setFaviconUrl] = useState('');
+  const [footerText, setFooterText] = useState('');
+  const [successText, setSuccessText] = useState('');
+  const [heroText, setHeroText] = useState('');
   const [savingBranding, setSavingBranding] = useState(false);
+  const [accentColor, setAccentColor] = useState('#f59e42');
+  const [themeMode, setThemeMode] = useState('auto'); // 'light' | 'dark' | 'auto'
+  // Integraciones / Automatización
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [analyticsId, setAnalyticsId] = useState('');
+  const [notificationEmail, setNotificationEmail] = useState('');
+  const [savingIntegrations, setSavingIntegrations] = useState(false);
 
   useEffect(() => {
     if (configData) {
@@ -41,6 +55,17 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
       setSiteTitle(configData.site_title ?? 'International Virtus La Rábida');
       setPrimaryColor(configData.primary_color ?? '#0ea5a4');
       setHeroFullscreen(configData.hero_fullscreen === 'true');
+      setCoverImageUrl(configData.cover_image_url ?? '');
+      setLogoUrl(configData.logo_url ?? '');
+      setFaviconUrl(configData.favicon_url ?? '');
+      setFooterText(configData.footer_text ?? '');
+      setSuccessText(configData.success_text ?? '');
+      setHeroText(configData.hero_text ?? '');
+      setAccentColor(configData.accent_color ?? '#f59e42');
+      setThemeMode(configData.theme_mode ?? 'auto');
+      setWebhookUrl(configData.webhook_url ?? '');
+      setAnalyticsId(configData.analytics_id ?? '');
+      setNotificationEmail(configData.notification_email ?? '');
     }
   }, [configData]);
 
@@ -80,19 +105,19 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
     setLoading(true);
     try {
       // Intentar cargar desde base de datos
-      const { data: customStatuses } = await supabase
+      const { data: customStatuses, error } = await supabase
         .from('status_configs')
         .select('*')
         .order('is_default', { ascending: false });
 
-      if (customStatuses && customStatuses.length > 0) {
+      if (error) {
+        setStatuses(defaultStatuses);
+      } else if (customStatuses && customStatuses.length > 0) {
         setStatuses(customStatuses);
       } else {
-        // Si no hay configuración personalizada, usar estados por defecto
         setStatuses(defaultStatuses);
       }
     } catch (error) {
-      console.log('Tabla status_configs no existe aún, usando valores por defecto');
       setStatuses(defaultStatuses);
     } finally {
       setLoading(false);
@@ -373,102 +398,378 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                 </button>
               </div>
 
-              {/* Branding / UI settings */}
-              <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <h4 className="font-medium text-gray-800 mb-3">Branding / UI</h4>
-                <p className="text-sm text-gray-500 mb-4">Ajustes visuales del sitio: título, color principal y comportamiento del hero.</p>
-
-                <div className="space-y-4 max-w-xl">
+              {/* Integraciones y automatización */}
+              <div className="mt-6 bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                <h4 className="font-medium text-gray-800 mb-2">Integraciones y automatización</h4>
+                <p className="text-sm text-gray-500 mb-4">Webhooks para eventos, Google Analytics y email de notificaciones.</p>
+                <div className="space-y-3 max-w-xl">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Título del sitio (`site_title`)</label>
+                    <label className="block text-sm font-medium text-gray-700">Webhook URL (`webhook_url`)</label>
+                    <input
+                      type="url"
+                      value={webhookUrl}
+                      onChange={(e) => setWebhookUrl(e.target.value)}
+                      placeholder="https://tu-endpoint.com/webhook"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Recibe eventos clave (inscripción, pago, error) vía POST.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Google Analytics ID (`analytics_id`)</label>
                     <input
                       type="text"
-                      value={siteTitle}
-                      onChange={(e) => setSiteTitle(e.target.value)}
+                      value={analyticsId}
+                      onChange={(e) => setAnalyticsId(e.target.value)}
+                      placeholder="G-XXXXXXXXXX"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
-                      placeholder="International Virtus La Rábida"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Color primario (`primary_color`)</label>
-                    <div className="flex items-center gap-3 mt-1">
-                      <input
-                        type="color"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-12 h-10 p-0 border-0 bg-transparent"
-                      />
-                      <input
-                        type="text"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        placeholder="#0ea5a4"
-                      />
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700">Email de notificación (`notification_email`)</label>
+                    <input
+                      type="email"
+                      value={notificationEmail}
+                      onChange={(e) => setNotificationEmail(e.target.value)}
+                      placeholder="alertas@dominio.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Recibirá alertas de eventos y errores críticos.</p>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Hero fullscreen (`hero_fullscreen`)</label>
-                      <p className="text-xs text-gray-500">Si está activo, la portada usará `h-screen` para ocupar toda la pantalla.</p>
-                    </div>
-                    <div>
-                      <label className="inline-flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={heroFullscreen}
-                          onChange={(e) => setHeroFullscreen(e.target.checked)}
-                          className="form-checkbox h-5 w-5 text-green-600"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-3">
+                  <div className="flex gap-3 pt-2">
                     <button
                       onClick={async () => {
-                        setSavingBranding(true);
+                        setSavingIntegrations(true);
                         try {
                           const ops = [
-                            { clave: 'site_title', valor: siteTitle },
-                            { clave: 'primary_color', valor: primaryColor },
-                            { clave: 'hero_fullscreen', valor: heroFullscreen ? 'true' : 'false' },
+                            { clave: 'webhook_url', valor: webhookUrl },
+                            { clave: 'analytics_id', valor: analyticsId },
+                            { clave: 'notification_email', valor: notificationEmail },
                           ];
-
                           for (const op of ops) {
                             const { error } = await supabase.from('configuracion').upsert(op);
                             if (error) throw error;
                           }
-
-                          // Invalidate config cache so UI updates immediately
                           queryClient.invalidateQueries({ queryKey: ['configuracion'] });
-
-                          alert('Ajustes de branding guardados');
+                          alert('Integraciones guardadas');
                         } catch (err) {
-                          console.error('Error guardando branding settings', err);
-                          alert('Error al guardar los ajustes');
+                          console.error('Error guardando integraciones', err);
+                          alert('Error al guardar');
                         } finally {
-                          setSavingBranding(false);
+                          setSavingIntegrations(false);
                         }
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
-                      {savingBranding ? 'Guardando...' : 'Guardar ajustes'}
+                      {savingIntegrations ? 'Guardando...' : 'Guardar'}
                     </button>
-
                     <button
                       onClick={() => {
-                        // Restaurar desde configData
-                        setSiteTitle(configData?.site_title ?? 'International Virtus La Rábida');
-                        setPrimaryColor(configData?.primary_color ?? '#0ea5a4');
-                        setHeroFullscreen(configData?.hero_fullscreen === 'true');
+                        setWebhookUrl(configData?.webhook_url ?? '');
+                        setAnalyticsId(configData?.analytics_id ?? '');
+                        setNotificationEmail(configData?.notification_email ?? '');
                       }}
                       className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
                     >
                       Restaurar
                     </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Branding / UI settings + imágenes y textos clave */}
+              <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="grid gap-8 lg:grid-cols-2">
+                  <div className="space-y-3">
+                    <h5 className="font-semibold text-gray-700">Vista previa en vivo</h5>
+                    <div
+                      className="rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+                      style={{
+                        background: themeMode === 'dark' ? '#222' : '#fff',
+                        color: themeMode === 'dark' ? '#fff' : '#222',
+                        borderColor: primaryColor,
+                        maxWidth: 480,
+                        margin: '0 auto',
+                      }}
+                    >
+                      <div
+                        style={{
+                          backgroundImage: coverImageUrl ? `url(${coverImageUrl})` : undefined,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          minHeight: heroFullscreen ? 240 : 120,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          position: 'relative',
+                          borderBottom: `4px solid ${accentColor}`,
+                          padding: 24,
+                        }}
+                      >
+                        {logoUrl && (
+                          <img
+                            src={logoUrl}
+                            alt="Logo preview"
+                            style={{ width: 72, height: 72, objectFit: 'contain', background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0002', marginBottom: 12 }}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        )}
+                        <div
+                          style={{
+                            background: themeMode === 'dark' ? '#222a' : '#fff8',
+                            borderRadius: 8,
+                            padding: '8px 16px',
+                            fontWeight: 600,
+                            fontSize: 20,
+                            color: primaryColor,
+                            textAlign: 'center',
+                            maxWidth: '90%',
+                            margin: '0 auto',
+                          }}
+                        >
+                          {siteTitle}
+                        </div>
+                        {heroText && (
+                          <div
+                            style={{
+                              marginTop: 8,
+                              background: themeMode === 'dark' ? '#222a' : '#fff8',
+                              borderRadius: 6,
+                              padding: '6px 12px',
+                              fontSize: 15,
+                              color: '#444',
+                              textAlign: 'center',
+                              maxWidth: '90%',
+                            }}
+                          >
+                            {heroText}
+                          </div>
+                        )}
+                      </div>
+                      {successText && (
+                        <div
+                          style={{
+                            background: accentColor,
+                            color: '#fff',
+                            padding: '12px 16px',
+                            textAlign: 'center',
+                            fontWeight: 500,
+                            fontSize: 16,
+                            borderBottom: `2px solid ${primaryColor}`,
+                          }}
+                        >
+                          {successText}
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          background: themeMode === 'dark' ? '#111' : '#f8fafc',
+                          color: themeMode === 'dark' ? '#eee' : '#222',
+                          padding: '10px 18px',
+                          fontSize: 13,
+                          textAlign: 'center',
+                          borderTop: `2px solid ${accentColor}`,
+                        }}
+                      >
+                        {footerText || '© 2025 International Virtus La Rábida'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 max-w-xl">
+                    <h4 className="font-medium text-gray-800">Branding / UI</h4>
+                    <p className="text-sm text-gray-500">Ajustes visuales, imágenes y textos clave del sitio.</p>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Título del sitio (`site_title`)</label>
+                      <input
+                        type="text"
+                        value={siteTitle}
+                        onChange={(e) => setSiteTitle(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                        placeholder="International Virtus La Rábida"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Color primario (`primary_color`)</label>
+                      <div className="flex items-center gap-3 mt-1">
+                        <input
+                          type="color"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                          className="w-12 h-10 p-0 border-0 bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="#0ea5a4"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Color acento (`accent_color`)</label>
+                      <div className="flex items-center gap-3 mt-1">
+                        <input
+                          type="color"
+                          value={accentColor}
+                          onChange={(e) => setAccentColor(e.target.value)}
+                          className="w-12 h-10 p-0 border-0 bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={accentColor}
+                          onChange={(e) => setAccentColor(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="#f59e42"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Tema visual (`theme_mode`)</label>
+                      <select
+                        value={themeMode}
+                        onChange={e => setThemeMode(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                      >
+                        <option value="auto">Automático (según sistema)</option>
+                        <option value="light">Claro</option>
+                        <option value="dark">Oscuro</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Hero fullscreen (`hero_fullscreen`)</label>
+                        <p className="text-xs text-gray-500">Si está activo, la portada usará `h-screen` para ocupar toda la pantalla.</p>
+                      </div>
+                      <div>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={heroFullscreen}
+                            onChange={(e) => setHeroFullscreen(e.target.checked)}
+                            className="form-checkbox h-5 w-5 text-green-600"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <ImageUploader
+                      label="Imagen de portada (1920x1080px o mayor, WebP/JPG)"
+                      bucketName="branding"
+                      currentImageUrl={coverImageUrl}
+                      onImageUploaded={setCoverImageUrl}
+                    />
+
+                    <ImageUploader
+                      label="Logo (PNG transparente, 512x512px recomendado)"
+                      bucketName="branding"
+                      currentImageUrl={logoUrl}
+                      onImageUploaded={setLogoUrl}
+                    />
+
+                    <ImageUploader
+                      label="Favicon (PNG 64x64px)"
+                      bucketName="branding"
+                      currentImageUrl={faviconUrl}
+                      onImageUploaded={setFaviconUrl}
+                    />
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Texto de portada (`hero_text`)</label>
+                      <textarea
+                        value={heroText}
+                        onChange={e => setHeroText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                        rows={2}
+                        placeholder="Texto principal de la portada"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Mensaje de éxito (`success_text`)</label>
+                      <textarea
+                        value={successText}
+                        onChange={e => setSuccessText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                        rows={2}
+                        placeholder="Mensaje mostrado tras inscripción exitosa"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Pie de página (`footer_text`)</label>
+                      <textarea
+                        value={footerText}
+                        onChange={e => setFooterText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                        rows={2}
+                        placeholder="Texto del pie de página"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={async () => {
+                          setSavingBranding(true);
+                          try {
+                            const ops = [
+                              { clave: 'site_title', valor: siteTitle },
+                              { clave: 'primary_color', valor: primaryColor },
+                              { clave: 'accent_color', valor: accentColor },
+                              { clave: 'theme_mode', valor: themeMode },
+                              { clave: 'hero_fullscreen', valor: heroFullscreen ? 'true' : 'false' },
+                              { clave: 'cover_image_url', valor: coverImageUrl },
+                              { clave: 'logo_url', valor: logoUrl },
+                              { clave: 'favicon_url', valor: faviconUrl },
+                              { clave: 'footer_text', valor: footerText },
+                              { clave: 'success_text', valor: successText },
+                              { clave: 'hero_text', valor: heroText },
+                            ];
+
+                            for (const op of ops) {
+                              const { error } = await supabase.from('configuracion').upsert(op);
+                              if (error) throw error;
+                            }
+
+                            queryClient.invalidateQueries({ queryKey: ['configuracion'] });
+                            alert('Ajustes guardados');
+                          } catch (err) {
+                            console.error('Error guardando branding settings', err);
+                            alert('Error al guardar los ajustes');
+                          } finally {
+                            setSavingBranding(false);
+                          }
+                        }}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        {savingBranding ? 'Guardando...' : 'Guardar ajustes'}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setSiteTitle(configData?.site_title ?? 'International Virtus La Rábida');
+                          setPrimaryColor(configData?.primary_color ?? '#0ea5a4');
+                          setHeroFullscreen(configData?.hero_fullscreen === 'true');
+                          setCoverImageUrl(configData?.cover_image_url ?? '');
+                          setLogoUrl(configData?.logo_url ?? '');
+                          setFaviconUrl(configData?.favicon_url ?? '');
+                          setFooterText(configData?.footer_text ?? '');
+                          setSuccessText(configData?.success_text ?? '');
+                          setHeroText(configData?.hero_text ?? '');
+                        }}
+                        className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                      >
+                        Restaurar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

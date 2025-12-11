@@ -1,12 +1,26 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 // Fecha de build para mostrar en la app
 const buildDate = new Date().toISOString();
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    ...(process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            release: process.env.SENTRY_RELEASE || process.env.VERCEL_GIT_COMMIT_SHA,
+            telemetry: false,
+          }),
+        ]
+      : []),
+  ],
   define: {
     __BUILD_DATE__: JSON.stringify(buildDate),
   },

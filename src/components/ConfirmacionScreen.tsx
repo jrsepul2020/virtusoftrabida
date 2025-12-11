@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CompanyData, SampleData, PaymentMethod } from "./types";
 import { Building2, Package, CreditCard, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 import { PayPalModal } from './PayPalModal';
 
 export function ConfirmacionScreen({
@@ -30,6 +31,7 @@ export function ConfirmacionScreen({
   onPayPalSuccess?: (details: any) => void;
   isManualInscription?: boolean;
 }) {
+  const { t } = useI18n();
   const [showPayPalModal, setShowPayPalModal] = useState(false);
 
   return (
@@ -40,58 +42,54 @@ export function ConfirmacionScreen({
           <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full mb-3 shadow-lg">
             <CheckCircle className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl sm:text-2xl text-primary-800 font-bold mb-2">
-            Confirmación de inscripción
-          </h2>
-          <p className="text-gray-600 text-sm">
-            Revisa y confirma los datos de tu inscripción
-          </p>
+          <h2 className="text-xl sm:text-2xl text-primary-800 font-bold mb-2">{t('form.confirm.title')}</h2>
+          <p className="text-gray-600 text-sm">{t('form.confirm.review')}</p>
         </div>
 
         {/* Información de la empresa */}
         <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
             <Building2 className="w-5 h-5 text-primary-600" />
-            <h3 className="font-semibold text-primary-700 text-base">Datos de la empresa</h3>
+            <h3 className="font-semibold text-primary-700 text-base">{t('form.company.title')}</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
             <div>
-              <span className="font-medium text-gray-700">NIF:</span>
+              <span className="font-medium text-gray-700">{t('form.company.nif')}</span>
               <span className="ml-2 text-gray-800">{company.nif}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Empresa:</span>
+              <span className="font-medium text-gray-700">{t('form.company.name')}</span>
               <span className="ml-2 text-gray-800">{company.nombre_empresa}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Email:</span>
+              <span className="font-medium text-gray-700">{t('form.company.email')}</span>
               <div className="mt-1">
                 <a className="text-gray-800 break-all" href={`mailto:${company.email}`}>{company.email}</a>
               </div>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Teléfono:</span>
+              <span className="font-medium text-gray-700">{t('form.company.phone')}</span>
               <span className="ml-2 text-gray-800">{company.telefono}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Dirección:</span>
+              <span className="font-medium text-gray-700">{t('form.company.address')}</span>
               <span className="ml-2 text-gray-800">{company.direccion || '-'}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Población:</span>
+              <span className="font-medium text-gray-700">{t('form.company.city')}</span>
               <span className="ml-2 text-gray-800">{company.poblacion}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Código Postal:</span>
+              <span className="font-medium text-gray-700">{t('form.company.postal')}</span>
               <span className="ml-2 text-gray-800">{company.codigo_postal || '-'}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">País:</span>
+              <span className="font-medium text-gray-700">{t('form.company.country')}</span>
               <span className="ml-2 text-gray-800">{company.pais}</span>
             </div>
             {company.persona_contacto && (
               <div>
-                <span className="font-medium text-gray-700">Contacto:</span>
+                <span className="font-medium text-gray-700">{t('form.company.contact')}</span>
                 <span className="ml-2 text-gray-800">{company.persona_contacto}</span>
               </div>
             )}
@@ -110,7 +108,7 @@ export function ConfirmacionScreen({
                 </div>
               )}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-sm font-medium text-gray-700">Total a pagar:</span>
+                <span className="text-sm font-medium text-gray-700">{t('summary.total_label')}</span>
                 <span className="text-xl font-bold text-primary-800">{precio.total}€</span>
               </div>
             </div>
@@ -121,7 +119,7 @@ export function ConfirmacionScreen({
         <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
             <Package className="w-5 h-5 text-primary-600" />
-            <h3 className="font-semibold text-primary-700 text-base">Muestras registradas</h3>
+            <h3 className="font-semibold text-primary-700 text-base">{t('form.samples.registered')}</h3>
           </div>
           <div className="space-y-3">
             {samples.map((sample, idx) => (
@@ -138,7 +136,7 @@ export function ConfirmacionScreen({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="font-medium text-gray-600">Categoría:</span>
+                        <span className="font-medium text-gray-600">{t('form.sample.category')}:</span>
                         <span className="ml-1 text-gray-800">{sample.categoria}</span>
                       </div>
                       {sample.origen && (
@@ -149,7 +147,7 @@ export function ConfirmacionScreen({
                       )}
                       {sample.pais && (
                         <div>
-                          <span className="font-medium text-gray-600">País:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.country')}:</span>
                           <span className="ml-1 text-gray-800">{sample.pais}</span>
                         </div>
                       )}
@@ -161,43 +159,43 @@ export function ConfirmacionScreen({
                       )}
                       {sample.anio && (
                         <div>
-                          <span className="font-medium text-gray-600">Año/Añada:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.year')}:</span>
                           <span className="ml-1 text-gray-800">{sample.anio}</span>
                         </div>
                       )}
                       {sample.azucar && (
                         <div>
-                          <span className="font-medium text-gray-600">Azúcar:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.sugar')}:</span>
                           <span className="ml-1 text-gray-800">{sample.azucar} g/l</span>
                         </div>
                       )}
                       {sample.grado_alcoholico && (
                         <div>
-                          <span className="font-medium text-gray-600">Grado:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.degree')}:</span>
                           <span className="ml-1 text-gray-800">{sample.grado_alcoholico}°</span>
                         </div>
                       )}
                       {sample.tipo_uva && (
                         <div>
-                          <span className="font-medium text-gray-600">Tipo Uva:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.grape_type')}:</span>
                           <span className="ml-1 text-gray-800">{sample.tipo_uva}</span>
                         </div>
                       )}
                       {sample.tipo_aceituna && (
                         <div>
-                          <span className="font-medium text-gray-600">Tipo Aceituna:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.olive_type')}:</span>
                           <span className="ml-1 text-gray-800">{sample.tipo_aceituna}</span>
                         </div>
                       )}
                       {sample.destilado && (
                         <div>
-                          <span className="font-medium text-gray-600">Destilado:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.distillate')}:</span>
                           <span className="ml-1 text-gray-800">{sample.destilado}</span>
                         </div>
                       )}
                       {sample.existencias && (
                         <div>
-                          <span className="font-medium text-gray-600">Existencias:</span>
+                          <span className="font-medium text-gray-600">{t('form.sample.stock')}:</span>
                           <span className="ml-1 text-gray-800">{sample.existencias}</span>
                         </div>
                       )}
@@ -215,7 +213,7 @@ export function ConfirmacionScreen({
             <div className="bg-primary-600 p-2 rounded-lg">
               <CreditCard className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-lg font-bold text-primary-900">Selecciona tu método de pago</h3>
+            <h3 className="text-lg font-bold text-primary-900">{t('form.payment.title')}</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className={`relative flex flex-col p-5 border-3 rounded-xl cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg ${
@@ -241,10 +239,10 @@ export function ConfirmacionScreen({
                     <div className="w-3 h-3 bg-white rounded-full"></div>
                   )}
                 </div>
-                <div className="text-lg font-bold text-gray-900">Transferencia bancaria</div>
+                <div className="text-lg font-bold text-gray-900">{t('payment.transfer')}</div>
               </div>
               <div className="text-sm text-gray-600 ml-9">
-                Pago tradicional mediante transferencia
+                {t('payment.transfer.desc')}
               </div>
               {payment === 'transferencia' && (
                 <div className="absolute top-2 right-2">
@@ -276,10 +274,10 @@ export function ConfirmacionScreen({
                     <div className="w-3 h-3 bg-white rounded-full"></div>
                   )}
                 </div>
-                <div className="text-lg font-bold text-gray-900">PayPal</div>
+                <div className="text-lg font-bold text-gray-900">{t('payment.paypal')}</div>
               </div>
               <div className="text-sm text-gray-600 ml-9">
-                Pago online rápido y seguro
+                {t('payment.paypal.desc')}
               </div>
               {payment === 'paypal' && (
                 <div className="absolute top-2 right-2">
@@ -302,14 +300,12 @@ export function ConfirmacionScreen({
 
         {success ? (
           <div className="text-center">
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-6 rounded-xl">
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-6 rounded-xl">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <CheckCircle className="w-8 h-8 text-green-600" />
-                <div className="text-lg font-bold">¡Inscripción enviada con éxito!</div>
+                <div className="text-lg font-bold">{t('success.title')}</div>
               </div>
-              <p className="text-sm">
-                Recibirás un email de confirmación con los detalles del pago.
-              </p>
+              <p className="text-sm">{t('success.check_email')}</p>
             </div>
           </div>
         ) : (
@@ -323,7 +319,7 @@ export function ConfirmacionScreen({
                 disabled={loading}
                 className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-2 rounded-lg font-semibold hover:from-gray-700 hover:to-gray-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Atrás
+                {t('button.prev')}
               </button>
               
               {payment === 'transferencia' ? (
@@ -336,15 +332,15 @@ export function ConfirmacionScreen({
                   }} 
                   className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-2 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
-                  {loading ? (
+                      {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Enviando...
+                      {t('loading.sending')}
                     </>
                   ) : (
                     <>
                       <CheckCircle className="w-5 h-5" />
-                      Enviar inscripción
+                      {t('button.submit')}
                     </>
                   )}
                 </button>
@@ -355,7 +351,7 @@ export function ConfirmacionScreen({
                   className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-3"
                 >
                   <CreditCard className="w-5 h-5" />
-                  Pagar con PayPal
+                  {t('payment.paypal')}
                 </button>
               )}
             </div>

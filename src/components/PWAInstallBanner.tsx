@@ -18,7 +18,7 @@ export const PWAInstallBanner: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
+    <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up" role="status" aria-live="polite">
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl shadow-lg p-4 mx-auto max-w-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
