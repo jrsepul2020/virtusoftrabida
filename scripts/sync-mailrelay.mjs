@@ -242,9 +242,13 @@ CREATE TABLE mailrelay_sync (
       }
 
       if (tableExists) {
-        const upsert = await supabase.from('mailrelay_sync').insert([{ empresa_id: comp.id, mailrelay_id: res?.id || null, synced: true }]).onConflict('empresa_id');
+        // Usar upsert en lugar de insert().onConflict (supabase-js v2)
+        const upsert = await supabase.from('mailrelay_sync').upsert(
+          { empresa_id: comp.id, mailrelay_id: res?.id || null, synced: true },
+          { onConflict: 'empresa_id' }
+        );
         if (upsert.error) {
-          console.warn('No se pudo insertar estado de sync en DB:', upsert.error.message || upsert.error);
+          console.warn('No se pudo insertar/actualizar estado de sync en DB:', upsert.error.message || upsert.error);
         } else {
           console.log('Marcado como sincronizado en mailrelay_sync');
         }
