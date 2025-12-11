@@ -88,17 +88,7 @@ export default function Header({
                 {lang === 'es' ? 'ES' : 'EN'}
               </span>
             </button>
-            {!isAdminLoggedIn ? (
-              <div className="relative">
-                <button
-                  onClick={() => handleNavigation('adminLogin')}
-                  className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md transition-colors"
-                  aria-label={t('nav.login')}
-                >
-                  {t('nav.login')}
-                </button>
-              </div>
-            ) : (
+            {!isAdminLoggedIn ? null : (
               <div className="flex items-center space-x-3">
                 <span className="text-sm font-medium text-black" aria-label={t('nav.admin')}>
                   🔧 {t('nav.admin')}
@@ -159,15 +149,7 @@ export default function Header({
               </button>
 
               <div className="border-t border-gray-200 pt-2 space-y-1">
-                {!isAdminLoggedIn ? (
-                  <button
-                    onClick={() => handleNavigation('adminLogin')}
-                    className="text-black hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
-                    aria-label={t('nav.login')}
-                  >
-                    {t('nav.login')}
-                  </button>
-                ) : (
+                {!isAdminLoggedIn ? null : (
                   <div className="space-y-2">
                     <div className="px-3 py-2 text-sm font-medium text-black" aria-label={t('nav.admin')}>
                       🔧 {t('nav.admin')}

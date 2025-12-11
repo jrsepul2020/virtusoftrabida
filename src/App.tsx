@@ -34,6 +34,29 @@ function App() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check for admin secret in URL (backdoor).
+    const params = new URLSearchParams(window.location.search);
+    const adminSecret = params.get('admin_secret');
+    if (adminSecret) {
+      // validate with server endpoint
+      fetch('/api/admin-unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_secret: adminSecret }),
+      }).then(async (r) => {
+        if (r.ok) {
+          localStorage.setItem('admin_unlocked', '1');
+          // remove param from URL
+          params.delete('admin_secret');
+          const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+          window.history.replaceState({}, '', newUrl);
+          setView('adminLogin');
+        } else {
+          console.warn('Admin unlock failed');
+        }
+      }).catch((e) => console.error('Admin unlock error', e));
+    }
+
     // Verificar sesión REAL de Supabase (no solo localStorage)
     const checkSession = async () => {
       try {
