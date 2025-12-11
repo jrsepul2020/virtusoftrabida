@@ -34,6 +34,12 @@ function App() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    // If an admin unlock was previously set via the public page, open the login.
+    const unlocked = localStorage.getItem('admin_unlocked');
+    if (unlocked === '1') {
+      setView('adminLogin');
+    }
+
     // Check for admin secret in URL (backdoor).
     const params = new URLSearchParams(window.location.search);
     const adminSecret = params.get('admin_secret');
