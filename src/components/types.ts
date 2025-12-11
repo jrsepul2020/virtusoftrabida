@@ -14,6 +14,8 @@ export type CompanyData = {
   pagina_web: string;
   observaciones: string;
   num_muestras: number | string;
+  acepto_reglamento?: boolean;
+  consentimiento_marketing?: boolean;
 };
 
 export type SampleData = {

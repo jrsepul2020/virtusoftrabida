@@ -368,6 +368,40 @@ export function EmpresaScreen({
         </div>
       </div>
 
+      {/* Consentimientos: reglamento obligatorio y marketing opcional */}
+      <div className="mt-4 border-t pt-4">
+        <div className="flex items-start gap-3">
+          <input
+            id="acepto_reglamento"
+            name="acepto_reglamento"
+            type="checkbox"
+            checked={!!company.acepto_reglamento}
+            onChange={(e) => onChange({ target: { name: 'acepto_reglamento', value: e.target.checked } } as any)}
+            className="w-4 h-4 mt-1 text-primary-600 rounded"
+          />
+          <label htmlFor="acepto_reglamento" className="text-sm text-gray-700">
+            <span className="font-medium">{t('form.company.accept_rules')}</span>
+            <div className="text-xs text-gray-600">{t('form.company.accept_rules_desc')}</div>
+          </label>
+        </div>
+
+        <div className="flex items-start gap-3 mt-3">
+          <input
+            id="consentimiento_marketing"
+            name="consentimiento_marketing"
+            type="checkbox"
+            checked={!!company.consentimiento_marketing}
+            onChange={(e) => onChange({ target: { name: 'consentimiento_marketing', value: e.target.checked } } as any)}
+            className="w-4 h-4 mt-1 text-primary-600 rounded"
+          />
+          <label htmlFor="consentimiento_marketing" className="text-sm text-gray-700">
+            <span className="font-medium">{t('form.company.accept_marketing')}</span>
+            <div className="text-xs text-gray-600">{t('form.company.accept_marketing_desc')}</div>
+          </label>
+        </div>
+        {validationErrors?.acepto_reglamento && <p className="text-red-500 text-sm mt-2">{t('form.required')}</p>}
+      </div>
+
       {/* Resumen de precio */}
       <div className="text-center sm:text-right text-primary-700 font-semibold mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
         <div className="flex flex-col gap-2">

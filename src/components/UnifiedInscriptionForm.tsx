@@ -71,6 +71,8 @@ export default function UnifiedInscriptionForm({
     pagina_web: '',
     observaciones: '',
     num_muestras: 1,
+    acepto_reglamento: false,
+    consentimiento_marketing: false,
   };
 
   // Estado inicial de sample
@@ -258,6 +260,8 @@ export default function UnifiedInscriptionForm({
     if (!company.num_muestras || company.num_muestras < 1) errors.num_muestras = true;
     // Medio por el que nos conoció (obligatorio ahora)
     if (!company.medio_conocio?.trim()) errors.medio_conocio = true;
+    // Aceptación de reglamento obligatoria
+    if (!company.acepto_reglamento) errors.acepto_reglamento = true;
     
     setCompanyValidationErrors(errors);
     
@@ -403,6 +407,8 @@ export default function UnifiedInscriptionForm({
         conocimiento: company.medio_conocio,  // medio_conocio -> conocimiento
         pagina_web: company.pagina_web,
         observaciones: company.observaciones,
+        acepto_reglamento: company.acepto_reglamento || false,
+        consentimiento_marketing: company.consentimiento_marketing || false,
         // pedido se asigna automáticamente por el trigger en Supabase
         totalinscripciones: company.num_muestras,  // Número de muestras como total de inscripciones
         metodo_pago: isPaidWithPayPal ? 'paypal' : payment, // Método de pago
