@@ -106,9 +106,10 @@ async function main() {
   const since = new Date(Date.now() - DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   // Obtener empresas candidatas
+  // Seleccionar columnas existentes en la tabla `empresas`. Evitar `telefono` si no existe.
   const { data: empresas, error } = await supabase
     .from('empresas')
-    .select('id,name,email,phone,telefono,movil,conocimiento,created_at')
+    .select('id,name,email,phone,movil,conocimiento,created_at')
     .gt('created_at', since)
     .order('created_at', { ascending: true });
 
