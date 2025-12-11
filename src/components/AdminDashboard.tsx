@@ -15,6 +15,7 @@ import GestionTandas from './GestionTandas';
 import ListadoEmpresas from './ListadoEmpresas';
 import DispositivosManager from './DispositivosManager';
 import SettingsManager from './SettingsManager';
+import MailrelayManager from './MailrelayManager';
 import ManageSamples from './ManageSamples';
 import Chequeo from './Chequeo';
 import PantallasManager from './PantallasManager';
@@ -28,7 +29,7 @@ import ComunicacionesManager from './ComunicacionesManager';
 import EtiquetadoMuestras from './EtiquetadoMuestras';
 import UsuariosManager from './UsuariosManager';
 
-type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'etiquetado';
+type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'mailrelay' | 'etiquetado';
 
 interface MenuItem {
   id: string;
@@ -120,6 +121,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'dispositivos', label: 'Dispositivos', icon: Smartphone },
     { id: 'separator4', label: '', icon: null, isSeparator: true },
     { id: 'comunicaciones', label: 'Comunicaciones', icon: Send },
+    { id: 'mailrelay', label: 'Mailrelay', icon: Send },
     { id: 'paypal', label: 'PAYPAL', icon: CreditCard, highlight: true },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
@@ -313,6 +315,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === 'catadores' && <CatadoresManager />}
             {activeTab === 'dispositivos' && <DispositivosManager />}
             {activeTab === 'comunicaciones' && <ComunicacionesManager />}
+            {activeTab === 'mailrelay' && <MailrelayManager />}
             {activeTab === 'paypal' && <PayPalDashboard />}
             {activeTab === 'print' && <PrintSamples />}
             {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}

@@ -7,8 +7,14 @@ export default function MailrelayManager() {
   const [message, setMessage] = useState<string | null>(null);
 
   const handleSync = async () => {
-    // Pedir secreto administrativo (no lo guardamos)
-    const secret = window.prompt(t('mailrelay.prompt_secret'));
+    // In dev you can set VITE_MAILRELAY_ADMIN_SECRET to avoid the prompt.
+    const devSecret = (import.meta as any)?.env?.VITE_MAILRELAY_ADMIN_SECRET;
+      // DEBUG: mostrar si la variable VITE está presente en runtime (se eliminará después)
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-console
+        console.debug('DEV: VITE_MAILRELAY_ADMIN_SECRET=', devSecret ? '[present]' : '[missing]');
+      }
+    const secret = devSecret || window.prompt(t('mailrelay.prompt_secret'));
     if (!secret) return;
     setRunning(true);
     setMessage(null);
@@ -27,8 +33,8 @@ export default function MailrelayManager() {
       } else {
         setMessage(`Sincronizados: ${data.synced || 0}, omitidos: ${data.skipped || 0}`);
       }
-    } catch (e: any) {
-      setMessage(String(e.message || e));
+    } catch (err) {
+      setMessage(String((err as any)?.message || err));
     } finally {
       setRunning(false);
     }
