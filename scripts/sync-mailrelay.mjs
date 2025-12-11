@@ -37,8 +37,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-if (!MAILRELAY_API_BASE || !MAILRELAY_API_KEY) {
-  console.error('Faltan MAILRELAY_API_BASE o MAILRELAY_API_KEY en el entorno.');
+if (MODE === 'sync' && (!MAILRELAY_API_BASE || !MAILRELAY_API_KEY)) {
+  console.error('Faltan MAILRELAY_API_BASE o MAILRELAY_API_KEY en el entorno. Para dry-run no son necesarias.');
   process.exit(1);
 }
 
