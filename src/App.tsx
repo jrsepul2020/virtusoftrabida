@@ -34,6 +34,15 @@ function App() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    // Detectar acceso directo vía hash #admin
+    const hash = window.location.hash;
+    if (hash === '#admin') {
+      setView('adminLogin');
+      // Limpiar hash para evitar confusión
+      window.history.replaceState({}, '', window.location.pathname);
+      return; // Skip other checks
+    }
+
     // If an admin unlock was previously set via the public page, open the login.
     const unlocked = localStorage.getItem('admin_unlocked');
     if (unlocked === '1') {
