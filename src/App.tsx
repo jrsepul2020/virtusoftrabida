@@ -45,7 +45,8 @@ function App() {
       fetch(`/api/admin-auth?token=${encodeURIComponent(adminToken)}`)
         .then(async (r) => {
           if (!r.ok) {
-            throw new Error('Token inválido');
+            const errorData = await r.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || 'Token inválido');
           }
           return r.json();
         })
@@ -58,6 +59,8 @@ function App() {
 
           if (error) {
             console.error('❌ Error estableciendo sesión:', error);
+            alert('Error estableciendo sesión de administrador');
+            setLoading(false);
             return;
           }
 
@@ -71,6 +74,7 @@ function App() {
           
           // Redirigir a admin
           setView('admin');
+          setLoading(false);
           
           // Limpiar URL para seguridad (eliminar token visible)
           params.delete('admin_token');
@@ -79,7 +83,11 @@ function App() {
         })
         .catch((error) => {
           console.error('❌ Error autenticando admin:', error);
-          alert('Token de administrador inválido o expirado');
+          alert(`Token de administrador inválido o expirado.\n\nDetalles: ${error.message}\n\nUsa el login tradicional en: ${window.location.origin}/#admin`);
+          setLoading(false);
+          // Limpiar token de la URL
+          params.delete('admin_token');
+          window.history.replaceState({}, '', window.location.pathname);
         });
       
       return; // Skip other auth checks
