@@ -18,8 +18,9 @@ Wine/olive oil competition management system with bilingual public inscription f
 ### Authentication & Roles
 - Supabase Auth for admin/catador login (`LoginForm.tsx`)
 - Role hierarchy: `Administrador` > `Presidente` > `Supervisor` > `Catador`
-- **Admin access (production)**: Direct URL `https://domain.com/#admin` → shows login immediately (no unlock step)
-- Admin unlock alternatives: dev-only button in `Header` (visible via `import.meta.env.DEV`) or `public/admin-unlock.html` + `api/admin-unlock.ts`
+- **Admin access (production)**: Magic link system - URL `https://domain.com/?admin_token=SECRET` validates server-side and creates auto session (no manual login)
+- Admin access alternatives: hash `#admin` shows traditional login; dev-only button in `Header` (visible via `import.meta.env.DEV`)
+- Magic link endpoint: `api/admin-auth.ts` validates `ADMIN_ACCESS_TOKEN` and generates Supabase session via Service Role
 - Creating admin users: Use `crear-admin.mjs` script or Supabase Dashboard (see `ACCESO_ADMIN.md`)
 - No public auth - inscription is anonymous with email confirmation
 

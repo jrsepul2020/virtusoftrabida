@@ -1,109 +1,171 @@
-# Acceso de Administrador - Guía Completa
+# Acceso de Administrador - Sistema Simplificado
 
 ## Resumen
-Sistema de acceso simplificado para administradores. Solo requiere crear usuarios en Supabase Auth y acceder vía URL directa.
+Sistema de acceso directo mediante **link secreto** - sin necesidad de email/contraseña. Los administradores solo necesitan guardar el link como marcador.
 
 ---
 
 ## Para Administradores: Cómo Acceder
 
-### Opción 1: URL Directa (Recomendado)
-Añade `#admin` al final de la URL principal y guarda como marcador:
+### Opción 1: Link Secreto (Recomendado - MÁS SIMPLE)
+El técnico te proporcionará un link personalizado del tipo:
+
+```
+https://www.internationalawardsvirtus.com/?admin_token=tu-token-secreto-aqui
+```
+
+**Instrucciones:**
+1. Abre el link en tu navegador
+2. Acceso **inmediato** al panel de administración (sin login)
+3. Guarda el link como marcador/favorito para acceso con un click
+
+**Ventajas:**
+- ✅ No necesitas recordar contraseñas
+- ✅ Acceso en un solo click
+- ✅ Funciona desde cualquier dispositivo con el link
+- ✅ La sesión persiste ~7 días (te mantiene logueado)
+
+**Seguridad:**
+- ⚠️ NO compartas este link con nadie
+- ⚠️ Si crees que el link ha sido comprometido, pide al técnico que genere uno nuevo
+- 💡 Guarda el link en un gestor de contraseñas o marcador privado del navegador
+
+---
+
+### Opción 2: Login Tradicional (Backup)
+Si prefieres usar email/contraseña:
 
 ```
 https://www.internationalawardsvirtus.com/#admin
 ```
 
-Esto abre **directamente** el formulario de login sin pasos intermedios.
-
-**Instrucciones:**
-1. Abre la URL en tu navegador
-2. Introduce tu email y contraseña (creados por el técnico en Supabase)
-3. Acceso inmediato al panel de administración
-
-**Tip:** Guarda esta URL como marcador/favorito para acceso con un click.
+El técnico habrá creado credenciales para ti en Supabase.
 
 ---
 
-### Opción 2: Botón Desarrollo (Solo en entorno local)
-Si trabajas en desarrollo local (`npm run dev`):
-- El header muestra un botón "Admin local"
-- Click → acceso directo al login
+## Para Técnicos: Configuración Inicial
 
----
+### Paso 1: Generar Token de Acceso
+Crea un token secreto único y fuerte:
 
-### Opción 3: Página de Desbloqueo (Backup)
-Si necesitas usar el sistema antiguo:
+```bash
+# Generar token aleatorio de 32 caracteres
+openssl rand -hex 32
+
+# O con Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
-https://www.internationalawardsvirtus.com/admin-unlock.html
+
+**Guarda este token de forma segura** - lo necesitarás en el siguiente paso.
+
+### Paso 2: Configurar Variables de Entorno
+
+**En Desarrollo (`.env.local`):**
+```bash
+# Token para acceso directo admin
+ADMIN_ACCESS_TOKEN=token-generado-en-paso-1
+
+# Supabase credentials
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu-anon-key
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
+
+# URL de la app (para redirects)
+VITE_APP_URL=http://localhost:3000
 ```
-Introduce el `ADMIN_ACCESS_SECRET` → redirige al login.
 
----
+**En Producción (Vercel/Host):**
+1. Ve al panel de tu hosting
+2. Settings → Environment Variables
+3. Añade las mismas variables (con valores de producción)
+4. `VITE_APP_URL` debe ser tu dominio real: `https://www.internationalawardsvirtus.com`
 
-## Para Técnicos: Crear Usuarios Admin
+### Paso 3: Crear Usuario Admin en Supabase
 
-### Paso 1: Acceder a Supabase Dashboard
-1. Abre https://supabase.com/dashboard
-2. Selecciona el proyecto: **virtusoftrabida** (o el nombre correspondiente)
-3. Ve a **Authentication** → **Users**
+Aunque el acceso es por token, necesitas al menos un usuario admin en la base de datos:
 
-### Paso 2: Crear Usuario Admin
-Click en **"Add User"** o **"Invite User"** y completa:
+**Opción A - Script Automático:**
+```bash
+node crear-admin.mjs admin@internationalvirtus.es "Administrador Principal"
+```
 
-- **Email:** `admin@internationalvirtus.es` (o el email del administrador)
-- **Password:** Genera una contraseña segura (mínimo 8 caracteres, mayúsculas/minúsculas/números)
-- **Email Confirm:** Marca como confirmado (bypass confirmation email)
-
-**Importante:** Guarda la contraseña de forma segura (gestor de contraseñas).
-
-### Paso 3: Asignar Rol en Base de Datos
-Una vez creado el usuario, obtén su UUID desde la tabla de usuarios de Supabase Auth:
-
-1. En Dashboard → **Authentication** → **Users** → Click en el usuario → Copia el **UUID**
-2. Ve a **Table Editor** → Tabla `usuarios`
-3. Inserta un registro:
+**Opción B - Manual en Supabase Dashboard:**
+1. Authentication → Users → "Add User"
+2. Email: `admin@internationalvirtus.es`
+3. Password: (cualquiera, no se usará)
+4. Confirmar email: ✓
+5. Table Editor → `usuarios` → INSERT:
    ```sql
-   INSERT INTO usuarios (id, rol, nombre, email)
-   VALUES (
-     'UUID-DEL-USUARIO',  -- UUID copiado del Auth
-     'Administrador',      -- Rol exacto (mayúscula)
-     'Nombre Admin',
-     'admin@internationalvirtus.es'
-   );
+   INSERT INTO usuarios (id, email, nombre, rol)
+   VALUES ('UUID-del-usuario', 'admin@internationalvirtus.es', 'Admin', 'Administrador');
    ```
 
-**Roles válidos:**
-- `Administrador` - acceso completo
-- `Presidente` - acceso de supervisión
-- `Supervisor` - gestión de catas
-- `Catador` - solo panel de cata
+### Paso 4: Generar Links para Administradores
 
-### Paso 4: Verificar Acceso
-1. Abre `https://www.internationalawardsvirtus.com/#admin`
-2. Login con email/password del usuario creado
-3. Debe redirigir al panel admin
+Una vez configurado, genera el link para cada administrador:
+
+```
+https://www.internationalawardsvirtus.com/?admin_token=TOKEN_DEL_PASO_1
+```
+
+**Importante:**
+- Usa el mismo `ADMIN_ACCESS_TOKEN` para todos los admins (es un token compartido)
+- Si quieres tokens individuales por admin, genera múltiples tokens y configúralos en el endpoint
+
+**Compartir el link de forma segura:**
+- Enviarlo por mensaje cifrado (Signal, WhatsApp con mensajes temporales)
+- Usar gestor de contraseñas compartido (1Password Teams)
+- NO enviar por email sin cifrar
+
+### Paso 5: Verificar Acceso
+
+1. Abre el link generado en tu navegador
+2. Debe redirigir al panel admin inmediatamente
+3. La sesión debe persistir ~7 días
+4. Tras expirar, el admin solo hace click en el marcador de nuevo
+
+---
+
+## Cómo Funciona (Técnico)
+
+1. Admin abre URL con `?admin_token=SECRET`
+2. Frontend detecta el parámetro y llama a `/api/admin-auth?token=SECRET`
+3. Endpoint valida token contra `ADMIN_ACCESS_TOKEN`
+4. Si válido, genera sesión Supabase para el primer usuario admin de la DB
+5. Devuelve `access_token` + `refresh_token` al frontend
+6. Frontend establece sesión con `supabase.auth.setSession()`
+7. Redirige a panel admin
+8. URL se limpia (elimina `admin_token` por seguridad)
+
+**Archivo clave:** `api/admin-auth.ts`
 
 ---
 
 ## Seguridad
 
-### Contraseñas
-- Mínimo 8 caracteres
-- Mezcla de mayúsculas, minúsculas, números y símbolos
-- Nunca compartas contraseñas por email/chat sin cifrar
-- Usa gestores de contraseñas (1Password, Bitwarden, LastPass)
+### Token de Acceso
+- El token es un secreto compartido entre todos los administradores
+- Si se compromete, genera uno nuevo y actualiza la variable de entorno
+- No expongas el token en repositorios públicos, logs o mensajes sin cifrar
 
-### Recuperación de Contraseña
-Si un admin olvida su contraseña:
+### Rotación de Token
+Si necesitas cambiar el token (por seguridad):
 
-1. **Vía Supabase Email (automático):**
-   - En el login, usar función "Recuperar contraseña" (si implementada)
-   
-2. **Vía Dashboard (manual):**
-   - Técnico accede a Supabase → Authentication → Users
-   - Click en el usuario → **"Reset Password"**
-   - Se envía email de recuperación al correo del usuario
+1. Genera nuevo token: `openssl rand -hex 32`
+2. Actualiza `ADMIN_ACCESS_TOKEN` en el servidor
+3. Redeploy la aplicación
+4. Genera nuevos links y distribúyelos a los admins
+5. Los links antiguos dejarán de funcionar
+
+### Sesiones
+- Las sesiones generadas duran ~7 días por defecto
+- Tras expirar, el admin hace click en el link guardado
+- No se requiere re-autenticación manual
+
+### Recuperación de Acceso
+Si un admin pierde su link:
+- El técnico genera un nuevo link con el mismo token
+- O envía el link original de nuevo de forma segura
 
 ---
 
@@ -127,23 +189,29 @@ La aplicación es PWA (Progressive Web App):
 
 ## Troubleshooting
 
-### Error: "Email o contraseña incorrectos"
-- Verifica email (no confundir mayúsculas/minúsculas)
-- Verifica contraseña (copiar/pegar para evitar errores)
-- Si persiste: resetear contraseña vía Dashboard
+### Error: "Token inválido"
+- Verifica que el link tiene el token completo (no truncado)
+- Confirma que `ADMIN_ACCESS_TOKEN` está configurado en el servidor
+- Verifica que el token en el link coincide con el del servidor
 
-### Error: "Usuario sin rol asignado"
-- El usuario existe en Auth pero NO en tabla `usuarios`
-- Sigue **Paso 3** arriba para asignar rol
+### Error: "No admin user configured"
+- No hay usuarios con rol `Administrador` o `Presidente` en la tabla `usuarios`
+- Ejecuta `node crear-admin.mjs` o crea un usuario manualmente
 
-### No redirige a admin tras login
+### El link no hace nada
 - Abre DevTools (F12) → Console → busca errores
-- Verifica que el rol en DB sea exactamente `Administrador` (con mayúscula)
-- Cierra sesión y vuelve a intentar
+- Verifica que `/api/admin-auth` responde (Network tab)
+- Confirma que las variables de Supabase están configuradas
 
-### Sesión expira constantemente
-- Sesiones de Supabase duran ~7 días por defecto
-- Si expira antes: problema de configuración de Supabase (contactar soporte)
+### La sesión expira muy rápido
+- Sesiones por defecto duran 7 días
+- Si expira antes: verificar configuración de Supabase Auth
+- El admin simplemente hace click en el link de nuevo
+
+### Acceso desde múltiples dispositivos
+- El mismo link funciona desde cualquier dispositivo
+- Cada dispositivo tendrá su propia sesión
+- El token es compartido, las sesiones son independientes
 
 ---
 
@@ -151,19 +219,55 @@ La aplicación es PWA (Progressive Web App):
 
 ### Local (`.env.local`)
 ```bash
+# Token de acceso admin (genera con: openssl rand -hex 32)
+ADMIN_ACCESS_TOKEN=tu-token-secreto-aqui
+
 # Supabase
 VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu-anon-key
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
 
-# Admin unlock (opcional, para admin-unlock.html)
-ADMIN_ACCESS_SECRET=tu-secret-fuerte-aqui
+# URL de la aplicación
+VITE_APP_URL=http://localhost:3000
+
+# Brevo (opcional, para emails)
+BREVO_API_KEY=tu-brevo-key
+SENDER_EMAIL=info@internationalvirtus.es
 ```
 
 ### Producción (Vercel/Host)
 Asegura que estas variables están configuradas en el panel del hosting:
+- `ADMIN_ACCESS_TOKEN` ⚠️ **CRÍTICO**
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
-- `ADMIN_ACCESS_SECRET` (para endpoint de unlock, opcional)
+- `SUPABASE_SERVICE_ROLE_KEY` ⚠️ **CRÍTICO - Service Role**
+- `VITE_APP_URL` (tu dominio de producción)
+
+---
+
+## Ejemplo de Uso Completo
+
+### Setup Inicial (Técnico)
+```bash
+# 1. Generar token
+TOKEN=$(openssl rand -hex 32)
+echo "Token generado: $TOKEN"
+
+# 2. Añadir a .env.local
+echo "ADMIN_ACCESS_TOKEN=$TOKEN" >> .env.local
+
+# 3. Crear usuario admin
+node crear-admin.mjs admin@internationalvirtus.es "Administrador Principal"
+
+# 4. Generar link para admin
+echo "Link de acceso: https://www.internationalawardsvirtus.com/?admin_token=$TOKEN"
+```
+
+### Uso Diario (Admin)
+1. Click en marcador guardado: `https://.../?admin_token=xxx`
+2. Acceso inmediato al panel
+3. Trabajar normalmente
+4. Cerrar navegador (sesión persiste)
 
 ---
 

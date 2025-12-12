@@ -34,42 +34,69 @@ function App() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Detectar acceso directo vía hash #admin
+    // Sistema de acceso directo para administradores con token en URL
+    const params = new URLSearchParams(window.location.search);
+    const adminToken = params.get('admin_token');
+    
+    if (adminToken) {
+      console.log('🔐 Validando token de administrador...');
+      
+      // Validar token y obtener sesión automática
+      fetch(`/api/admin-auth?token=${encodeURIComponent(adminToken)}`)
+        .then(async (r) => {
+          if (!r.ok) {
+            throw new Error('Token inválido');
+          }
+          return r.json();
+        })
+        .then(async (data) => {
+          // Establecer sesión en Supabase con los tokens recibidos
+          const { error } = await supabase.auth.setSession({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token
+          });
+
+          if (error) {
+            console.error('❌ Error estableciendo sesión:', error);
+            return;
+          }
+
+          console.log('✅ Sesión admin establecida');
+          
+          // Guardar estado de admin
+          setAdminLoggedIn(true);
+          setUserRole(data.user.rol);
+          localStorage.setItem('adminLoggedIn', 'true');
+          localStorage.setItem('userRole', data.user.rol);
+          
+          // Redirigir a admin
+          setView('admin');
+          
+          // Limpiar URL para seguridad (eliminar token visible)
+          params.delete('admin_token');
+          const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+          window.history.replaceState({}, '', newUrl);
+        })
+        .catch((error) => {
+          console.error('❌ Error autenticando admin:', error);
+          alert('Token de administrador inválido o expirado');
+        });
+      
+      return; // Skip other auth checks
+    }
+
+    // Detectar acceso directo vía hash #admin (muestra login tradicional)
     const hash = window.location.hash;
     if (hash === '#admin') {
       setView('adminLogin');
-      // Limpiar hash para evitar confusión
       window.history.replaceState({}, '', window.location.pathname);
-      return; // Skip other checks
+      return;
     }
 
-    // If an admin unlock was previously set via the public page, open the login.
+    // Backup: sistema antiguo de unlock para compatibilidad
     const unlocked = localStorage.getItem('admin_unlocked');
     if (unlocked === '1') {
       setView('adminLogin');
-    }
-
-    // Check for admin secret in URL (backdoor).
-    const params = new URLSearchParams(window.location.search);
-    const adminSecret = params.get('admin_secret');
-    if (adminSecret) {
-      // validate with server endpoint
-      fetch('/api/admin-unlock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ admin_secret: adminSecret }),
-      }).then(async (r) => {
-        if (r.ok) {
-          localStorage.setItem('admin_unlocked', '1');
-          // remove param from URL
-          params.delete('admin_secret');
-          const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
-          window.history.replaceState({}, '', newUrl);
-          setView('adminLogin');
-        } else {
-          console.warn('Admin unlock failed');
-        }
-      }).catch((e) => console.error('Admin unlock error', e));
     }
 
     // Verificar sesión REAL de Supabase (no solo localStorage)
