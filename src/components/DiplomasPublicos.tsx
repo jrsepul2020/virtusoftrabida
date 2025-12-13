@@ -168,7 +168,7 @@ export default function DiplomasPublicos() {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
       doc.setTextColor(colors.primary);
-      doc.text('INTERNATIONAL VIRTUS AWARDS', pageWidth / 2, 35, { align: 'center' });
+      doc.text('INTERNATIONAL AWARDS VIRTUS', pageWidth / 2, 35, { align: 'center' });
 
       // Subtítulo
       doc.setFont('helvetica', 'normal');

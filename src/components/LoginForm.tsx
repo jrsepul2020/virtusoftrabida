@@ -79,7 +79,14 @@ export default function LoginForm({ onLogin, onBack }: Props) {
         throw new Error('Usuario sin rol asignado. Contacta al administrador.');
       }
 
-      // 4. Verificar si el dispositivo está autorizado
+      // 4. Verificar dispositivos autorizados en el sistema
+      const { count: totalDispositivos } = await supabase
+        .from('dispositivos')
+        .select('*', { count: 'exact', head: true });
+
+      console.log('📊 Total dispositivos en sistema:', totalDispositivos);
+
+      // 5. Verificar si el dispositivo actual está autorizado
       const { data: dispositivoData, error: dispositivoError } = await supabase
         .from('dispositivos')
         .select('id, autorizado, nombre')
@@ -92,9 +99,17 @@ export default function LoginForm({ onLogin, onBack }: Props) {
         console.error('Error consultando dispositivos:', dispositivoError);
       }
 
+      // Determinar si es admin (Administrador, Presidente, Supervisor)
+      const isAdmin = ['Administrador', 'Presidente', 'Supervisor', 'Admin'].includes(userData.rol);
+      const isPrimerDispositivo = (totalDispositivos === null || totalDispositivos === 0);
+
       // Si el dispositivo no existe, registrarlo
       if (!dispositivoData) {
         console.log('📝 Registrando nuevo dispositivo...');
+        
+        // Auto-autorizar si: (1) es el primer dispositivo del sistema, O (2) es admin
+        const autoAutorizar = isPrimerDispositivo || isAdmin;
+        
         const { error: insertError } = await supabase
           .from('dispositivos')
           .insert({
@@ -103,33 +118,49 @@ export default function LoginForm({ onLogin, onBack }: Props) {
             nombre: `${deviceInfo.browser} en ${deviceInfo.os}`,
             user_agent: deviceInfo.userAgent,
             ultima_conexion: new Date().toISOString(),
-            autorizado: false, // Por defecto NO autorizado, admin debe aprobar
+            autorizado: autoAutorizar,
           });
 
         if (insertError) {
           console.error('Error registrando dispositivo:', insertError);
         }
 
-        // Dispositivo nuevo, no autorizado
-        await supabase.auth.signOut();
-        throw new Error('Dispositivo no autorizado. El administrador debe aprobar este dispositivo antes de que puedas acceder. Contacta con el administrador.');
+        if (!autoAutorizar) {
+          // Solo catadores necesitan aprobación
+          await supabase.auth.signOut();
+          throw new Error('Dispositivo no autorizado. El administrador debe aprobar este dispositivo. Contacta con el administrador.');
+        }
+
+        console.log('✅ Dispositivo auto-autorizado (primer dispositivo o admin)');
+      } else if (!dispositivoData.autorizado) {
+        // Dispositivo existe pero no está autorizado
+        
+        // Si es admin, auto-autorizar ahora
+        if (isAdmin) {
+          await supabase
+            .from('dispositivos')
+            .update({ autorizado: true, ultima_conexion: new Date().toISOString() })
+            .eq('id', dispositivoData.id);
+          
+          console.log('✅ Dispositivo admin auto-autorizado');
+        } else {
+          // Catador con dispositivo no autorizado
+          await supabase.auth.signOut();
+          throw new Error(`Dispositivo "${dispositivoData.nombre}" pendiente de autorización. Contacta al administrador.`);
+        }
       }
 
-      // Si el dispositivo existe pero NO está autorizado
-      if (!dispositivoData.autorizado) {
-        await supabase.auth.signOut();
-        throw new Error(`Dispositivo "${dispositivoData.nombre}" pendiente de autorización. Contacta al administrador.`);
+      // 6. Dispositivo autorizado - actualizar última conexión
+      if (dispositivoData?.id) {
+        await supabase
+          .from('dispositivos')
+          .update({ ultima_conexion: new Date().toISOString() })
+          .eq('id', dispositivoData.id);
       }
-
-      // 5. Dispositivo autorizado - actualizar última conexión
-      await supabase
-        .from('dispositivos')
-        .update({ ultima_conexion: new Date().toISOString() })
-        .eq('id', dispositivoData.id);
 
       console.log('✅ Dispositivo autorizado');
 
-      // 6. Normalizar rol y permitir acceso
+      // 7. Normalizar rol y permitir acceso
       let userRole = 'Admin';
       
       // Normalizar rol
