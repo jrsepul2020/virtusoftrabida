@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { RefreshCw, Download, Eye, Edit, X, ChevronUp, ChevronDown, Check, Clock, AlertCircle, Save, PlusCircle } from 'lucide-react';
+import { RefreshCw, Download, Eye, Edit, X, ChevronUp, ChevronDown, Check, Clock, AlertCircle, Save, PlusCircle, Mail } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 interface Muestra {
   id: string;
@@ -195,6 +196,70 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
     setSelectedInscripcion(null);
     setModalMode(null);
     setEditForm({});
+  };
+
+  const handleResendEmail = async (inscripcion: Inscripcion) => {
+    try {
+      // Mostrar loading toast
+      const loadingToast = toast.loading('Reenviando email...');
+
+      // Obtener las muestras de la inscripción
+      const muestras = await fetchMuestrasForInscripcion(inscripcion.id);
+
+      // Preparar los datos para el email en el formato esperado por la API
+      const emailPayload = {
+        empresa: {
+          nombre_empresa: inscripcion.name,
+          nif: inscripcion.nif || '',
+          email: inscripcion.email,
+          telefono: inscripcion.phone || '',
+          movil: inscripcion.movil || '',
+          direccion: inscripcion.address || '',
+          poblacion: inscripcion.poblacion || '',
+          codigo_postal: inscripcion.codigo_postal || '',
+          ciudad: inscripcion.ciudad || '',
+          pais: inscripcion.pais || '',
+          persona_contacto: inscripcion.contact_person || '',
+          pagina_web: inscripcion.pagina_web || '',
+          medio_conocio: inscripcion.conocimiento || '',
+          observaciones: inscripcion.observaciones || '',
+          num_muestras: muestras.length
+        },
+        muestras: muestras.map(m => ({
+          nombre_muestra: m.nombre,
+          categoria: m.categoria,
+          origen: m.igp || '',
+          pais: m.pais || '',
+          anio: m.anio,
+          grado: m.grado
+        })),
+        precio: {
+          pagadas: inscripcion.totalinscripciones || muestras.length,
+          gratis: 0,
+          total: (inscripcion.totalinscripciones || muestras.length) * 85 // Asumiendo 85€ por muestra
+        },
+        metodoPago: inscripcion.metodo_pago || 'transferencia',
+        pedido: inscripcion.pedido
+      };
+
+      // Enviar email
+      const response = await fetch('/api/send-inscription-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailPayload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al enviar email');
+      }
+
+      toast.dismiss(loadingToast);
+      toast.success(`Email reenviado correctamente a ${inscripcion.email}`);
+    } catch (err: any) {
+      toast.error('Error al reenviar email: ' + err.message);
+      console.error('Error reenviando email:', err);
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -574,6 +639,13 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
                         title="Ver detalle"
                       >
                         <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleResendEmail(insc)}
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Reenviar email con datos de inscripción"
+                      >
+                        <Mail className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => openModal(insc, 'edit')}
