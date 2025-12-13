@@ -130,14 +130,16 @@ export default function PuntuacionesManager() {
       let comparison = 0;
       
       switch (sortField) {
-        case 'puntuacion_total':
+        case 'puntuacion_total': {
           const puntA = a.puntuacion_total ?? -1;
           const puntB = b.puntuacion_total ?? -1;
           comparison = puntA - puntB;
           break;
-        case 'categoriadecata':
+        }
+        case 'categoriadecata': {
           comparison = (a.categoriadecata || '').localeCompare(b.categoriadecata || '');
           break;
+        }
         case 'codigo':
         default:
           comparison = a.codigo - b.codigo;

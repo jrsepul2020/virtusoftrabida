@@ -20,8 +20,6 @@ export default function Modal({
   confirmText = 'Entendido',
   onConfirm 
 }: ModalProps) {
-  if (!isOpen) return null;
-
   // IDs for accessibility associations
   const baseId = useId();
   const labelId = `${baseId}-title`;
@@ -29,6 +27,8 @@ export default function Modal({
 
   // Close with Escape for keyboard users
   useEffect(() => {
+    if (!isOpen) return;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
@@ -37,7 +37,7 @@ export default function Modal({
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
 
   const handleConfirm = () => {
     if (onConfirm) {
@@ -82,6 +82,8 @@ export default function Modal({
   };
 
   const colors = getColors();
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby={labelId} aria-describedby={descriptionId}>

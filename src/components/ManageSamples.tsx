@@ -83,7 +83,7 @@ export default function ManageSamples() {
 
   const filterAndSortSamples = () => {
     const term = searchTerm.toLowerCase();
-    let data = samples.filter(s => {
+    const data = samples.filter(s => {
       const matchesSearch =
         s.nombre.toLowerCase().includes(term) ||
         (s.codigotexto || s.codigo?.toString() || '').toLowerCase().includes(term) ||

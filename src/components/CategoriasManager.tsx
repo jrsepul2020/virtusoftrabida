@@ -128,7 +128,7 @@ export default function CategoriasManager() {
 
   const filterAndSortSamples = () => {
     const term = searchTerm.toLowerCase();
-    let data = samples.filter(s => {
+    const data = samples.filter(s => {
       const matchesSearch =
         (s.codigotexto || '').toLowerCase().includes(term) ||
         s.nombre.toLowerCase().includes(term) ||

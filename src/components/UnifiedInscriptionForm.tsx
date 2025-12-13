@@ -301,7 +301,7 @@ export default function UnifiedInscriptionForm({
   const isVino = (categoria: string) => categoria?.toUpperCase().includes('VINO');
   const requiresGrado = (categoria: string) => !isVinoSinAlcohol(categoria) && !isAceite(categoria);
   const isValidEmail = (email: string) => /.+@.+\..+/.test(email.trim());
-  const isValidPhone = (phone: string) => /^[+()0-9\s.\-]{7,20}$/.test(phone.trim());
+  const isValidPhone = (phone: string) => /^[+()0-9\s.-]{7,20}$/.test(phone.trim());
   const isValidPostal = (postal: string) => /^[0-9A-Za-z\s-]{3,10}$/.test(postal.trim());
 
   // Validación del paso Muestras

@@ -11,7 +11,7 @@ export default function MailrelayManager() {
     const devSecret = (import.meta as any)?.env?.VITE_MAILRELAY_ADMIN_SECRET;
       // DEBUG: mostrar si la variable VITE está presente en runtime (se eliminará después)
       if (typeof window !== 'undefined') {
-        // eslint-disable-next-line no-console
+         
         console.debug('DEV: VITE_MAILRELAY_ADMIN_SECRET=', devSecret ? '[present]' : '[missing]');
       }
     const secret = devSecret || window.prompt(t('mailrelay.prompt_secret'));

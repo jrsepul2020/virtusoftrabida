@@ -130,7 +130,7 @@ export default function Chequeo() {
           case 'codigo': va = (a.codigotexto || a.codigo || '').toString(); vb = (b.codigotexto || b.codigo || '').toString(); break;
           case 'nombre': va = (a.nombre || '').toLowerCase(); vb = (b.nombre || '').toLowerCase(); break;
           case 'fecha': va = (a.recibida_at || a.created_at || '') ; vb = (b.recibida_at || b.created_at || ''); va = new Date(va); vb = new Date(vb); break;
-          case 'recibida': va = Boolean(a.recibida) ? 1 : 0; vb = Boolean(b.recibida) ? 1 : 0; break;
+          case 'recibida': va = a.recibida ? 1 : 0; vb = b.recibida ? 1 : 0; break;
           default: va = 0; vb = 0;
         }
         if (va == null) va = '';
@@ -289,7 +289,11 @@ export default function Chequeo() {
       const constraints: MediaStreamConstraints = { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (videoRef.current) {
-        try { videoRef.current.setAttribute('playsinline', 'true'); } catch (e) {}
+        try {
+          videoRef.current.setAttribute('playsinline', 'true');
+        } catch (e) {
+          console.debug('playsinline attribute not set', e);
+        }
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
         try { await videoRef.current.play(); } catch (e) { console.debug('video.play failed', e); }

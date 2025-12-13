@@ -56,7 +56,12 @@ function App() {
       // Sistema antiguo de unlock para compatibilidad (dev)
       const unlocked = localStorage.getItem('admin_unlocked');
       if (unlocked === '1') {
-        setView('adminLogin');
+        localStorage.removeItem('admin_unlocked'); // limpiar para no re-entrar en loop
+        if (isMounted) {
+          setView('adminLogin');
+          setLoading(false);
+        }
+        return;
       }
 
       // Verificar sesión REAL de Supabase
@@ -103,7 +108,8 @@ function App() {
 
       // Escuchar cambios en la autenticación
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
+        // Solo actuar en logout explícito, no en estado inicial
+        if (event === 'SIGNED_OUT') {
           clearAuthState();
           setView('home');
         }

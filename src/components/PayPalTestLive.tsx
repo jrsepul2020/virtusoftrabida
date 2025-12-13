@@ -99,8 +99,8 @@ export default function PayPalTestLive() {
         const currentSrc = existingScript.getAttribute('src') || '';
         if (!currentSrc.includes(paypalConfig.client_id)) {
           existingScript.remove();
-          // @ts-ignore
-          window.paypal = undefined;
+          const win = window as typeof window & { paypal?: any };
+          win.paypal = undefined;
           buttonRendered.current = false;
         }
       }

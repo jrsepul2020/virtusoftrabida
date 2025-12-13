@@ -42,8 +42,8 @@ const ErrorFallbackWrapper = (errorData: any) => {
   return ErrorFallback({ error: err as Error, resetErrorBoundary: reset });
 };
 
-// Register Service Worker for PWA functionality
-if ('serviceWorker' in navigator) {
+// Register Service Worker for PWA functionality (disabled in dev to avoid noisy prompts)
+if ('serviceWorker' in navigator && !import.meta.env.DEV) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
@@ -70,18 +70,20 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Add to home screen prompt
+// Add to home screen prompt (skip in dev so the install bar does not show locally)
 let deferredPrompt: any;
-window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('beforeinstallprompt event fired');
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  // Stash the event so it can be triggered later
-  deferredPrompt = e;
-  
-  // Show install button/banner (you can customize this)
-  showInstallPrompt();
-});
+if (!import.meta.env.DEV) {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('beforeinstallprompt event fired');
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+    
+    // Show install button/banner (you can customize this)
+    showInstallPrompt();
+  });
+}
 
 function showInstallPrompt() {
   // Create a subtle install prompt

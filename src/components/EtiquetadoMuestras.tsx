@@ -266,7 +266,7 @@ export default function EtiquetadoMuestras() {
       <html>
       <head>
         <title>Etiquetas de Muestras - PDF</title>
-        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
         <style>
           @page { 
             margin: 5mm;
@@ -342,7 +342,7 @@ export default function EtiquetadoMuestras() {
               } catch (e) { console.error('Error:', e); }
             }
           });
-        <\/script>
+        </script>
         <p style="margin-top: 20px; font-size: 10pt; color: #666;">
           Use Ctrl+P (o Cmd+P en Mac) y seleccione "Guardar como PDF" para exportar este documento.
         </p>
@@ -363,7 +363,7 @@ export default function EtiquetadoMuestras() {
       <html>
       <head>
         <title>Etiquetas de Muestras</title>
-        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
         <style>
           @page { margin: 5mm; size: A4; }
           * { box-sizing: border-box; }
@@ -428,7 +428,7 @@ export default function EtiquetadoMuestras() {
             }
           });
           setTimeout(function() { window.print(); }, 500);
-        <\/script>
+        </script>
       </body>
       </html>
     `);

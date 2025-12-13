@@ -18,11 +18,6 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
   const [viewingSample, setViewingSample] = useState<Sample | null>(null);
   const [showPhotosGallery, setShowPhotosGallery] = useState(false);
 
-  // Si estamos viendo la galería de fotos, mostrarla
-  if (showPhotosGallery) {
-    return <BottlePhotosGallery onBack={() => setShowPhotosGallery(false)} />;
-  }
-
   useEffect(() => {
     fetchSamples();
   }, []);
@@ -320,6 +315,10 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
     const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
     XLSX.writeFile(workbook, `muestras_${fecha}.xlsx`);
   };
+
+  if (showPhotosGallery) {
+    return <BottlePhotosGallery onBack={() => setShowPhotosGallery(false)} />;
+  }
 
   if (loading) {
     return (
