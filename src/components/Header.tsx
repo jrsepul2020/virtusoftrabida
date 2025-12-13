@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { LogOut } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'resultados' | 'diplomas';
+type View = 'home' | 'adminLogin' | 'admin' | 'catador' | 'inscripcion' | 'reglamento' | 'resultados' | 'diplomas';
 
 export default function Header({
   setView,

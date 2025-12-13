@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction } from 'react';
 import Header from './Header';
 import { useI18n } from '../lib/i18n';
 
-type View = 'home' | 'adminLogin' | 'admin' | 'inscripcion' | 'reglamento' | 'resultados' | 'diplomas';
+type View = 'home' | 'adminLogin' | 'admin' | 'catador' | 'inscripcion' | 'reglamento' | 'resultados' | 'diplomas';
 
 type Props = {
   children: React.ReactNode;

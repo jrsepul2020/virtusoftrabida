@@ -1,9 +1,16 @@
 import { Client } from 'pg';
 
 // Conexión directa (puerto 5432) sin pooler
-const connectionString = 'postgresql://postgres.cfpawqoegitgtsjygbqp:5A8wwBQY$_E-SiV@db.cfpawqoegitgtsjygbqp.supabase.co:5432/postgres';
+const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
 
 async function main() {
+  if (!connectionString) {
+    console.error('Falta DATABASE_URL (o SUPABASE_DB_URL) en el entorno.');
+    console.error('Ejemplo: DATABASE_URL="postgresql://user:pass@host:5432/postgres"');
+    process.exitCode = 1;
+    return;
+  }
+
   const client = new Client({ connectionString });
   try {
     await client.connect();

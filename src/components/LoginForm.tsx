@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Lock, Mail, X, Shield } from 'lucide-react';
+import { Lock, Mail, X, Shield, AlertTriangle } from 'lucide-react';
+import { generateDeviceFingerprint, getDeviceInfo } from '../lib/deviceFingerprint';
 
 type Props = {
   onLogin: (success: boolean, userRole?: string) => void;
@@ -48,6 +49,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
     setError('');
 
     try {
+      // 1. Autenticar usuario
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -57,7 +59,12 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
       console.log('✅ Login exitoso, userId:', authData.user.id);
 
-      // Intentar obtener rol del usuario
+      // 2. Generar/obtener ID del dispositivo
+      const deviceId = await generateDeviceFingerprint();
+      const deviceInfo = getDeviceInfo();
+      console.log('📱 Device ID:', deviceId);
+
+      // 3. Obtener rol del usuario
       const { data: userData, error: userError } = await supabase
         .from('usuarios')
         .select('rol')
@@ -66,23 +73,75 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
       console.log('📋 Datos usuario:', userData, 'Error:', userError);
 
-      // Si hay error o no hay datos, usar 'Admin' como fallback temporal
+      // Si hay error o no hay datos, denegar acceso
+      if (userError || !userData?.rol) {
+        await supabase.auth.signOut();
+        throw new Error('Usuario sin rol asignado. Contacta al administrador.');
+      }
+
+      // 4. Verificar si el dispositivo está autorizado
+      const { data: dispositivoData, error: dispositivoError } = await supabase
+        .from('dispositivos')
+        .select('id, autorizado, nombre')
+        .eq('device_id', deviceId)
+        .maybeSingle();
+
+      console.log('🖥️ Dispositivo encontrado:', dispositivoData);
+
+      if (dispositivoError) {
+        console.error('Error consultando dispositivos:', dispositivoError);
+      }
+
+      // Si el dispositivo no existe, registrarlo
+      if (!dispositivoData) {
+        console.log('📝 Registrando nuevo dispositivo...');
+        const { error: insertError } = await supabase
+          .from('dispositivos')
+          .insert({
+            device_id: deviceId,
+            usuario_id: authData.user.id,
+            nombre: `${deviceInfo.browser} en ${deviceInfo.os}`,
+            user_agent: deviceInfo.userAgent,
+            ultima_conexion: new Date().toISOString(),
+            autorizado: false, // Por defecto NO autorizado, admin debe aprobar
+          });
+
+        if (insertError) {
+          console.error('Error registrando dispositivo:', insertError);
+        }
+
+        // Dispositivo nuevo, no autorizado
+        await supabase.auth.signOut();
+        throw new Error('Dispositivo no autorizado. El administrador debe aprobar este dispositivo antes de que puedas acceder. Contacta con el administrador.');
+      }
+
+      // Si el dispositivo existe pero NO está autorizado
+      if (!dispositivoData.autorizado) {
+        await supabase.auth.signOut();
+        throw new Error(`Dispositivo "${dispositivoData.nombre}" pendiente de autorización. Contacta al administrador.`);
+      }
+
+      // 5. Dispositivo autorizado - actualizar última conexión
+      await supabase
+        .from('dispositivos')
+        .update({ ultima_conexion: new Date().toISOString() })
+        .eq('id', dispositivoData.id);
+
+      console.log('✅ Dispositivo autorizado');
+
+      // 6. Normalizar rol y permitir acceso
       let userRole = 'Admin';
       
-      if (!userError && userData?.rol) {
-        // Normalizar rol: admin -> Admin, catador -> Catador
-        const rawRol = userData.rol.toLowerCase();
-        if (rawRol === 'admin') {
-          userRole = 'Admin';
-        } else if (rawRol === 'catador') {
-          userRole = 'Catador';
-        } else {
-          userRole = userData.rol;
-        }
-        console.log('✅ Rol obtenido de DB:', userData.rol, '-> normalizado:', userRole);
+      // Normalizar rol
+      const rawRol = userData.rol.toLowerCase();
+      if (rawRol === 'administrador' || rawRol === 'admin' || rawRol === 'presidente' || rawRol === 'supervisor') {
+        userRole = 'Admin';
+      } else if (rawRol === 'catador') {
+        userRole = 'Catador';
       } else {
-        console.warn('⚠️ No se pudo obtener rol, usando Admin por defecto');
+        userRole = userData.rol;
       }
+      console.log('✅ Rol obtenido de DB:', userData.rol, '-> normalizado:', userRole);
       
       console.log('✅ Acceso permitido con rol:', userRole);
       onLogin(true, userRole);
@@ -122,9 +181,9 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm" role="alert" aria-live="assertive">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"></div>
-              {error}
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">{error}</div>
             </div>
           </div>
         )}

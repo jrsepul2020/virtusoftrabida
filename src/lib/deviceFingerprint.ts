@@ -1,26 +1,59 @@
 /**
- * Genera una huella digital única del dispositivo basada en características del navegador
+ * Sistema de identificación de dispositivos para control de acceso
  */
 
-interface DeviceInfo {
+/**
+ * Información detallada del dispositivo para mostrar al admin
+ */
+export interface DeviceInfo {
+  userAgent: string;
   platform: string;
-  screenResolution: string;
-  colorDepth: number;
-  touchSupport: boolean;
-  // Removed sensitive fields: userAgent, language, timezone, hardwareConcurrency, deviceMemory
+  language: string;
+  screen: string;
+  timezone: string;
+  browser: string;
+  os: string;
 }
 
 /**
- * Recopila información del dispositivo (versión reducida para privacidad)
+ * Obtiene información completa del dispositivo
  */
 export function getDeviceInfo(): DeviceInfo {
   return {
+    userAgent: navigator.userAgent,
     platform: navigator.platform,
-    screenResolution: `${screen.width}x${screen.height}`,
-    colorDepth: screen.colorDepth,
-    touchSupport: 'ontouchstart' in window,
-    // Removed sensitive data collection for privacy
+    language: navigator.language,
+    screen: `${window.screen.width}x${window.screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    browser: getBrowserName(),
+    os: getOSName(),
   };
+}
+
+/**
+ * Detecta el nombre del navegador
+ */
+function getBrowserName(): string {
+  const ua = navigator.userAgent;
+  if (ua.includes('Firefox')) return 'Firefox';
+  if (ua.includes('Edg')) return 'Edge';
+  if (ua.includes('Chrome')) return 'Chrome';
+  if (ua.includes('Safari')) return 'Safari';
+  if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
+  return 'Desconocido';
+}
+
+/**
+ * Detecta el sistema operativo
+ */
+function getOSName(): string {
+  const ua = navigator.userAgent;
+  if (ua.includes('Win')) return 'Windows';
+  if (ua.includes('Mac')) return 'macOS';
+  if (ua.includes('Linux')) return 'Linux';
+  if (ua.includes('Android')) return 'Android';
+  if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+  return 'Desconocido';
 }
 
 /**
@@ -60,32 +93,42 @@ async function simpleHash(str: string): Promise<string> {
 }
 
 /**
- * Genera la huella digital del dispositivo
+ * Genera un ID único para el dispositivo actual
+ * Combina características del navegador con un componente aleatorio persistente
  */
 export async function generateDeviceFingerprint(): Promise<string> {
   try {
+    // Intentar recuperar ID existente de localStorage
+    const stored = getStoredFingerprint();
+    if (stored) return stored;
+
     const info = getDeviceInfo();
     
-    // Combinar características no sensibles (reducidas por privacidad)
+    // Combinar características del dispositivo con timestamp y random
     const fingerprintData = [
+      info.userAgent,
       info.platform,
-      info.screenResolution,
-      info.colorDepth.toString(),
-      info.touchSupport.toString(),
+      info.screen,
+      info.timezone,
+      info.language,
+      Date.now().toString(),
+      Math.random().toString()
     ].join('|');
-    
-    console.log('Generando fingerprint con datos:', fingerprintData.substring(0, 50) + '...');
     
     // Generar hash
     const fingerprint = await simpleHash(fingerprintData);
+    const deviceId = `dev_${fingerprint.substring(0, 16)}`;
     
-    console.log('Fingerprint generado:', fingerprint.substring(0, 10) + '...');
+    // Guardar en localStorage
+    storeFingerprint(deviceId);
     
-    return fingerprint;
+    return deviceId;
   } catch (error) {
-    console.error('Error generando fingerprint:', error);
+    console.error('Error generando device ID:', error);
     // Fallback: usar timestamp + random
-    return Date.now().toString(16) + Math.random().toString(16).substring(2);
+    const fallback = `dev_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 10)}`;
+    storeFingerprint(fallback);
+    return fallback;
   }
 }
 

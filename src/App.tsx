@@ -31,96 +31,46 @@ function App() {
   const [view, setView] = useState<View>('home');
   const [loading, setLoading] = useState(true);
   const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Sistema de acceso directo para administradores con token en URL
-    const params = new URLSearchParams(window.location.search);
-    const adminToken = params.get('admin_token');
-    
-    if (adminToken) {
-      console.log('🔐 Validando token de administrador...');
-      
-      // Validar token y obtener sesión automática
-      fetch(`/api/admin-auth?token=${encodeURIComponent(adminToken)}`)
-        .then(async (r) => {
-          if (!r.ok) {
-            const errorData = await r.json().catch(() => ({ error: 'Unknown error' }));
-            throw new Error(errorData.error || 'Token inválido');
-          }
-          return r.json();
-        })
-        .then(async (data) => {
-          // Establecer sesión en Supabase con los tokens recibidos
-          const { error } = await supabase.auth.setSession({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token
-          });
+    let isMounted = true;
+    let authUnsubscribe: (() => void) | null = null;
 
-          if (error) {
-            console.error('❌ Error estableciendo sesión:', error);
-            alert('Error estableciendo sesión de administrador');
-            setLoading(false);
-            return;
-          }
+    const clearAuthState = () => {
+      setAdminLoggedIn(false);
+      localStorage.removeItem('adminLoggedIn');
+      localStorage.removeItem('userRole');
+    };
 
-          console.log('✅ Sesión admin establecida');
-          
-          // Guardar estado de admin
-          setAdminLoggedIn(true);
-          setUserRole(data.user.rol);
-          localStorage.setItem('adminLoggedIn', 'true');
-          localStorage.setItem('userRole', data.user.rol);
-          
-          // Redirigir a admin
-          setView('admin');
+    const run = async () => {
+      // Detectar acceso directo vía hash #admin (muestra login tradicional)
+      const hash = window.location.hash;
+      if (hash === '#admin') {
+        if (isMounted) {
+          setView('adminLogin');
           setLoading(false);
-          
-          // Limpiar URL para seguridad (eliminar token visible)
-          params.delete('admin_token');
-          const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
-          window.history.replaceState({}, '', newUrl);
-        })
-        .catch((error) => {
-          console.error('❌ Error autenticando admin:', error);
-          alert(`Token de administrador inválido o expirado.\n\nDetalles: ${error.message}\n\nUsa el login tradicional en: ${window.location.origin}/#admin`);
-          setLoading(false);
-          // Limpiar token de la URL
-          params.delete('admin_token');
-          window.history.replaceState({}, '', window.location.pathname);
-        });
-      
-      return; // Skip other auth checks
-    }
+        }
+        window.history.replaceState({}, '', window.location.pathname);
+        return;
+      }
 
-    // Detectar acceso directo vía hash #admin (muestra login tradicional)
-    const hash = window.location.hash;
-    if (hash === '#admin') {
-      setView('adminLogin');
-      window.history.replaceState({}, '', window.location.pathname);
-      return;
-    }
+      // Sistema antiguo de unlock para compatibilidad (dev)
+      const unlocked = localStorage.getItem('admin_unlocked');
+      if (unlocked === '1') {
+        setView('adminLogin');
+      }
 
-    // Backup: sistema antiguo de unlock para compatibilidad
-    const unlocked = localStorage.getItem('admin_unlocked');
-    if (unlocked === '1') {
-      setView('adminLogin');
-    }
-
-    // Verificar sesión REAL de Supabase (no solo localStorage)
-    const checkSession = async () => {
+      // Verificar sesión REAL de Supabase
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('Error verificando sesión:', error);
           clearAuthState();
-          setLoading(false);
           return;
         }
 
         if (session?.user) {
-          // Sesión válida - obtener rol del usuario
           const { data: userData, error: userError } = await supabase
             .from('usuarios')
             .select('rol')
@@ -128,17 +78,14 @@ function App() {
             .single();
 
           if (userError || !userData) {
-            // No tiene rol asignado - denegar acceso
             console.warn('Usuario sin rol asignado');
             await supabase.auth.signOut();
             clearAuthState();
           } else {
-            // Rol válido - permitir acceso
             setAdminLoggedIn(true);
-            setUserRole(userData.rol);
             localStorage.setItem('adminLoggedIn', 'true');
             localStorage.setItem('userRole', userData.rol);
-            
+
             if (userData.rol === 'Catador') {
               setView('catador');
             } else {
@@ -146,35 +93,32 @@ function App() {
             }
           }
         } else {
-          // No hay sesión - limpiar estado
           clearAuthState();
         }
       } catch (err) {
         console.error('Error en verificación de sesión:', err);
         clearAuthState();
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
+
+      // Escuchar cambios en la autenticación
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+          clearAuthState();
+          setView('home');
+        }
+      });
+
+      authUnsubscribe = () => subscription.unsubscribe();
     };
 
-    const clearAuthState = () => {
-      setAdminLoggedIn(false);
-      setUserRole(null);
-      localStorage.removeItem('adminLoggedIn');
-      localStorage.removeItem('userRole');
+    run();
+
+    return () => {
+      isMounted = false;
+      authUnsubscribe?.();
     };
-
-    checkSession();
-
-    // Escuchar cambios en la autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        clearAuthState();
-        setView('home');
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   // Ocultar temporalmente vistas de resultados y diplomas (solo accesibles públicamente)
@@ -193,7 +137,6 @@ function App() {
       console.log('✅ Login exitoso, rol normalizado:', normalizedRole);
       
       setAdminLoggedIn(true);
-      setUserRole(normalizedRole);
       localStorage.setItem('adminLoggedIn', 'true');
       localStorage.setItem('userRole', normalizedRole);
       
@@ -213,7 +156,6 @@ function App() {
   const handleAdminLogout = async () => {
     await supabase.auth.signOut();
     setAdminLoggedIn(false);
-    setUserRole(null);
     localStorage.removeItem('adminLoggedIn');
     localStorage.removeItem('userRole');
     setView('home');
