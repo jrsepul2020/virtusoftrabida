@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Send, Barcode, ClipboardList, Download } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Camera, Trophy, CreditCard, Tag, Send, Barcode, ClipboardList, Download } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { supabase } from '../lib/supabase';
 import CompaniesManager from './CompaniesManager';

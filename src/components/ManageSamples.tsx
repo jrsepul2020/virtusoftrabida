@@ -435,7 +435,7 @@ export default function ManageSamples() {
             </thead>
             <tbody>
               {filteredSamples.map((sample, index) => {
-                const codigoNum = parseInt(sample.codigotexto || sample.codigo || '0', 10);
+                const codigoNum = parseInt(String(sample.codigotexto || sample.codigo || '0'), 10);
                 const isLowCode = !isNaN(codigoNum) && codigoNum <= 999;
                 return (
                 <tr 

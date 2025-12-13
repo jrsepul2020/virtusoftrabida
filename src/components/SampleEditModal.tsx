@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
 import { X, Camera, Upload, Loader2, Trash2 } from 'lucide-react';
 import { showError } from '../lib/toast';
-import { useEscapeKey, useSaveShortcut } from '../hooks/useKeyboardShortcuts';
+import { useEscapeKey } from '../hooks/useKeyboardShortcuts';
 
 interface SampleEditModalProps {
   sample: Sample | null;

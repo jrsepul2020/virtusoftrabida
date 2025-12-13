@@ -257,7 +257,7 @@ export default function UnifiedInscriptionForm({
     if (!company.codigo_postal?.trim() || !isValidPostal(company.codigo_postal)) errors.codigo_postal = true;
     if (!company.ciudad?.trim()) errors.ciudad = true;
     if (!company.pais?.trim()) errors.pais = true;
-    if (!company.num_muestras || company.num_muestras < 1) errors.num_muestras = true;
+    if (!company.num_muestras || Number(company.num_muestras) < 1) errors.num_muestras = true;
     // Medio por el que nos conoció (obligatorio ahora)
     if (!company.medio_conocio?.trim()) errors.medio_conocio = true;
     // Aceptación de reglamento obligatoria
@@ -653,7 +653,7 @@ export default function UnifiedInscriptionForm({
         pedido={pedidoNumero}
         company={company}
         samples={samples}
-        precio={calculatePrice(company.num_muestras)}
+        precio={calculatePrice(Number(company.num_muestras || 0))}
         metodoPago={payment}
       />
     );
@@ -734,9 +734,9 @@ export default function UnifiedInscriptionForm({
         
         {/* Pasos */}
         <div className="flex items-center justify-between">
-              <div className={`flex items-center ${currentStep === 'empresa' ? 'text-primary-600' : currentStep !== 'empresa' ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`flex items-center ${String(currentStep) === 'empresa' ? 'text-primary-600' : String(currentStep) !== 'empresa' ? 'text-green-600' : 'text-gray-400'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
-              currentStep === 'empresa' ? 'bg-primary-600 text-white' : currentStep !== 'empresa' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+              String(currentStep) === 'empresa' ? 'bg-primary-600 text-white' : String(currentStep) !== 'empresa' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
             }`}>
               {currentStep !== 'empresa' ? '✓' : '1'}
             </div>

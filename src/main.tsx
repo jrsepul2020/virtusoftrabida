@@ -32,6 +32,16 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetError
   </div>
 );
 
+// Sentry's ErrorBoundary may call the fallback with a different shape depending on version.
+const ErrorFallbackWrapper = (errorData: any) => {
+  const err = errorData?.error ?? errorData?.error?.error ?? new Error('Unknown error');
+  const reset = () => {
+    if (typeof errorData?.resetError === 'function') errorData.resetError();
+    if (typeof errorData?.resetErrorBoundary === 'function') errorData.resetErrorBoundary();
+  };
+  return ErrorFallback({ error: err as Error, resetErrorBoundary: reset });
+};
+
 // Register Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -155,7 +165,7 @@ function showInstallPrompt() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={ErrorFallback}>
+    <Sentry.ErrorBoundary fallback={ErrorFallbackWrapper}>
       <I18nProvider>
         <QueryProvider>
           <App />

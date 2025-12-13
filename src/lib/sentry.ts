@@ -18,8 +18,9 @@ export const initSentry = () => {
     release: import.meta.env.VITE_SENTRY_RELEASE || __BUILD_DATE__,
     integrations: [
       Sentry.browserTracingIntegration({
-        tracePropagationTargets: ['localhost', /^https?:\/\/virtuslarabida\.com/],
-      }),
+        // cast to any because types of integration options vary across @sentry/react versions
+        ...( { tracePropagationTargets: ['localhost', /^https?:\/\/virtuslarabida\.com/] } as any ),
+      } as any),
       Sentry.replayIntegration({
         maskAllText: false,
         blockAllMedia: true,

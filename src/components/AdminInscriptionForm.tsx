@@ -348,7 +348,7 @@ export default function AdminInscriptionForm() {
           company={company}
           onChange={handleCompanyChange}
           onNext={handleCompanyNext}
-          precio={calculatePrice(company.num_muestras)}
+          precio={calculatePrice(Number(company.num_muestras || 0))}
         />
       )}
 
@@ -358,6 +358,7 @@ export default function AdminInscriptionForm() {
           onChange={handleSampleChange}
           onNext={handleMuestrasNext}
           onPrev={handleMuestrasPrev}
+          onImageChange={() => {}}
         />
       )}
 
@@ -367,7 +368,7 @@ export default function AdminInscriptionForm() {
           samples={samples}
           payment={payment}
           onPaymentChange={handlePaymentChange}
-          precio={calculatePrice(company.num_muestras)}
+          precio={calculatePrice(Number(company.num_muestras || 0))}
           onPrev={handleConfirmacionPrev}
           onSubmit={handleSubmit}
           success={success}

@@ -190,7 +190,7 @@ export default function Chequeo() {
         if (track && (track.getConstraints as any)) {
           const caps: any = track.getCapabilities ? track.getCapabilities() : {};
           if (caps.torch) {
-            try { await track.applyConstraints({ advanced: [{ torch: false }] }); } catch (e) { /* ignore */ }
+            try { await (track as any).applyConstraints({ advanced: [{ torch: false }] }); } catch (e) { /* ignore */ }
             setTorchOn(false);
           }
         }
@@ -451,7 +451,7 @@ export default function Chequeo() {
         setTimeout(() => setMessage(null), 1500);
         return;
       }
-      await track.applyConstraints({ advanced: [{ torch: !torchOn }] });
+      await (track as any).applyConstraints({ advanced: [{ torch: !torchOn }] });
       setTorchOn(prev => !prev);
     } catch (err) {
       console.warn('toggleTorch error', err);

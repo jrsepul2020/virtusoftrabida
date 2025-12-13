@@ -49,13 +49,6 @@ export function InscripcionExitosa({
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
-  // Función para compartir por Email
-  const shareEmail = () => {
-    const subject = encodeURIComponent(`Inscripción Virtus Awards - Pedido #${pedido}`);
-    const body = encodeURIComponent(generateSummaryText());
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-  };
-
   // Función para descargar PDF (genera una versión imprimible)
   const downloadPDF = () => {
     // Abrir ventana de impresión que permite guardar como PDF

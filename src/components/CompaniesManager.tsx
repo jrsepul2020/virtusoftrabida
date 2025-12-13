@@ -562,7 +562,7 @@ export default function CompaniesManager() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {(() => {
                           const status = company.status?.toLowerCase();
-                          const isPagado = company.pago_confirmado;
+                          const isPagado = (company as any).pago_confirmado;
                           
                           // Colores según estado
                           if (status === 'approved' || status === 'aprobada' || isPagado) {
