@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Send, Barcode, ClipboardList } from 'lucide-react';
+import { Building2, BarChart3, Layers, List, PlusCircle, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Monitor, Camera, Trophy, CreditCard, Tag, Database, Send, Barcode, ClipboardList, Download } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 import { supabase } from '../lib/supabase';
 import CompaniesManager from './CompaniesManager';
 import InscripcionesManager from './InscripcionesManager';
@@ -194,14 +195,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </div>
             </div>
-            <button 
-              onClick={onLogout}
-              className="w-full mt-2 flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-              title="Cerrar sesión"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
+            <div className="mt-2 space-y-2">
+              {/* PWA install button - visible only in admin area */}
+              <AdminPWAInstall />
+
+              <button 
+                onClick={onLogout}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -328,5 +334,22 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+function AdminPWAInstall() {
+  const { isInstallable, isInstalled, installApp } = usePWAInstall();
+
+  if (!isInstallable || isInstalled) return null;
+
+  return (
+    <button
+      onClick={() => installApp().catch(err => console.error('Install failed', err))}
+      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+      title="Instalar app"
+    >
+      <Download className="w-4 h-4" />
+      <span>Instalar App</span>
+    </button>
   );
 }

@@ -4,7 +4,6 @@ import { supabase } from './lib/supabase';
 import LoginForm from './components/LoginForm';
 import MainLayout from './components/MainLayout';
 import HeroLanding from './components/HeroLanding';
-import PWAInstallBanner from './components/PWAInstallBanner';
 import UpdateNotification, { VersionBadge } from './components/UpdateNotification';
 
 // Lazy loading de componentes pesados
@@ -243,8 +242,7 @@ function App() {
 
       {/* test page removed */}
 
-      {/* PWA Install Banner */}
-      <PWAInstallBanner />
+      {/* PWA install prompt handled inside admin only */}
       
       {/* Update Notification */}
       <UpdateNotification />
