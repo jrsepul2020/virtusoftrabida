@@ -41,14 +41,34 @@ function App() {
       localStorage.removeItem('userRole');
     };
 
+    // Listener para cambios de hash (soporte para navegación con #admin)
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      console.log('🔄 Hash change detectado:', hash);
+      
+      if (hash === '#admin') {
+        console.log('✅ Navegando a admin login via hashchange');
+        setView('adminLogin');
+        setLoading(false);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+
+    // Agregar listener de hashchange
+    window.addEventListener('hashchange', handleHashChange);
+
     const run = async () => {
       // Detectar acceso directo vía hash #admin (muestra login tradicional)
       const hash = window.location.hash;
+      console.log('🔍 Hash detectado:', hash);
+      
       if (hash === '#admin') {
+        console.log('✅ Hash #admin detectado - mostrando login');
         if (isMounted) {
           setView('adminLogin');
           setLoading(false);
         }
+        // Limpiar hash de la URL después de procesar
         window.history.replaceState({}, '', window.location.pathname);
         return;
       }
@@ -56,6 +76,7 @@ function App() {
       // Sistema antiguo de unlock para compatibilidad (dev)
       const unlocked = localStorage.getItem('admin_unlocked');
       if (unlocked === '1') {
+        console.log('✅ admin_unlocked detectado - mostrando login');
         localStorage.removeItem('admin_unlocked'); // limpiar para no re-entrar en loop
         if (isMounted) {
           setView('adminLogin');
@@ -123,6 +144,7 @@ function App() {
     return () => {
       isMounted = false;
       authUnsubscribe?.();
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 
