@@ -13,6 +13,10 @@ export default function LoginForm({ onLogin, onBack }: Props) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Safe error message function to prevent information leakage
   const getSafeErrorMessage = (error: any): string => {
@@ -185,6 +189,125 @@ export default function LoginForm({ onLogin, onBack }: Props) {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setError('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/#admin`,
+      });
+
+      if (error) throw error;
+
+      setResetSuccess(true);
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setResetSuccess(false);
+        setResetEmail('');
+      }, 3000);
+    } catch (err: any) {
+      setError(err.message || 'Error al enviar email de recuperación');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  // Modal de recuperación de contraseña
+  if (showForgotPassword) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md relative">
+          <button
+            onClick={() => {
+              setShowForgotPassword(false);
+              setResetEmail('');
+              setError('');
+              setResetSuccess(false);
+            }}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Cerrar"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 shadow-lg">
+              <Mail className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+              Recuperar Contraseña
+            </h2>
+            <p className="text-gray-500 text-sm">
+              Te enviaremos un enlace para restablecer tu contraseña
+            </p>
+          </div>
+
+          {resetSuccess ? (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 text-sm text-center">
+              <p className="font-semibold mb-1">✅ Email enviado</p>
+              <p className="text-xs">Revisa tu bandeja de entrada</p>
+            </div>
+          ) : (
+            <>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm" role="alert">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">{error}</div>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleForgotPassword} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email de tu cuenta
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="email"
+                      required
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all bg-gray-50 focus:bg-white text-base"
+                      placeholder="admin@ejemplo.com"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {resetLoading ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Enviando email...
+                    </div>
+                  ) : (
+                    'Enviar enlace de recuperación'
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(false)}
+                  className="w-full text-gray-600 hover:text-gray-800 py-2 text-sm font-medium transition-colors"
+                >
+                  Volver al login
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="login-title" aria-describedby="login-subtitle">
       <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md relative transform transition-all scale-100 opacity-100">
@@ -270,6 +393,14 @@ export default function LoginForm({ onLogin, onBack }: Props) {
                 Acceder al Panel
               </div>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(true)}
+            className="w-full text-gray-600 hover:text-gray-800 py-2 text-sm font-medium transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
           </button>
         </form>
 
