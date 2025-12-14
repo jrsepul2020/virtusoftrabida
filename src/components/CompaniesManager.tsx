@@ -243,21 +243,6 @@ export default function CompaniesManager() {
     }
   };
 
-  const handleSendEmail = async (company: CompanyWithSamples) => {
-    try {
-      const response = await fetch('/api/send-inscription-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyId: company.id }),
-      });
-
-      if (!response.ok) throw new Error('Error sending email');
-      alert('Email enviado correctamente');
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Error al enviar el email');
-    }
-  };
 
   const exportToExcel = () => {
     const exportData = filteredCompanies.map(company => ({
@@ -630,13 +615,7 @@ export default function CompaniesManager() {
                         >
                           <Eye className="w-5 h-5" />
                         </button>
-                        <button
-                          onClick={() => handleSendEmail(company)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Enviar email"
-                        >
-                          <Mail className="w-5 h-5" />
-                        </button>
+                        {/* Email action removed: not needed on companies list */}
                         <button
                           onClick={() => setShowDeleteConfirm(company)}
                           className="text-red-600 hover:text-red-900"
