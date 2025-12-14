@@ -27,9 +27,18 @@ export function EmpresaScreen({
 }) {
   const { t } = useI18n();
 
+  // Sanitiza el prefijo: permite opcionalmente '+' seguido de hasta 3 dígitos
+  const sanitizePrefix = (raw: string) => {
+    if (!raw) return '+34';
+    const plus = raw.trim().startsWith('+') ? '+' : '';
+    const digits = raw.replace(/\D/g, '').slice(0, 3);
+    return plus + digits;
+  };
+
   const setTelefonoPrefijo = (prefijo: string) => {
+    const sanitized = sanitizePrefix(prefijo);
     const num = company.telefono?.replace(/^\+\d+\s?/, '') || '';
-    onChange({ target: { name: 'telefono', value: `${prefijo} ${num}` } } as any);
+    onChange({ target: { name: 'telefono', value: `${sanitized} ${num}` } } as any);
   };
 
   const setTelefonoNumero = (num: string) => {
@@ -38,8 +47,9 @@ export function EmpresaScreen({
   };
 
   const setMovilPrefijo = (prefijo: string) => {
+    const sanitized = sanitizePrefix(prefijo);
     const num = company.movil?.replace(/^\+\d+\s?/, '') || '';
-    onChange({ target: { name: 'movil', value: `${prefijo} ${num}` } } as any);
+    onChange({ target: { name: 'movil', value: `${sanitized} ${num}` } } as any);
   };
 
   const setMovilNumero = (num: string) => {
@@ -119,10 +129,12 @@ export function EmpresaScreen({
             <input
               type="text"
               name="telefono_prefijo"
-              value={company.telefono?.match(/^\+\d+/)?.[0] || '+34'}
-              onChange={(e) => setTelefonoPrefijo(e.target.value || '+34')}
+              value={company.telefono?.match(/^\+\d{1,3}/)?.[0] || '+34'}
+              onChange={(e) => setTelefonoPrefijo(sanitizePrefix(e.target.value || '+34'))}
               className="w-16 px-2 py-2 rounded-l-lg border-r-0 border border-black bg-black text-white text-sm focus:border-black focus:ring-2 focus:ring-red-500"
               placeholder="+34"
+              maxLength={4}
+              inputMode="numeric"
             />
             <input
               type="tel"
@@ -148,10 +160,12 @@ export function EmpresaScreen({
             <input
               type="text"
               name="movil_prefijo"
-              value={company.movil?.match(/^\+\d+/)?.[0] || '+34'}
-              onChange={(e) => setMovilPrefijo(e.target.value || '+34')}
+              value={company.movil?.match(/^\+\d{1,3}/)?.[0] || '+34'}
+              onChange={(e) => setMovilPrefijo(sanitizePrefix(e.target.value || '+34'))}
               className="w-16 px-2 py-2 rounded-l-lg border-r-0 border border-black bg-black text-white text-sm focus:border-black focus:ring-2 focus:ring-red-500"
               placeholder="+34"
+              maxLength={4}
+              inputMode="numeric"
             />
             <input
               type="tel"
