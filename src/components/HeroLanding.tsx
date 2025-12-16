@@ -43,18 +43,12 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
               </span>
             </h1>
         </div>
-        
+
+          {/* Eliminado 'LA RABIDA 2026' (subtitle1). Ahora mostramos y destacamos 'IBEROAMERICANO 2026' */}
           <div className={`mb-8 -mt-6 md:-mt-10 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-             <h2 className="text-base sm:text-2xl md:text-3xl lg:text-4xl xl:text-3xl font-medium tracking-tight leading-tight mt-2" style={{ fontFamily: "'Lato', serif" }}>
+             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-4xl font-extrabold tracking-tight leading-tight mt-2 uppercase" style={{ fontFamily: "'Lato', serif" }}>
               <span className="text-white drop-shadow-3xl">
-                {t('hero.subtitle1')}
-              </span>
-            </h2>
-          </div>
-          <div className={`mb-8 -mt-1 md:-mt-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-            <h2 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-base font-medium tracking-tight leading-tight" >
-              <span className="text-white drop-shadow-3xl">
-                {t('hero.subtitle2')}
+                {t('hero.subtitle2')} 2026
               </span>
             </h2>
           </div>
