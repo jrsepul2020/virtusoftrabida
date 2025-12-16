@@ -29,12 +29,12 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
       <div 
         className="md:hidden fixed inset-0 bg-cover bg-center bg-no-repeat z-0"
         style={{
-          backgroundImage: `url(/virtus.jpg)`
+          backgroundImage: `url(/virtus-movil.jpg)`
         }}
       >
       </div>
 
-      <div className="relative z-10 h-screen flex flex-col items-center justify-start md:justify-center text-center px-4 pt-20 md:pt-0">
+      <div className="relative z-10 h-screen flex flex-col items-center justify-center text-center px-4">
         {/* Título principal - responsive con Cormorant */}
         <div className={`mb-12 -mt-10 md:-mt-20 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
             <h1 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
