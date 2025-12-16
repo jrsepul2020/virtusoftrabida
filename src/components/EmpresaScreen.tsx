@@ -281,7 +281,7 @@ export function EmpresaScreen({
         </div>
 
         <div className="lg:col-span-5">
-          <label className="block text-primary-800 font-medium mb-1">{t('form.company.city')}</label>
+          <label className="block text-primary-800 font-medium mb-1">{t('label.city')}</label>
           <input
             type="text"
             name="ciudad"

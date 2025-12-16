@@ -401,9 +401,11 @@ export function InscripcionExitosa({
             {metodoPago === 'transferencia' && (
               <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <h4 className="font-semibold text-blue-800 mb-2">📋 Datos para la transferencia:</h4>
-                <div className="space-y-1 text-sm text-blue-700">
-                  <p><strong>Banco:</strong> CAIXABANK</p>
-                  <p><strong>IBAN:</strong> ES12 2100 1234 5678 9012 3456</p>
+                <div className="space-y-1 text-sm text-blue-700">               
+                  <p><strong>Titular:</strong>Excelencias de Huelva S.L.<br>
+                  <strong>Banco:</strong>CAJASUR<br>
+                  <strong>IBAN:</strong> ES21 0237 0506 4091 7146 4247<br>
+                  <strong>BIC/SWIFT:</strong>CSURES2CXXX<br></br>
                   <p><strong>Concepto:</strong> Pedido #{pedido} - {company?.nombre_empresa}</p>
                 </div>
               </div>

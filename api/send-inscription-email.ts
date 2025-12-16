@@ -187,10 +187,10 @@ export default async function handler(req: any, res: any) {
         
         ${metodoPago === 'transferencia' ? `
         <h3 style="color: #8A754C;">Datos para transferencia bancaria:</h3>
-        <p><strong>Titular:</strong> Excelencias de Huelva S.L.<br>
-        <strong>Banco:</strong> Caja Rural del Sur<br>
+        <p><strong>Titular:</strong>Excelencias de Huelva S.L.<br>
+        <strong>Banco:</strong>CAJASUR<br>
         <strong>IBAN:</strong> ES21 0237 0506 4091 7146 4247<br>
-        <strong>BIC/SWIFT:</strong> CSURES2CXXX<br>
+        <strong>BIC/SWIFT:</strong>CSURES2CXXX<br>
         <strong>Concepto:</strong> Inscripción concurso - ${empresa.nombre_empresa}</p>
         ` : ''}
         
