@@ -38,7 +38,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         {/* Título principal - responsive con Cormorant */}
         <div className={`mb-12 -mt-10 md:-mt-20 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
             <h1 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
-              <span className="text-[#3d2f21] drop-shadow-3xl">
+              <span className="text-white drop-shadow-3xl">
                 {t('hero.title')}
               </span>
             </h1>
@@ -46,14 +46,14 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         
           <div className={`mb-8 -mt-6 md:-mt-10 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
              <h2 className="text-base sm:text-2xl md:text-3xl lg:text-4xl xl:text-3xl font-medium tracking-tight leading-tight mt-2" style={{ fontFamily: "'Lato', serif" }}>
-              <span className="text-[#4b382a] drop-shadow-3xl">
+              <span className="text-white drop-shadow-3xl">
                 {t('hero.subtitle1')}
               </span>
             </h2>
           </div>
           <div className={`mb-8 -mt-1 md:-mt-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
             <h2 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-base font-medium tracking-tight leading-tight" >
-              <span className="text-[#4b382a] drop-shadow-3xl">
+              <span className="text-white drop-shadow-3xl">
                 {t('hero.subtitle2')}
               </span>
             </h2>
@@ -80,13 +80,13 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         {/* Subtítulo con animación - responsive */}
         <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
           <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold leading-tight px-4">
-            <span className="text-[#3d2f21] drop-shadow-lg">{t('hero.tagline.line1')}</span>
+            <span className="text-white drop-shadow-lg">{t('hero.tagline.line1')}</span>
             <br />
-            <span className="text-[#3d2f21] drop-shadow-lg">
+            <span className="text-white drop-shadow-lg">
               {t('hero.tagline.line2')}
             </span>
-            <span className="text-[#3d2f21] drop-shadow-lg"> {t('hero.tagline.line3')} </span>
-            <span className="text-[#3d2f21] drop-shadow-lg">
+            <span className="text-white drop-shadow-lg"> {t('hero.tagline.line3')} </span>
+            <span className="text-white drop-shadow-lg">
               {t('hero.tagline.line4')}
             </span>
           </h2>

@@ -68,7 +68,7 @@ export default function Header({
               <button
                 key={item.name}
                 onClick={item.onClick}
-                className={`${isHomePage ? 'text-black hover:text-gray-800 font-semibold' : 'text-black hover:text-gray-800'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                className={`${isHomePage ? 'text-white hover:text-gray-100 font-semibold' : 'text-black hover:text-gray-800'} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
               >
                 {item.name}
               </button>
@@ -95,7 +95,7 @@ export default function Header({
             ) : null}
             <button
               onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-              className="px-3 py-2 text-sm font-semibold text-black border border-gray-200 rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+              className={`${isHomePage ? 'px-3 py-2 text-sm font-semibold text-white border border-transparent' : 'px-3 py-2 text-sm font-semibold text-black border border-gray-200'} rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
               aria-label={t('lang.toggle.aria')}
             >
               <span aria-hidden="true" className="text-lg">
@@ -125,7 +125,7 @@ export default function Header({
           <div className="md:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="text-black hover:text-gray-800 inline-flex items-center justify-center p-2 rounded-md focus:outline-none"
+              className={`${isHomePage ? 'text-white hover:text-gray-100' : 'text-black hover:text-gray-800'} inline-flex items-center justify-center p-2 rounded-md focus:outline-none`}
               aria-label={showMobileMenu ? t('nav.close') : t('nav.open')}
             >
               <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -146,7 +146,7 @@ export default function Header({
                 <button
                   key={item.name}
                   onClick={item.onClick}
-                  className="text-black hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left"
+                  className={`${isHomePage ? 'text-white hover:text-gray-100' : 'text-black hover:text-gray-800'} block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left`}
                 >
                   {item.name}
                 </button>
@@ -154,7 +154,7 @@ export default function Header({
 
               <button
                 onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-                className="w-full text-left px-3 py-2 rounded-md text-black border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+                className={`${isHomePage ? 'w-full text-left px-3 py-2 rounded-md text-white border border-transparent hover:border-transparent' : 'w-full text-left px-3 py-2 rounded-md text-black border border-gray-200 hover:border-gray-300 hover:bg-gray-50'} flex items-center gap-2`}
                 aria-label={t('lang.toggle.aria')}
               >
                 <span aria-hidden="true" className="text-lg">
