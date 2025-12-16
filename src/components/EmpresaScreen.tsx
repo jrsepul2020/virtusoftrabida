@@ -230,7 +230,7 @@ export function EmpresaScreen({
 
       {/* Cuarta fila - Dirección, Población, CP */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 mt-4">
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-12">
           <label className="block text-primary-800 font-medium mb-1">{t('form.company.address')}</label>
           <input
             type="text"
@@ -245,21 +245,7 @@ export function EmpresaScreen({
           />
           {validationErrors?.direccion && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
         </div>
-        <div className="lg:col-span-4">
-          <label className="block text-primary-800 font-medium mb-1">{t('form.company.city')}</label>
-          <input
-            type="text"
-            name="poblacion"
-            value={company.poblacion}
-            onChange={onChange}
-            className={`w-full px-4 py-2 rounded-lg border ${
-              validationErrors?.poblacion
-                ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
-                : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
-            } focus:ring-2 transition-colors`}
-          />
-          {validationErrors?.poblacion && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
-        </div>
+        
       </div>
 
       {/* Quinta fila - CP, Ciudad, País */}
@@ -284,16 +270,16 @@ export function EmpresaScreen({
           <label className="block text-primary-800 font-medium mb-1">{t('label.city')}</label>
           <input
             type="text"
-            name="ciudad"
-            value={company.ciudad}
+            name="poblacion"
+            value={company.poblacion}
             onChange={onChange}
             className={`w-full px-4 py-2 rounded-lg border ${
-              validationErrors?.ciudad
+              validationErrors?.poblacion
                 ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
                 : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
             } focus:ring-2 transition-colors`}
           />
-          {validationErrors?.ciudad && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
+          {validationErrors?.poblacion && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
         </div>
 
         <div className="lg:col-span-4">
