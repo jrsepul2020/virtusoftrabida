@@ -37,7 +37,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
       <div className="relative z-10 h-screen flex flex-col items-center justify-center text-center px-4">
         {/* Título principal - responsive con Cormorant */}
         <div className={`mb-12 -mt-10 md:-mt-20 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-            <h1 className="text-xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
               <span className="text-white drop-shadow-3xl">
                 {t('hero.title')}
               </span>
@@ -45,10 +45,10 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         </div>
 
           {/* Eliminado 'LA RABIDA 2026' (subtitle1). Ahora mostramos y destacamos 'IBEROAMERICANO 2026' */}
-          <div className={`mb-8 -mt-6 md:-mt-10 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-4xl font-extrabold tracking-tight leading-tight mt-2 uppercase" style={{ fontFamily: "'Lato', serif" }}>
+          <div className={`mb-6 -mt-2 md:-mt-10 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
+             <h2 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-4xl font-extrabold tracking-tight leading-tight mt-1 uppercase" style={{ fontFamily: "'Lato', serif" }}>
               <span className="text-white drop-shadow-3xl">
-                {t('hero.subtitle2')} 2026
+                {t('hero.subtitle2')}
               </span>
             </h2>
           </div>
@@ -73,7 +73,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
 
         {/* Subtítulo con animación - responsive */}
         <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-          <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold leading-tight px-4">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-xl font-semibold leading-tight px-4">
             <span className="text-white drop-shadow-lg">{t('hero.tagline.line1')}</span>
             <br />
             <span className="text-white drop-shadow-lg">
