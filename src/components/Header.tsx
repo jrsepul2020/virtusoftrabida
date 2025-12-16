@@ -48,14 +48,14 @@ export default function Header({
     <header className={`${isHomePage ? 'bg-transparent absolute top-0 left-0 right-0' : 'bg-white shadow-md'} relative z-50 transition-all duration-300`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          <button
-            type="button"
-            className="flex items-center cursor-pointer focus:outline-none"
-            onClick={() => handleNavigation('home')}
-            aria-label={t('nav.home')}
-          >
+            <button
+              type="button"
+              className="flex items-center cursor-pointer focus:outline-none"
+              onClick={() => handleNavigation('home')}
+              aria-label={t('nav.home')}
+            >
             <img
-              src="/logo-bandera-1.png"
+              src={isHomePage ? '/logo-blanco-virtus.png' : '/logo-bandera-1.png'}
               alt="International Virtus"
               className="h-10 w-auto"
               loading="lazy"
