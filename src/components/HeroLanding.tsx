@@ -34,9 +34,9 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
       >
       </div>
 
-      <div className="relative z-10 h-screen flex flex-col items-center justify-center text-center px-4">
+      <div className="relative z-10 h-screen flex flex-col items-center justify-start text-center px-4 pt-32 md:pt-36 lg:pt-44">
         {/* Título principal - responsive con Cormorant */}
-        <div className={`mb-12 -mt-10 md:-mt-20 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
+        <div className={`mb-8 mt-6 md:mt-0 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
             <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
               <span className="text-white drop-shadow-3xl">
                 {t('hero.title')}
@@ -45,8 +45,8 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         </div>
 
           {/* Eliminado 'LA RABIDA 2026' (subtitle1). Ahora mostramos y destacamos 'IBEROAMERICANO 2026' */}
-          <div className={`mb-6 -mt-2 md:-mt-10 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-             <h2 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-4xl font-extrabold tracking-tight leading-tight mt-1 uppercase" style={{ fontFamily: "'Lato', serif" }}>
+          <div className={`mb-6 mt-0 md:-mt-6 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
+             <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-extrabold tracking-tight leading-tight mt-1 uppercase" style={{ fontFamily: "'Lato', serif" }}>
               <span className="text-white drop-shadow-3xl">
                 {t('hero.subtitle2')}
               </span>

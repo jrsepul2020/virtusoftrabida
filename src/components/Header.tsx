@@ -140,13 +140,13 @@ export default function Header({
         </div>
 
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200">
+          <div className="md:hidden bg-white shadow-md border-t border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {menuItems.map((item) => (
                 <button
                   key={item.name}
                   onClick={item.onClick}
-                  className={`${isHomePage ? 'text-white hover:text-gray-100' : 'text-black hover:text-gray-800'} block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left`}
+                  className={`text-black hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium transition-colors w-full text-left`}
                 >
                   {item.name}
                 </button>
@@ -154,7 +154,7 @@ export default function Header({
 
               <button
                 onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
-                className={`${isHomePage ? 'w-full text-left px-3 py-2 rounded-md text-white border border-transparent hover:border-transparent' : 'w-full text-left px-3 py-2 rounded-md text-black border border-gray-200 hover:border-gray-300 hover:bg-gray-50'} flex items-center gap-2`}
+                className={`w-full text-left px-3 py-2 rounded-md text-black border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
                 aria-label={t('lang.toggle.aria')}
               >
                 <span aria-hidden="true" className="text-lg">
