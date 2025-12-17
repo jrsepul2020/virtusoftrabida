@@ -70,7 +70,9 @@ if ('serviceWorker' in navigator && !import.meta.env.DEV) {
   });
 }
 
-// Add to home screen prompt (skip in dev so the install bar does not show locally)
+// PWA Install prompt disabled for public views - only available in admin config
+// The hook usePWAInstall() can still be used in admin areas if needed
+/*
 let deferredPrompt: any;
 if (!import.meta.env.DEV) {
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -84,8 +86,9 @@ if (!import.meta.env.DEV) {
     showInstallPrompt();
   });
 }
+*/
 
-function showInstallPrompt() {
+function showInstallPrompt_DISABLED() {
   // Create a subtle install prompt
   const installBanner = document.createElement('div');
   installBanner.innerHTML = `

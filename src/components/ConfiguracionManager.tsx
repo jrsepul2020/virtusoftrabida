@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Settings, Save, Plus, Edit2, Trash2, X, Award, Database, Monitor } from 'lucide-react';
+import { Settings, Save, Plus, Edit2, Trash2, X, Award, Database, Monitor, Download } from 'lucide-react';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface StatusConfig {
   id: string;
@@ -37,6 +38,9 @@ export default function ConfiguracionManager({ onNavigate }: ConfiguracionManage
   const [medals, setMedals] = useState<MedalConfig[]>([]);
   const [editingMedal, setEditingMedal] = useState<MedalConfig | null>(null);
   const [newMedal, setNewMedal] = useState<Partial<MedalConfig> | null>(null);
+
+  // PWA Install hook
+  const { showInstallPrompt, installApp, isInstallable } = usePWAInstall();
 
   // Estados por defecto
   const defaultStatuses: StatusConfig[] = [
@@ -812,7 +816,7 @@ export default function ConfiguracionManager({ onNavigate }: ConfiguracionManage
       {/* Herramientas del Sistema */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">🔧 Herramientas del Sistema</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <button
             onClick={() => onNavigate?.('backup')}
             className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-colors"
@@ -837,6 +841,20 @@ export default function ConfiguracionManager({ onNavigate }: ConfiguracionManage
               <p className="text-sm text-gray-500">Explorador de componentes</p>
             </div>
           </button>
+          {isInstallable && (
+            <button
+              onClick={() => installApp()}
+              className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl hover:from-green-100 hover:to-emerald-100 transition-colors"
+            >
+              <div className="p-2 bg-green-600 rounded-lg">
+                <Download className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">Instalar PWA</p>
+                <p className="text-sm text-gray-500">Instalar como aplicación</p>
+              </div>
+            </button>
+          )}
         </div>
       </div>
     </div>
