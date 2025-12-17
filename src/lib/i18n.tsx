@@ -114,7 +114,7 @@ const messages: Record<Lang, Messages> = {
     'hero.tagline.line1': 'CONCURSO INTERNACIONAL DE',
     'hero.tagline.line2': 'VINOS, ESPIRITUOSOS',
     'hero.tagline.line3': 'Y',
-    'hero.tagline.line4': 'ACEITE VIRGEN EXTRA',
+    'hero.tagline.line4': 'ACEITE DE OLIVA VIRGEN EXTRA',
     'lang.toggle': 'EN',
     'lang.toggle.aria': 'Cambiar a inglés',
     'skip.link': 'Saltar al contenido principal',
