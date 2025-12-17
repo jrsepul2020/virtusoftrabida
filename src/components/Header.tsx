@@ -93,22 +93,44 @@ export default function Header({
                 Admin local
               </button>
             ) : null}
-            <button
-              onClick={() => {
-                if (lang === 'es') setLang('en');
-                else if (lang === 'en') setLang('pt');
-                else setLang('es');
-              }}
-              className={`${isHomePage ? 'px-3 py-2 text-sm font-semibold text-white border border-transparent' : 'px-3 py-2 text-sm font-semibold text-black border border-gray-200'} rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
-              aria-label={t('lang.toggle.aria')}
-            >
-              <span aria-hidden="true" className="text-lg">
-                {lang === 'es' ? '🇪🇸' : lang === 'en' ? '🇬🇧' : '🇵🇹'}
-              </span>
-              <span className="text-xs uppercase tracking-wide">
-                {lang === 'es' ? 'ES' : lang === 'en' ? 'EN' : 'PT'}
-              </span>
-            </button>
+            <div className={`flex gap-2 ${isHomePage ? 'border border-transparent' : 'border border-gray-200'} rounded-md p-1`}>
+              <button
+                onClick={() => setLang('es')}
+                className={`px-2 py-1 text-sm font-semibold rounded-md transition-colors ${
+                  lang === 'es'
+                    ? isHomePage ? 'bg-white text-gray-900' : 'bg-gray-200 text-black'
+                    : isHomePage ? 'text-white hover:bg-white/20' : 'text-black hover:bg-gray-100'
+                }`}
+                aria-label="Español"
+                title="Español"
+              >
+                <span aria-hidden="true">🇪🇸</span>
+              </button>
+              <button
+                onClick={() => setLang('en')}
+                className={`px-2 py-1 text-sm font-semibold rounded-md transition-colors ${
+                  lang === 'en'
+                    ? isHomePage ? 'bg-white text-gray-900' : 'bg-gray-200 text-black'
+                    : isHomePage ? 'text-white hover:bg-white/20' : 'text-black hover:bg-gray-100'
+                }`}
+                aria-label="English"
+                title="English"
+              >
+                <span aria-hidden="true">🇬🇧</span>
+              </button>
+              <button
+                onClick={() => setLang('pt')}
+                className={`px-2 py-1 text-sm font-semibold rounded-md transition-colors ${
+                  lang === 'pt'
+                    ? isHomePage ? 'bg-white text-gray-900' : 'bg-gray-200 text-black'
+                    : isHomePage ? 'text-white hover:bg-white/20' : 'text-black hover:bg-gray-100'
+                }`}
+                aria-label="Português"
+                title="Português"
+              >
+                <span aria-hidden="true">🇵🇹</span>
+              </button>
+            </div>
             {!isAdminLoggedIn ? null : (
               <div className="flex items-center space-x-3">
                 <span className="text-sm font-medium text-black" aria-label={t('nav.admin')}>
@@ -156,22 +178,38 @@ export default function Header({
                 </button>
               ))}
 
-              <button
-                onClick={() => {
-                  if (lang === 'es') setLang('en');
-                  else if (lang === 'en') setLang('pt');
-                  else setLang('es');
-                }}
-                className={`w-full text-left px-3 py-2 rounded-md text-black border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
-                aria-label={t('lang.toggle.aria')}
-              >
-                <span aria-hidden="true" className="text-lg">
-                  {lang === 'es' ? '🇪🇸' : lang === 'en' ? '🇬🇧' : '🇵🇹'}
-                </span>
-                <span className="text-xs uppercase tracking-wide">
-                  {lang === 'es' ? 'ES' : lang === 'en' ? 'EN' : 'PT'}
-                </span>
-              </button>
+              <div className="flex gap-2 px-3 py-2 border-t border-gray-200">
+                <button
+                  onClick={() => setLang('es')}
+                  className={`flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                    lang === 'es' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
+                  }`}
+                  aria-label="Español"
+                  title="Español"
+                >
+                  <span aria-hidden="true" className="text-lg">🇪🇸</span>
+                </button>
+                <button
+                  onClick={() => setLang('en')}
+                  className={`flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                    lang === 'en' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
+                  }`}
+                  aria-label="English"
+                  title="English"
+                >
+                  <span aria-hidden="true" className="text-lg">🇬🇧</span>
+                </button>
+                <button
+                  onClick={() => setLang('pt')}
+                  className={`flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                    lang === 'pt' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
+                  }`}
+                  aria-label="Português"
+                  title="Português"
+                >
+                  <span aria-hidden="true" className="text-lg">🇵🇹</span>
+                </button>
+              </div>
 
               <div className="border-t border-gray-200 pt-2 space-y-1">
                 {import.meta.env.DEV ? (
