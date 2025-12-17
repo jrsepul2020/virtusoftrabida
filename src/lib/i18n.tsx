@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-type Lang = 'es' | 'en';
+type Lang = 'es' | 'en' | 'pt';
 
 type Messages = Record<string, string>;
 
@@ -383,6 +383,195 @@ const messages: Record<Lang, Messages> = {
     'payment.success.message': 'Your payment has been processed successfully. You will receive a confirmation email shortly.',
     'payment.success.backhome': 'Back to home',
   },
+  pt: {
+    // Inscrição - Empresa
+    'form.company.title': 'Dados da Empresa / Adega',
+    'form.company.nif': 'NIF *',
+    'form.company.name': 'Nome da Empresa *',
+    'form.company.contact': 'Pessoa de Contacto *',
+    'form.company.phone': 'Telefone *',
+    'form.company.mobile': 'Telemóvel *',
+    'form.company.email': 'Email *',
+    'form.company.confirm_email': 'Confirmar Email *',
+    'form.company.address': 'Morada *',
+    'form.company.city': 'Cidade *',
+    'form.company.postal': 'Código Postal *',
+    'form.company.country': 'País *',
+    'form.company.website': 'Website',
+    'form.company.medium': 'Como soubeste de nós? *',
+    'form.company.medium.placeholder': 'Ex: Website, Email, Redes Sociais',
+    'form.company.observations': 'Observações',
+    'form.required': 'Obrigatório',
+
+    // Inscrição - Amostras
+    'form.samples.title': 'Dados das Amostras ({count})',
+    'form.samples.registered': 'Amostras registadas',
+    'form.sample.name': 'Nome da Amostra *',
+    'form.sample.photo': 'Foto da Garrafa (Opcional)',
+    'form.sample.category': 'Categoria *',
+    'form.sample.country': 'País *',
+    'form.sample.year': 'Ano / Colheita *',
+    'form.sample.sugar': 'Açúcar (g/l) *',
+    'form.sample.degree': 'Grau Alcoólico (%) *',
+    'form.sample.stock': 'Existências (garrafas) *',
+    // Placeholders e labels adicionais para amostras
+    'form.sample.item': 'Amostra #{n}',
+    'form.sample.category.select': 'Seleccionar categoria...',
+    'placeholder.sample.name': 'Introduza o nome da amostra',
+    'placeholder.sample.country': 'País de origem',
+    'placeholder.sample.region': 'Região de origem',
+    'placeholder.sample.igp': 'Indicação Geográfica Protegida',
+    'placeholder.sample.sugar': 'Ex: 12.5 ou 12,5',
+    'placeholder.sample.degree': 'Ex: 13.5 ou 13,5',
+    'placeholder.sample.variety': 'Variedade de uva',
+    'placeholder.sample.olive_variety': 'Variedade de azeitona',
+    'placeholder.sample.distilled': 'Tipo de destilado',
+    'placeholder.sample.stock': 'Número de garrafas',
+    'form.sample.origin': 'Origem',
+    'form.sample.igp': 'IGP',
+    'form.sample.grape_type': 'Tipo de Uva',
+    'form.sample.olive_type': 'Tipo de Azeitona',
+    'form.sample.distillate': 'Destilado',
+    'form.sample.year.select': 'Seleccionar ano...',
+
+    // Confirmação
+    'form.confirm.title': 'Confirmação de inscrição',
+    'form.confirm.review': 'Reveja e confirme os dados da sua inscrição',
+
+    // Botões
+    'button.next': 'Próximo',
+    'button.prev': 'Anterior',
+    'button.submit': 'Enviar inscrição',
+    'button.backhome': 'Voltar ao Início',
+    'loading.sending': 'Enviando...',
+    'action.download_pdf': 'Descarregar PDF',
+    'action.whatsapp': 'WhatsApp',
+    'tracking.title': 'Como verificar o estado da minha inscrição?',
+    'tracking.copy': 'Copiar',
+    'order.number': 'Número de Pedido',
+    'success.email_heading': 'Verifique o seu correio eletrónico',
+    'success.check_email_to': 'Enviámos um email para {email} com os detalhes da sua inscrição. Consulte a secção "Como verificar o estado da minha inscrição?" abaixo para mais informações ou contacte: inscripciones@internationalvirtus.com',
+    // Modal / erros
+    'modal.error.fields_required': 'Campos obrigatórios',
+    'modal.error.fill_required': 'Por favor, preencha todos os campos obrigatórios marcados com *',
+    'modal.error.emails_mismatch': 'Os emails não coincidem',
+    'modal.error.emails_mismatch_msg': 'O email e a sua confirmação devem ser iguais',
+    'modal.error.samples_required': 'Por favor, preencha todos os campos obrigatórios das amostras marcados com *',
+
+    // Pagamento
+    'form.payment.title': 'Seleccione o seu método de pagamento',
+    'payment.transfer': 'Transferência bancária',
+    'payment.transfer.desc': 'Pagamento tradicional através de transferência',
+    'payment.paypal': 'Pagar com PayPal',
+
+    // Sucesso
+    'success.title': 'Inscrição Realizada com Sucesso!',
+    'success.check_email': 'Enviámos um email com os detalhes da sua inscrição.',
+    'nav.home': 'Início',
+    'nav.inscripcion': 'Inscrição',
+    'nav.reglamento': 'Regulamento',
+    'nav.normativa': 'Normativa',
+    'nav.resultados': 'Resultados',
+    'nav.diplomas': 'Diplomas',
+    'nav.label': 'Navegação principal',
+    'nav.open': 'Abrir menu',
+    'nav.close': 'Fechar menu',
+    'nav.login': 'Login Admin',
+    'nav.logout': 'Sair',
+    'nav.admin': 'Administrador',
+    'hero.title': 'INTERNATIONAL AWARDS VIRTUS',
+    'hero.subtitle1': '',
+    'hero.subtitle2': 'IBERO-AMERICANO 2026',
+    'hero.cta': 'INSCREVA-SE AGORA!',
+    'hero.tagline.line1': 'CONCURSO INTERNACIONAL DE VINHOS, BEBIDAS ESPIRITUOSAS E AZEITE VIRGEM EXTRA',
+    'hero.tagline.line2': '',
+    'hero.tagline.line3': '',
+    'hero.tagline.line4': '',
+    'lang.toggle': 'ES',
+    'lang.toggle.aria': 'Mudar para espanhol',
+    'skip.link': 'Saltar para o conteúdo principal',
+    'footer.rights': '© 2025 International Virtus Awards. Todos os direitos reservados.',
+    // Notas e labels de empresa
+    'company.note.line1': 'Realize a sua inscrição sem limite de amostras. Cada amostra custa {price}€. Envie {bottles} garrafas por amostra.',
+    'company.note.line2': 'Para cada {per} amostras inscritas, uma é GRÁTIS.',
+    'label.num_samples': 'Nº de amostras',
+    'company.min_samples': 'Mínimo 1 amostra',
+    'company.samples_summary_line': '{n} amostra(s) total',
+    'company.free_samples_celebration': '🎉 {n} amostra(s) grátis!',
+    'admin.manual.title': '🏷️ Inscrição Manual',
+    'admin.automatic.title': '💻 Inscrição Automática',
+    'admin.manual.description': 'Serão gerados códigos únicos (1-999) para cada amostra',
+    'admin.automatic.description': 'Inscrição padrão sem códigos especiais',
+    'admin.manual.features_title': 'Características da inscrição manual:',
+    'admin.manual.features.item1': 'Será atribuído um código único de 1 a 999 a cada amostra',
+    'admin.manual.features.item2': 'A inscrição será marcada como "manual" na base de dados',
+    'admin.manual.features.item3': 'Ideal para inscrições presenciais ou telefónicas',
+    'support.contact_label': 'Suporte / Ajuda na inscrição:',
+    // Labels de etapa
+    'step.empresa': 'Empresa',
+    'step.muestras': 'Amostras',
+    'step.confirmacion': 'Confirmação',
+    // Consentimentos
+    'form.company.accept_rules': 'Aceito o Regulamento *',
+    'form.company.accept_rules_desc': 'Li e aceito o Regulamento do concurso e as suas condições.',
+    'form.company.consent_marketing': 'Aceito receber comunicações comerciais (opcional)',
+    'form.company.accept_marketing': 'Aceito receber comunicações de marketing de Virtus',
+    'form.company.accept_marketing_desc': 'Aceito receber comunicações de marketing de Virtus',
+    // Resumo e pagamentos
+    'summary.payment.title': 'Resumo de Pagamento',
+    'summary.pay_label': 'Amostras a pagar:',
+    'summary.free_label': 'Amostras grátis:',
+    'summary.total_label': 'Total:',
+    'transfer.details_title': '📋 Dados para a transferência:',
+    'summary.payment_method_label': 'Método de pagamento:',
+    // Rastreamento / pós-sucesso
+    'tracking.intro': 'Pode verificar o estado da sua inscrição a qualquer momento:',
+    'tracking.step1': 'Para qualquer dúvida sobre a sua inscrição, contacte-nos por email: inscripciones@internationalvirtus.com ou por telefone: {phone}',
+    'tracking.step2': 'Forneça sempre o seu código de rastreamento #{pedido} para acelerar a consulta',
+    'tracking.step3': 'Informá-lo-emos sobre o estado do pagamento, recepção de amostras e datas do concurso por email',
+    'tracking.tip': '💡 Dica: Guarde este código juntamente com o email de confirmação. Precisará dele para qualquer consulta sobre a sua inscrição.',
+    // Labels genéricos
+    'label.company': 'Empresa',
+    'label.nif': 'NIF',
+    'label.contact_person': 'Pessoa de contacto',
+    'label.email': 'Email',
+    'label.phone': 'Telefone',
+    'label.address': 'Morada',
+    'label.web': 'Website',
+    'label.country': 'País',
+    'label.city': 'Cidade',
+    'label.postal': 'C.P.',
+    // Pagamentos - PT
+    'payment.select_title': 'Seleccione o seu método de pagamento',
+    'payment.company_label': 'Empresa',
+    'payment.company_email': 'Email',
+    'payment.total_samples_label': 'Total de amostras:',
+    'payment.discount_applied': 'Desconto aplicado! {info}',
+    'payment.total_to_pay': 'Total a pagar',
+    'payment.bank.title': 'Transferência Bancária',
+    'payment.bank.desc': 'Efectue o pagamento através de transferência para a nossa conta bancária',
+    'payment.paypal.title': 'PayPal',
+    'payment.paypal.desc': 'Pagamento rápido e seguro com PayPal ou cartão de crédito',
+    'payment.bank.details_title': 'Dados para Transferência Bancária',
+    'payment.bank.holder': 'Titular da conta',
+    'payment.bank.name': 'Banco',
+    'payment.bank.iban': 'IBAN',
+    'payment.bank.swift': 'BIC/SWIFT',
+    'payment.concept_label': 'Conceito',
+    'payment.amount_label': 'Montante',
+    'payment.important_label': 'Importante:',
+    'payment.important_text': 'Por favor, inclua o nome da sua empresa ({company}) no conceito da transferência para que possamos identificar o seu pagamento correctamente.',
+    'payment.change_method': 'Alterar método',
+    'payment.confirm_finish': 'Confirmar e finalizar',
+    'payment.paypal.title_header': 'Pagar com PayPal',
+    'payment.paypal.amount_label': 'Montante a pagar:',
+    'payment.paypal.redirect_text': 'Será redirecionado para o PayPal para completar o pagamento de forma segura',
+    'payment.paypal.error_alert': 'Houve um erro ao processar o pagamento. Por favor, tente novamente.',
+    'payment.change_method_full': 'Alterar método de pagamento',
+    'payment.success.title': 'Pagamento Concluído!',
+    'payment.success.message': 'O seu pagamento foi processado com sucesso. Receberá um email de confirmação em breve.',
+    'payment.success.backhome': 'Voltar ao início',
+  },
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -390,7 +579,7 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     const stored = localStorage.getItem('lang');
-    return stored === 'en' ? 'en' : 'es';
+    return (stored === 'en' || stored === 'pt') ? stored : 'es';
   });
 
   const setLang = (value: Lang) => {

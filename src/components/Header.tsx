@@ -94,15 +94,19 @@ export default function Header({
               </button>
             ) : null}
             <button
-              onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+              onClick={() => {
+                if (lang === 'es') setLang('en');
+                else if (lang === 'en') setLang('pt');
+                else setLang('es');
+              }}
               className={`${isHomePage ? 'px-3 py-2 text-sm font-semibold text-white border border-transparent' : 'px-3 py-2 text-sm font-semibold text-black border border-gray-200'} rounded-md hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
               aria-label={t('lang.toggle.aria')}
             >
               <span aria-hidden="true" className="text-lg">
-                {lang === 'es' ? '🇪🇸' : '🇬🇧'}
+                {lang === 'es' ? '🇪🇸' : lang === 'en' ? '🇬🇧' : '🇵🇹'}
               </span>
               <span className="text-xs uppercase tracking-wide">
-                {lang === 'es' ? 'ES' : 'EN'}
+                {lang === 'es' ? 'ES' : lang === 'en' ? 'EN' : 'PT'}
               </span>
             </button>
             {!isAdminLoggedIn ? null : (
@@ -153,15 +157,19 @@ export default function Header({
               ))}
 
               <button
-                onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+                onClick={() => {
+                  if (lang === 'es') setLang('en');
+                  else if (lang === 'en') setLang('pt');
+                  else setLang('es');
+                }}
                 className={`w-full text-left px-3 py-2 rounded-md text-black border border-gray-200 hover:border-gray-300 hover:bg-gray-50 flex items-center gap-2`}
                 aria-label={t('lang.toggle.aria')}
               >
                 <span aria-hidden="true" className="text-lg">
-                  {lang === 'es' ? '🇪🇸' : '🇬🇧'}
+                  {lang === 'es' ? '🇪🇸' : lang === 'en' ? '🇬🇧' : '🇵🇹'}
                 </span>
                 <span className="text-xs uppercase tracking-wide">
-                  {lang === 'es' ? 'ES' : 'EN'}
+                  {lang === 'es' ? 'ES' : lang === 'en' ? 'EN' : 'PT'}
                 </span>
               </button>
 
