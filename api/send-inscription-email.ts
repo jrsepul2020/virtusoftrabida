@@ -191,7 +191,7 @@ export default async function handler(req: any, res: any) {
         <strong>Banco:</strong>CAJASUR<br>
         <strong>IBAN:</strong> ES21 0237 0506 4091 7146 4247<br>
         <strong>BIC/SWIFT:</strong>CSURES2CXXX<br>
-        <strong>Concepto:</strong> Inscripción concurso - ${empresa.nombre_empresa}</p>
+        <strong>Concepto:</strong> ${pedido} - ${empresa.nombre_empresa}</p>
         ` : ''}
         
         <p>En breve nos pondremos en contacto contigo para confirmar todos los detalles.</p>
