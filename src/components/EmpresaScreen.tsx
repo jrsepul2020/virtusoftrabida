@@ -94,7 +94,7 @@ export function EmpresaScreen({
       {/* Segunda fila - Teléfono, Móvil */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
         <div>
-          <label className="block text-primary-800 font-medium mb-1">{t('form.company.phone')}</label>
+          <label className="block text-primary-800 font-medium mb-1">Teléfono de contacto</label>
           <input
             type="tel"
             inputMode="tel"
@@ -102,7 +102,8 @@ export function EmpresaScreen({
             maxLength={20}
             value={company.telefono || ''}
             onChange={onChange}
-            placeholder="600 000 000"
+            placeholder="+34 600 000 000"
+            required
             className={`w-full px-4 py-2 rounded-lg border ${
               validationErrors?.telefono
                 ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
@@ -121,7 +122,7 @@ export function EmpresaScreen({
             maxLength={20}
             value={company.movil || ''}
             onChange={onChange}
-            placeholder="600 000 000"
+            placeholder="+34 600 000 000"
             className={`w-full px-4 py-2 rounded-lg border ${
               validationErrors?.movil
                 ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
