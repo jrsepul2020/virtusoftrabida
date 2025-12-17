@@ -34,7 +34,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
       >
       </div>
 
-      <div className="relative z-10 h-screen flex flex-col items-center justify-start text-center px-4 pt-40 md:pt-52 lg:pt-60">
+      <div className="relative z-10 h-screen flex flex-col items-center justify-start text-center px-4 pt-40 md:pt-72 lg:pt-80">
         {/* Título principal - responsive con Cormorant */}
         <div className={`mb-2 mt-2 md:mt-0 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
             <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
@@ -73,7 +73,7 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
 
         {/* Subtítulo con animación - responsive */}
         <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-          <h2 className="text-base sm:text-lg md:text-xl lg:text-xl font-semibold leading-tight px-4">
+          <h2 className="text-xs sm:text-lg md:text-xl lg:text-xl font-semibold leading-tight px-4">
             <span className="text-white drop-shadow-lg">{t('hero.tagline.line1')}</span>
           </h2>
         </div>
