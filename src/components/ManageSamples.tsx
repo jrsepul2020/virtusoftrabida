@@ -25,6 +25,7 @@ export default function ManageSamples() {
   const [editedRows, setEditedRows] = useState<Map<string, Partial<Sample>>>(new Map());
   const [saving, setSaving] = useState(false);
   const [editModalSample, setEditModalSample] = useState<Sample | null>(null);
+  const [selectedSamples, setSelectedSamples] = useState<string[]>([]);
 
   const CATEGORIES = [
     'VINO BLANCO',
@@ -264,6 +265,32 @@ export default function ManageSamples() {
     }
   };
 
+  const toggleSelectSample = (id: string) => {
+    setSelectedSamples(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSamples.length === filteredSamples.length) {
+      setSelectedSamples([]);
+    } else {
+      setSelectedSamples(filteredSamples.map(s => s.id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedSamples.length === 0) return;
+    if (!confirm(`¿Eliminar ${selectedSamples.length} muestra(s) seleccionada(s)? Esta acción no se puede deshacer.`)) return;
+    try {
+      const { error } = await supabase.from('muestras').delete().in('id', selectedSamples);
+      if (error) throw error;
+      setSelectedSamples([]);
+      await fetchSamples();
+    } catch (err) {
+      console.error('Error eliminando muestras seleccionadas', err);
+      showError('Error eliminando muestras seleccionadas');
+    }
+  };
+
   const renderEditableCell = (sample: Sample, field: string, value: any, type: 'text' | 'number' = 'text', width: string = 'w-full') => {
     const isEditing = editingCell?.sampleId === sample.id && editingCell?.field === field;
     const isModified = editedRows.get(sample.id)?.[field as keyof Sample] !== undefined;
@@ -363,6 +390,15 @@ export default function ManageSamples() {
           >
             <Printer className="w-4 h-4" />
           </button>
+          <button
+            onClick={handleDeleteSelected}
+            disabled={selectedSamples.length === 0}
+            className="flex items-center gap-1 px-2 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:opacity-50"
+            title="Eliminar seleccionadas"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Eliminar ({selectedSamples.length})</span>
+          </button>
           <div className="bg-blue-50 px-2 py-1.5 rounded-lg">
             <span className="text-xs text-blue-600 font-medium">{filteredSamples.length}/{samples.length}</span>
           </div>
@@ -375,13 +411,16 @@ export default function ManageSamples() {
           <table className="w-full text-xs border-collapse">
             <thead className="bg-gray-700 sticky top-0">
               <tr>
-                <th 
-                  className="px-2 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
-                  onClick={() => handleSort('codigotexto')}
-                  style={{ width: '70px' }}
-                >
-                  <div className="flex items-center gap-1">Cód {getSortIcon('codigotexto')}</div>
-                </th>
+                    <th className="px-2 py-2 text-left font-medium text-white uppercase border-r border-gray-600 w-10">
+                      <input type="checkbox" checked={selectedSamples.length === filteredSamples.length && filteredSamples.length > 0} onChange={toggleSelectAll} className="w-4 h-4" />
+                    </th>
+                    <th 
+                      className="px-2 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
+                      onClick={() => handleSort('codigotexto')}
+                      style={{ width: '70px' }}
+                    >
+                      <div className="flex items-center gap-1">Cód {getSortIcon('codigotexto')}</div>
+                    </th>
                 <th 
                   className="px-2 py-2 text-left font-medium text-white uppercase cursor-pointer hover:bg-gray-600 border-r border-gray-600"
                   onClick={() => handleSort('nombre')}
@@ -444,6 +483,9 @@ export default function ManageSamples() {
                     isLowCode ? 'bg-red-100 border-l-4 border-l-red-500' : (index % 2 === 0 ? 'bg-white' : 'bg-gray-50')
                   } ${editedRows.has(sample.id) ? 'bg-yellow-50' : ''}`}
                 >
+                  <td className="px-2 py-1 border-r border-gray-200">
+                    <input type="checkbox" checked={selectedSamples.includes(sample.id)} onChange={() => toggleSelectSample(sample.id)} className="w-4 h-4" />
+                  </td>
                   <td className="px-2 py-1 border-r border-gray-200 font-mono">
                     <div className="flex items-center gap-1">
                       {isLowCode && <span className="text-red-600 font-bold text-xs">M</span>}

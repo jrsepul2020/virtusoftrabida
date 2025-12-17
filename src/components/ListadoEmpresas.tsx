@@ -26,6 +26,7 @@ export default function ListadoEmpresas() {
   const [editingCell, setEditingCell] = useState<{ companyId: string; field: string } | null>(null);
   const [viewingSamples, setViewingSamples] = useState<{ company: Company; samples: Sample[] } | null>(null);
   const [loadingSamples, setLoadingSamples] = useState(false);
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
   useEffect(() => {
     fetchCompanies();
@@ -244,6 +245,29 @@ export default function ListadoEmpresas() {
     window.print();
   };
 
+  const toggleSelectCompany = (id: string) => {
+    setSelectedCompanies(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAllCompanies = () => {
+    if (selectedCompanies.length === filteredCompanies.length) setSelectedCompanies([]);
+    else setSelectedCompanies(filteredCompanies.map(c => c.id));
+  };
+
+  const handleDeleteSelectedCompanies = async () => {
+    if (selectedCompanies.length === 0) return;
+    if (!confirm(`¿Eliminar ${selectedCompanies.length} empresa(s) seleccionada(s)? Esta acción no se puede deshacer.`)) return;
+    try {
+      const { error } = await supabase.from('empresas').delete().in('id', selectedCompanies);
+      if (error) throw error;
+      setSelectedCompanies([]);
+      await fetchCompanies();
+    } catch (err) {
+      console.error('Error eliminando empresas seleccionadas', err);
+      alert('Error eliminando empresas seleccionadas');
+    }
+  };
+
   const handleExportExcel = () => {
     // Preparar datos para el Excel
     const data = filteredCompanies.map(company => ({
@@ -343,6 +367,14 @@ export default function ListadoEmpresas() {
                 <FileSpreadsheet className="w-4 h-4" />
                 <span className="hidden sm:inline">Excel</span>
               </button>
+              <button
+                onClick={handleDeleteSelectedCompanies}
+                disabled={selectedCompanies.length === 0}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Eliminar ({selectedCompanies.length})</span>
+              </button>
             </div>
           </div>
         </div>
@@ -370,6 +402,9 @@ export default function ListadoEmpresas() {
               <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-800">
                 <tr>
+                  <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider w-12">
+                    <input type="checkbox" checked={selectedCompanies.length === filteredCompanies.length && filteredCompanies.length > 0} onChange={toggleSelectAllCompanies} className="w-4 h-4" />
+                  </th>
                   <th 
                     onClick={() => handleSort('created_at')}
                     className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors w-20"
@@ -447,6 +482,9 @@ export default function ListadoEmpresas() {
                     key={company.id}
                     className="hover:bg-gray-50 transition-colors border-b border-gray-200"
                   >
+                    <td className="px-2 py-1.5 text-xs text-gray-700 whitespace-nowrap">
+                      <input type="checkbox" checked={selectedCompanies.includes(company.id)} onChange={() => toggleSelectCompany(company.id)} className="w-4 h-4" />
+                    </td>
                     <td className="px-2 py-1.5 text-xs text-gray-700 whitespace-nowrap">
                       {new Date(company.created_at).toLocaleDateString('es-ES', {
                         day: '2-digit',

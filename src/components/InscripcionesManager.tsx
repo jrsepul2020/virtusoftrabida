@@ -67,6 +67,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
   const [loadingMuestras, setLoadingMuestras] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Inscripcion>>({});
+  const [selectedInscripciones, setSelectedInscripciones] = useState<string[]>([]);
 
   const fetchInscripciones = async () => {
     setLoading(true);
@@ -364,6 +365,29 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
     XLSX.writeFile(wb, `inscripciones_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  const toggleSelectInscripcion = (id: string) => {
+    setSelectedInscripciones(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAllInscripciones = () => {
+    if (selectedInscripciones.length === filteredInscripciones.length) setSelectedInscripciones([]);
+    else setSelectedInscripciones(filteredInscripciones.map(i => i.id));
+  };
+
+  const handleDeleteSelectedInscripciones = async () => {
+    if (selectedInscripciones.length === 0) return;
+    if (!confirm(`¿Eliminar ${selectedInscripciones.length} inscripción(es) seleccionada(s)? Esta acción no se puede deshacer.`)) return;
+    try {
+      const { error } = await supabase.from('empresas').delete().in('id', selectedInscripciones);
+      if (error) throw error;
+      setSelectedInscripciones([]);
+      await fetchInscripciones();
+    } catch (err: any) {
+      console.error('Error eliminando inscripciones seleccionadas', err);
+      toast.error('Error eliminando inscripciones seleccionadas');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
       'pending': { color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="w-3 h-3" />, label: 'Pendiente' },
@@ -513,6 +537,14 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
               <Download className="w-4 h-4" />
               Excel
             </button>
+            <button
+              onClick={handleDeleteSelectedInscripciones}
+              disabled={selectedInscripciones.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              <X className="w-4 h-4" />
+              Eliminar ({selectedInscripciones.length})
+            </button>
           </div>
         </div>
       </div>
@@ -524,8 +556,11 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                  ✓
+                  <input type="checkbox" checked={selectedInscripciones.length === filteredInscripciones.length && filteredInscripciones.length > 0} onChange={toggleSelectAllInscripciones} className="w-4 h-4" />
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                    ✓
+                  </th>
                 <th 
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('created_at')}
@@ -584,6 +619,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
                   key={insc.id} 
                   className={`hover:bg-gray-50 ${insc.revisada ? 'bg-green-50' : 'bg-red-50'}`}
                 >
+                  <td className="px-4 py-3">
+                    <input type="checkbox" checked={selectedInscripciones.includes(insc.id)} onChange={() => toggleSelectInscripcion(insc.id)} className="w-4 h-4" />
+                  </td>
                   <td className="px-4 py-3">
                     <input
                       type="checkbox"
