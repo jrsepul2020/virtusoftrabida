@@ -488,7 +488,6 @@ export default function ManageSamples() {
                   </td>
                   <td className="px-2 py-1 border-r border-gray-200 font-mono">
                     <div className="flex items-center gap-1">
-                      {isLowCode && <span className="text-red-600 font-bold text-xs">M</span>}
                       {renderEditableCell(sample, 'codigotexto', sample.codigotexto || sample.codigo, 'text', 'w-16')}
                     </div>
                   </td>
