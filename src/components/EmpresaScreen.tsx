@@ -177,7 +177,7 @@ export function EmpresaScreen({
 
       {/* Cuarta fila - Dirección y Población */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 mt-4">
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-7">
           <label className="block text-primary-800 font-medium mb-1">{t('form.company.address')}</label>
           <input
             type="text"
@@ -193,8 +193,8 @@ export function EmpresaScreen({
           {validationErrors?.direccion && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
         </div>
 
-        <div className="lg:col-span-4">
-          <label className="block text-primary-800 font-medium mb-1">{t('label.city')}</label>
+        <div className="lg:col-span-5">
+          <label className="block text-primary-800 font-medium mb-1">Población</label>
           <input
             type="text"
             name="poblacion"
@@ -210,9 +210,9 @@ export function EmpresaScreen({
         </div>
       </div>
 
-      {/* Quinta fila - CP, País */}
+      {/* Quinta fila - CP, Ciudad, País */}
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-12 gap-4 mt-4">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-2">
           <label className="block text-primary-800 font-medium mb-1">{t('form.company.postal')}</label>
           <input
             type="text"
@@ -228,7 +228,23 @@ export function EmpresaScreen({
           {validationErrors?.codigo_postal && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
         </div>
 
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-5">
+          <label className="block text-primary-800 font-medium mb-1">Ciudad</label>
+          <input
+            type="text"
+            name="ciudad"
+            value={company.ciudad}
+            onChange={onChange}
+            className={`w-full px-4 py-2 rounded-lg border ${
+              validationErrors?.ciudad
+                ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
+                : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+            } focus:ring-2 transition-colors`}
+          />
+          {validationErrors?.ciudad && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
+        </div>
+
+        <div className="lg:col-span-5">
           <label className="block text-primary-800 font-medium mb-1">{t('form.company.country')}</label>
           <input
             type="text"
