@@ -27,36 +27,6 @@ export function EmpresaScreen({
 }) {
   const { t } = useI18n();
 
-  // Sanitiza el prefijo: permite opcionalmente '+' seguido de hasta 3 dígitos
-  const sanitizePrefix = (raw: string) => {
-    if (!raw) return '+34';
-    const plus = raw.trim().startsWith('+') ? '+' : '';
-    const digits = raw.replace(/\D/g, '').slice(0, 3);
-    return plus + digits;
-  };
-
-  const setTelefonoPrefijo = (prefijo: string) => {
-    const sanitized = sanitizePrefix(prefijo);
-    const num = company.telefono?.replace(/^\+\d+\s?/, '') || '';
-    onChange({ target: { name: 'telefono', value: `${sanitized} ${num}` } } as any);
-  };
-
-  const setTelefonoNumero = (num: string) => {
-    const prefijo = company.telefono?.match(/^\+\d+/)?.[0] || '+34';
-    onChange({ target: { name: 'telefono', value: `${prefijo} ${num}` } } as any);
-  };
-
-  const setMovilPrefijo = (prefijo: string) => {
-    const sanitized = sanitizePrefix(prefijo);
-    const num = company.movil?.replace(/^\+\d+\s?/, '') || '';
-    onChange({ target: { name: 'movil', value: `${sanitized} ${num}` } } as any);
-  };
-
-  const setMovilNumero = (num: string) => {
-    const prefijo = company.movil?.match(/^\+\d+/)?.[0] || '+34';
-    onChange({ target: { name: 'movil', value: `${prefijo} ${num}` } } as any);
-  };
-
   return (
     <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100">
       <h2 className="text-xl sm:text-2xl font-bold text-primary-800 mb-4 text-center">{t('form.company.title')}</h2>
@@ -122,66 +92,42 @@ export function EmpresaScreen({
       </div>
 
       {/* Segunda fila - Teléfono, Móvil */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
         <div>
           <label className="block text-primary-800 font-medium mb-1">{t('form.company.phone')}</label>
-          <div className="flex">
-            <input
-              type="text"
-              name="telefono_prefijo"
-              value={company.telefono?.match(/^\+\d{1,3}/)?.[0] || '+34'}
-              onChange={(e) => setTelefonoPrefijo(sanitizePrefix(e.target.value || '+34'))}
-              className="w-16 px-2 py-2 rounded-l-lg border-r-0 border border-black bg-black text-white text-sm focus:border-black focus:ring-2 focus:ring-red-500"
-              placeholder="+34"
-              maxLength={4}
-              inputMode="numeric"
-            />
-            <input
-              type="tel"
-              inputMode="tel"
-              name="telefono"
-              maxLength={20}
-              value={company.telefono?.replace(/^\+\d+\s?/, '') || ''}
-              onChange={(e) => setTelefonoNumero(e.target.value)}
-              placeholder="600 000 000"
-              className={`flex-1 md:w-40 px-4 py-2 rounded-r-lg border ${
-                validationErrors?.telefono
-                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
-                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
-              } focus:ring-2 transition-colors`}
-            />
-          </div>
+          <input
+            type="tel"
+            inputMode="tel"
+            name="telefono"
+            maxLength={20}
+            value={company.telefono || ''}
+            onChange={onChange}
+            placeholder="600 000 000"
+            className={`w-full px-4 py-2 rounded-lg border ${
+              validationErrors?.telefono
+                ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
+                : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+            } focus:ring-2 transition-colors`}
+          />
           {validationErrors?.telefono && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
         </div>
 
         <div>
           <label className="block text-primary-800 font-medium mb-1">{t('form.company.mobile')}</label>
-          <div className="flex">
-            <input
-              type="text"
-              name="movil_prefijo"
-              value={company.movil?.match(/^\+\d{1,3}/)?.[0] || '+34'}
-              onChange={(e) => setMovilPrefijo(sanitizePrefix(e.target.value || '+34'))}
-              className="w-16 px-2 py-2 rounded-l-lg border-r-0 border border-black bg-black text-white text-sm focus:border-black focus:ring-2 focus:ring-red-500"
-              placeholder="+34"
-              maxLength={4}
-              inputMode="numeric"
-            />
-            <input
-              type="tel"
-              inputMode="tel"
-              name="movil"
-              maxLength={20}
-              value={company.movil?.replace(/^\+\d+\s?/, '') || ''}
-              onChange={(e) => setMovilNumero(e.target.value)}
-              placeholder="600 000 000"
-              className={`flex-1 md:w-40 px-4 py-2 rounded-r-lg border ${
-                validationErrors?.movil
-                  ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
-                  : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
-              } focus:ring-2 transition-colors`}
-            />
-          </div>
+          <input
+            type="tel"
+            inputMode="tel"
+            name="movil"
+            maxLength={20}
+            value={company.movil || ''}
+            onChange={onChange}
+            placeholder="600 000 000"
+            className={`w-full px-4 py-2 rounded-lg border ${
+              validationErrors?.movil
+                ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-200'
+                : 'border-primary-200 focus:border-primary-500 focus:ring-primary-200'
+            } focus:ring-2 transition-colors`}
+          />
           {validationErrors?.movil && <p className="text-red-500 text-sm mt-1">{t('form.required')}</p>}
         </div>
       </div>
