@@ -24,7 +24,7 @@ Añade a tu archivo `~/.bashrc`, `~/.zshrc` o equivalente:
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-api03-tu-clave-aqui"
-export VITE_SUPABASE_URL="https://cfpawqoegitgtsjygbqp.supabase.co"
+export VITE_SUPABASE_URL="https://your-project-ref.supabase.co"
 export SUPABASE_SERVICE_ROLE_KEY="tu-service-role-key-aqui"
 ```
 
@@ -37,7 +37,7 @@ source ~/.bashrc  # o ~/.zshrc
 
 ```powershell
 $env:ANTHROPIC_API_KEY="sk-ant-api03-tu-clave-aqui"
-$env:VITE_SUPABASE_URL="https://cfpawqoegitgtsjygbqp.supabase.co"
+$env:VITE_SUPABASE_URL="https://your-project-ref.supabase.co"
 $env:SUPABASE_SERVICE_ROLE_KEY="tu-service-role-key-aqui"
 ```
 
@@ -55,7 +55,7 @@ Para hacerlo permanente, usa las variables de entorno del sistema:
 2. Edita `.env.local` y completa los valores:
    ```bash
    ANTHROPIC_API_KEY=sk-ant-api03-tu-clave-aqui
-   VITE_SUPABASE_URL=https://cfpawqoegitgtsjygbqp.supabase.co
+   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key-aqui
    ```
 

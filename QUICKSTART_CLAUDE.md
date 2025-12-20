@@ -11,14 +11,14 @@ Visit [Anthropic Console](https://console.anthropic.com/settings/keys) → Creat
 **macOS/Linux:**
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
-export VITE_SUPABASE_URL="https://cfpawqoegitgtsjygbqp.supabase.co"
+export VITE_SUPABASE_URL="https://your-project-ref.supabase.co"
 export SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 ```
 
 **Windows (PowerShell):**
 ```powershell
 $env:ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"
-$env:VITE_SUPABASE_URL="https://cfpawqoegitgtsjygbqp.supabase.co"
+$env:VITE_SUPABASE_URL="https://your-project-ref.supabase.co"
 $env:SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 ```
 
