@@ -14,11 +14,13 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@paypal/react-paypal-js": "^8.9.2",
     "@sentry/react": "^10.29.0",
     "@sentry/vite-plugin": "^4.6.1",
     "@supabase/supabase-js": "^2.75.0",
     "@zxing/browser": "^0.1.5",
+    "dotenv": "^17.2.3",
     "jsbarcode": "^3.12.1",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.344.0",

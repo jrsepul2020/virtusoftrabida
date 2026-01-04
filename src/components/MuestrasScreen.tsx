@@ -37,6 +37,31 @@ export function MuestrasScreen({
   validationErrors?: {[key: string]: boolean};
 }) {
   const { t } = useI18n();
+
+  // Determinar si todas las muestras tienen sus campos obligatorios rellenados
+  const allRequiredFilled = samples.every((s) => {
+    const baseOk =
+      !!s.nombre_muestra?.trim() &&
+      !!s.categoria?.trim() &&
+      !!s.pais?.trim() &&
+      !!s.azucar?.toString().trim() &&
+      !!s.existencias?.toString().trim() &&
+      !!s.anio?.toString().trim();
+
+    if (!baseOk) return false;
+
+    // Grado obligatorio salvo vino sin alcohol y aceites
+    if (requiresGrado(s.categoria) && !s.grado_alcoholico?.toString().trim()) return false;
+
+    // Tipo de aceituna obligatorio si es aceite
+    if (isAceite(s.categoria) && !s.tipo_aceituna?.trim()) return false;
+
+    // Tipo de uva obligatorio si es vino (no sin alcohol)
+    const isVino = s.categoria?.toUpperCase().includes('VINO');
+    if (isVino && !isVinoSinAlcohol(s.categoria) && !s.tipo_uva?.trim()) return false;
+
+    return true;
+  });
   // Función para obtener el estilo del input según si hay error
   const getInputClass = (idx: number, field: string) => {
     const hasError = validationErrors?.[`muestra_${idx}_${field}`];
@@ -299,7 +324,12 @@ export function MuestrasScreen({
           <button 
             type="button" 
             onClick={onNext} 
-            className="w-full sm:w-auto bg-primary-600 text-white px-8 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+            className={
+              `w-full sm:w-auto text-white px-8 py-2 rounded-lg font-semibold transition-colors ` +
+              (allRequiredFilled
+                ? 'bg-green-600 hover:bg-green-700'
+                : 'bg-primary-600 hover:bg-primary-700')
+            }
           >
             {t('button.next')}
           </button>
