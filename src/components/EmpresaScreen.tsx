@@ -28,7 +28,7 @@ export function EmpresaScreen({
   const { t } = useI18n();
 
   return (
-    <div className="bg-amber-100 shadow-empresa rounded-2xl p-4 sm:p-8 border border-black">
+    <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-orange-100">
       <h2 className="text-xl sm:text-2xl font-bold text-primary-800 mb-4 text-center">{t('form.company.title')}</h2>
       <div className="company-note mt-2 text-center">
         <p className="text-sm text-gray-700 mb-1">

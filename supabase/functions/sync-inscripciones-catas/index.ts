@@ -7,14 +7,73 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
+function pickDefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {}
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined && v !== null) (out as any)[k] = v
+  }
+  return out
+}
+
+function extractMissingColumn(errMsg: string): string | null {
+  const m1 = errMsg.match(/Could not find the '([^']+)' column/i)
+  if (m1?.[1]) return m1[1]
+  const m2 = errMsg.match(/column "([^"]+)" .* does not exist/i)
+  if (m2?.[1]) return m2[1]
+  return null
+}
+
+async function upsertWithAutoSchemaPrune(
+  targetClient: ReturnType<typeof createClient>,
+  table: string,
+  records: Array<Record<string, unknown>>,
+  onConflict = 'id'
+): Promise<{ inserted: number; prunedColumns: string[] }> {
+  let payload = records.map(r => ({ ...r }))
+  const prunedColumns: string[] = []
+
+  const strategies: Array<{ kind: 'upsert' | 'insert'; onConflict?: string }> = [
+    { kind: 'upsert', onConflict },
+    { kind: 'upsert', onConflict: 'email' },
+    { kind: 'insert' },
+  ]
+
+  for (const strat of strategies) {
+    for (let i = 0; i < 25; i++) {
+      const op =
+        strat.kind === 'upsert'
+          ? targetClient.from(table).upsert(payload as any, { onConflict: strat.onConflict })
+          : targetClient.from(table).insert(payload as any)
+
+      const { error } = await op
+      if (!error) {
+        return { inserted: payload.length, prunedColumns }
+      }
+
+      const msg = error.message || String(error)
+      const missing = extractMissingColumn(msg)
+      if (!missing) {
+        break
+      }
+
+      prunedColumns.push(missing)
+      payload = payload.map((r) => {
+        const next = { ...r }
+        delete (next as any)[missing]
+        return next
+      })
+    }
+  }
+
+  throw new Error(`No se pudo insertar en Catas: el esquema de ${table} no es compatible.`)
+}
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Evitar prefijo SUPABASE_ (plataforma lo bloquea). Permitimos ambos nombres para compatibilidad.
     const sourceUrl =
       Deno.env.get('SOURCE_SUPABASE_URL') ??
       Deno.env.get('SUPABASE_URL')
@@ -36,36 +95,61 @@ serve(async (req) => {
       global: { headers: { 'x-client-info': 'sync-inscripciones-catas' } },
     })
 
-    const { data: inscripciones, error: fetchError } = await sourceClient.from('inscripciones').select('*')
-    if (fetchError) {
-      throw new Error(`Error leyendo inscripciones: ${fetchError.message}`)
+    // ==========================================
+    // PASO 1: SINCRONIZAR EMPRESAS
+    // ==========================================
+    const { data: empresas, error: empresasError } = await sourceClient
+      .from('empresas')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (empresasError) {
+      throw new Error(`Error leyendo empresas: ${empresasError.message}`)
     }
 
-    if (!inscripciones || inscripciones.length === 0) {
-      return new Response(
-        JSON.stringify({ success: true, message: 'No hay inscripciones para copiar', copied: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
-      )
+    let empresasCopiadas = 0
+    if (empresas && empresas.length > 0) {
+      const empresasPayload = empresas.map((e: any) => pickDefined(e) as Record<string, unknown>)
+      const result = await upsertWithAutoSchemaPrune(targetClient, 'empresas', empresasPayload, 'id')
+      empresasCopiadas = result.inserted
     }
 
-    const { error: upsertError } = await targetClient
-      .from('asistentes')
-      .upsert(inscripciones, { onConflict: 'id' })
+    // ==========================================
+    // PASO 2: SINCRONIZAR MUESTRAS (con mapeo de empresa_id)
+    // ==========================================
+    const { data: muestras, error: muestrasError } = await sourceClient
+      .from('muestras')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-    if (upsertError) {
-      throw new Error(`Error copiando a asistentes: ${upsertError.message}`)
+    if (muestrasError) {
+      throw new Error(`Error leyendo muestras: ${muestrasError.message}`)
+    }
+
+    let muestrasCopiadas = 0
+    if (muestras && muestras.length > 0) {
+      // Las muestras ya tienen empresa_id que coincide (mismo UUID)
+      // Solo necesitamos copiar los datos tal cual
+      const muestrasPayload = muestras.map((m: any) => pickDefined(m) as Record<string, unknown>)
+      const result = await upsertWithAutoSchemaPrune(targetClient, 'muestras', muestrasPayload, 'id')
+      muestrasCopiadas = result.inserted
     }
 
     return new Response(
-      JSON.stringify({ success: true, copied: inscripciones.length }),
+      JSON.stringify({
+        success: true,
+        empresas: empresasCopiadas,
+        muestras: muestrasCopiadas,
+        message: `Sincronizadas ${empresasCopiadas} empresas y ${muestrasCopiadas} muestras`,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Error en sync:', message)
     return new Response(
       JSON.stringify({ success: false, error: message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 },
     )
   }
 })
-

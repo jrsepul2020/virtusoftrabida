@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Lock, Mail, X, Shield, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, X, Shield, AlertTriangle } from 'lucide-react';
 import { generateDeviceFingerprint, getDeviceInfo } from '../lib/deviceFingerprint';
 
 type Props = {
@@ -17,21 +17,6 @@ export default function LoginForm({ onLogin, onBack }: Props) {
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberPassword, setRememberPassword] = useState(false);
-
-  // Cargar credenciales guardadas al montar el componente
-  useEffect(() => {
-    const savedEmail = localStorage.getItem('virtus_admin_email');
-    const savedPassword = localStorage.getItem('virtus_admin_password');
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberPassword(true);
-    }
-    if (savedPassword) {
-      setPassword(savedPassword);
-    }
-  }, []);
 
   // Safe error message function to prevent information leakage
   const getSafeErrorMessage = (error: any): string => {
@@ -68,15 +53,6 @@ export default function LoginForm({ onLogin, onBack }: Props) {
     setError('');
 
     try {
-      // Guardar o eliminar credenciales según la preferencia del usuario
-      if (rememberPassword) {
-        localStorage.setItem('virtus_admin_email', email);
-        localStorage.setItem('virtus_admin_password', password);
-      } else {
-        localStorage.removeItem('virtus_admin_email');
-        localStorage.removeItem('virtus_admin_password');
-      }
-
       // 1. Autenticar usuario
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -391,42 +367,14 @@ export default function LoginForm({ onLogin, onBack }: Props) {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
-                type={showPassword ? "text" : "password"}
+                type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-gray-50 focus:bg-white text-base"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-gray-50 focus:bg-white text-base"
                 placeholder="••••••••••••"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
             </div>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="rememberPassword"
-              checked={rememberPassword}
-              onChange={(e) => setRememberPassword(e.target.checked)}
-              className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2 cursor-pointer"
-            />
-            <label
-              htmlFor="rememberPassword"
-              className="ml-2 text-sm text-gray-700 cursor-pointer select-none"
-            >
-              Guardar contraseña en este dispositivo
-            </label>
           </div>
 
           <button
