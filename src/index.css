@@ -159,6 +159,11 @@ textarea:focus-visible {
   }
 }
 
+/* Custom shadow for EmpresaScreen */
+.shadow-empresa {
+  box-shadow: 3px 3px 10px 0px rgba(0, 0, 0, 0), 0px 0px 0px 0px rgba(0, 0, 0, 0), 0px 10px 15px -3px rgba(0, 0, 0, 0.1), 0px 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
 /* Animaciones suaves */
 .scale-105 {
   transform: scale(1.05);
