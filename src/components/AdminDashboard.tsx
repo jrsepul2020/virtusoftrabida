@@ -30,10 +30,9 @@ import ComunicacionesManager from './ComunicacionesManager';
 import EtiquetadoMuestras from './EtiquetadoMuestras';
 import UsuariosManager from './UsuariosManager';
 import UltimasInscripciones from './UltimasInscripciones';
-import ImportadorAvanzado from './ImportadorAvanzado';
 import GestorTemplates from './GestorTemplates';
 
-type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'mailrelay' | 'etiquetado' | 'importador' | 'templates';
+type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'mailrelay' | 'etiquetado' | 'templates';
 
 interface MenuItem {
   id: string;
@@ -128,7 +127,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'mailrelay', label: 'Mailrelay', icon: Send },
     { id: 'paypal', label: 'PAYPAL', icon: CreditCard, highlight: true },
     { id: 'emailTest', label: 'Probar Emails', icon: Mail },
-    { id: 'importador', label: 'Importador Avanzado', icon: Upload },
     { id: 'templates', label: 'Templates', icon: Package },
     { id: 'usuarios', label: 'Usuarios', icon: Users },
     { id: 'configuracion', label: 'Configuración', icon: Settings },
