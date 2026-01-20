@@ -316,42 +316,6 @@ export default function ComunicacionesManager() {
     }
   };
 
-      if (error) throw error;
-
-      const numMuestras = muestras?.length || 0;
-      const precioUnitario = 150;
-      const muestrasGratis = Math.floor(numMuestras / 5);
-      const muestrasCobradas = numMuestras - muestrasGratis;
-      const importe = muestrasCobradas * precioUnitario;
-
-      // Calcular días desde inscripción
-      const fechaInscripcion = new Date(empresa.created_at || Date.now());
-      const diasPendiente = Math.floor((Date.now() - fechaInscripcion.getTime()) / (1000 * 60 * 60 * 24));
-
-      let contenido = selectedPlantilla.contenido;
-      let asunto = selectedPlantilla.asunto;
-
-      // Reemplazar todas las variables
-      const pedido = empresa.pedido || 'SIN-PEDIDO';
-      contenido = contenido.replace(/\{\{nombre_empresa\}\}/g, empresa.nombre_empresa);
-      contenido = contenido.replace(/\{\{num_muestras\}\}/g, numMuestras.toString());
-      contenido = contenido.replace(/\{\{importe\}\}/g, importe.toString());
-      contenido = contenido.replace(/\{\{pedido\}\}/g, pedido);
-      contenido = contenido.replace(/\{\{dias_pendiente\}\}/g, diasPendiente.toString());
-      
-      asunto = asunto.replace(/\{\{nombre_empresa\}\}/g, empresa.nombre_empresa);
-      asunto = asunto.replace(/\{\{pedido\}\}/g, pedido);
-      asunto = asunto.replace(/\{\{importe\}\}/g, importe.toString());
-
-      setPreviewEmail({ asunto, contenido });
-      setPreviewEmpresa(empresa);
-      setShowPreviewModal(true);
-    } catch (error) {
-      console.error('Error generando preview:', error);
-      showError('Error al generar vista previa');
-    }
-  };
-
   // Enviar emails
   const enviarEmails = async () => {
     if (!selectedPlantilla || selectedEmpresas.length === 0) {
