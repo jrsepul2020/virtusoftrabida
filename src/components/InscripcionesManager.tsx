@@ -69,6 +69,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
   const [savingEdit, setSavingEdit] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Inscripcion>>({});
   const [selectedInscripciones, setSelectedInscripciones] = useState<string[]>([]);
+  const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
 
   const fetchInscripciones = async () => {
     setLoading(true);
@@ -174,6 +175,27 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
       );
     } catch (err: any) {
       alert('Error al actualizar: ' + err.message);
+    }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('empresas')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setInscripciones(prev => 
+        prev.map(insc => 
+          insc.id === id ? { ...insc, status: newStatus } : insc
+        )
+      );
+      setEditingStatusId(null);
+      toast.success('Estado actualizado');
+    } catch (err: any) {
+      toast.error('Error al actualizar estado: ' + err.message);
     }
   };
 
@@ -565,9 +587,6 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                   <input type="checkbox" checked={selectedInscripciones.length === filteredInscripciones.length && filteredInscripciones.length > 0} onChange={toggleSelectAllInscripciones} className="w-4 h-4" />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                    ✓
-                  </th>
                 <th 
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('created_at')}
@@ -632,31 +651,57 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
                   <td className="px-4 py-3">
                     <input type="checkbox" checked={selectedInscripciones.includes(insc.id)} onChange={() => toggleSelectInscripcion(insc.id)} className="w-4 h-4" />
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={insc.revisada}
-                      onChange={() => handleToggleRevisada(insc.id, insc.revisada)}
-                      className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 cursor-pointer"
-                    />
-                  </td>
                   <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                     {new Date(insc.created_at).toLocaleDateString('es-ES')}
                   </td>
                   <td className="px-4 py-3 text-sm font-medium text-amber-700 whitespace-nowrap">
                     {insc.pedido || '-'}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {getStatusBadge(insc.status)}
+                  <td className="px-4 py-3 whitespace-nowrap relative">
+                    {editingStatusId === insc.id ? (
+                      <select
+                        value={insc.status}
+                        onChange={(e) => handleStatusChange(insc.id, e.target.value)}
+                        onBlur={() => setEditingStatusId(null)}
+                        autoFocus
+                        className="text-xs rounded-full px-2 py-1 border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      >
+                        <option value="pending">Pendiente</option>
+                        <option value="pagado">Pagado</option>
+                        <option value="approved">Aprobado</option>
+                        <option value="rejected">Rechazado</option>
+                      </select>
+                    ) : (
+                      <button
+                        onClick={() => setEditingStatusId(insc.id)}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        {getStatusBadge(insc.status)}
+                      </button>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900 max-w-[150px] truncate" title={insc.name}>
                     {insc.name}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {insc.email}
+                  <td className="px-4 py-3 text-sm">
+                    <a 
+                      href={`mailto:${insc.email}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      title={`Enviar email a ${insc.email}`}
+                    >
+                      {insc.email}
+                    </a>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                    {insc.phone || insc.movil || '-'}
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">
+                    {insc.phone || insc.movil ? (
+                      <a 
+                        href={`tel:${insc.phone || insc.movil}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                        title={`Llamar a ${insc.phone || insc.movil}`}
+                      >
+                        {insc.phone || insc.movil}
+                      </a>
+                    ) : '-'}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="inline-flex items-center justify-center w-6 h-6 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
