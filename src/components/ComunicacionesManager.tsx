@@ -162,13 +162,29 @@ export default function ComunicacionesManager() {
       const savedPlantillas = localStorage.getItem('email_plantillas');
       if (savedPlantillas) {
         setPlantillas(JSON.parse(savedPlantillas));
-        // Crear plantillas por defecto
+      } else {
+        // Crear plantillas por defecto si no existen
         const defaultPlantillas = PLANTILLAS_DEFAULT.map((p, i) => ({
           ...p,
+          id: `plantilla-default-${i}`,
+          created_at: new Date().toISOString()
         }));
+        setPlantillas(defaultPlantillas);
+        localStorage.setItem('email_plantillas', JSON.stringify(defaultPlantillas));
       }
+      
+      // Cargar empresas desde Supabase
+      const { data: empresasData, error: empresasError } = await supabase
+        .from('empresas')
+        .select('id, name, email, status, pago_confirmado')
+        .order('created_at', { ascending: false });
+
+      if (empresasError) {
+        console.error('Error cargando empresas:', empresasError);
+      }
+
       // Mapear name a nombre_empresa para mantener compatibilidad
-      const empresasMapeadas = (empresas || []).map((e: any) => ({
+      const empresasMapeadas = (empresasData || []).map((e: any) => ({
         ...e,
         nombre_empresa: e.name || 'Sin nombre'
       }));
