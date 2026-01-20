@@ -42,6 +42,7 @@ interface Inscripcion {
   totalinscripciones?: number;
   muestras?: Muestra[];
   muestras_count?: number;
+  precio_total?: number;
 }
 
 type SortField = 'created_at' | 'pedido' | 'name' | 'status' | 'revisada';
@@ -207,6 +208,12 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
       // Obtener las muestras de la inscripción
       const muestras = await fetchMuestrasForInscripcion(inscripcion.id);
 
+      // Calcular precio correctamente: 150€ por muestra, con promoción 5x4
+      const numMuestras = muestras.length;
+      const gratis = Math.floor(numMuestras / 5);
+      const pagadas = numMuestras - gratis;
+      const total = pagadas * 150;
+
       // Preparar los datos para el email en el formato esperado por la API
       const emailPayload = {
         empresa: {
@@ -224,7 +231,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
           pagina_web: inscripcion.pagina_web || '',
           medio_conocio: inscripcion.conocimiento || '',
           observaciones: inscripcion.observaciones || '',
-          num_muestras: muestras.length
+          num_muestras: numMuestras
         },
         muestras: muestras.map(m => ({
           nombre_muestra: m.nombre,
@@ -235,9 +242,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
           grado: m.grado
         })),
         precio: {
-          pagadas: inscripcion.totalinscripciones || muestras.length,
-          gratis: 0,
-          total: (inscripcion.totalinscripciones || muestras.length) * 85 // Asumiendo 85€ por muestra
+          pagadas,
+          gratis,
+          total
         },
         metodoPago: inscripcion.metodo_pago || 'transferencia',
         pedido: inscripcion.pedido
@@ -603,6 +610,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
                   Muestras
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Precio
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Pago
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -652,6 +662,24 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({ onNewInscri
                     <span className="inline-flex items-center justify-center w-6 h-6 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
                       {insc.muestras_count || 0}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {(() => {
+                      const numMuestras = insc.muestras_count || 0;
+                      const gratis = Math.floor(numMuestras / 5);
+                      const pagadas = numMuestras - gratis;
+                      const total = pagadas * 150;
+                      return (
+                        <span className="text-sm font-semibold text-gray-900">
+                          {total}€
+                          {gratis > 0 && (
+                            <span className="block text-xs text-green-600">
+                              ({pagadas} + {gratis} gratis)
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {insc.metodo_pago ? (

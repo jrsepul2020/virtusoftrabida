@@ -413,7 +413,7 @@ export default function CompaniesManager() {
                   {isColumnVisible('pedido') && (
                     <th
                       onClick={() => handleSort('pedido')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap"
                     >
                       <div className="flex items-center gap-1">
                         Pedido
@@ -424,7 +424,7 @@ export default function CompaniesManager() {
                   {isColumnVisible('name') && (
                     <th
                       onClick={() => handleSort('name')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 min-w-[180px] max-w-[220px]"
                     >
                       <div className="flex items-center gap-1">
                         Nombre
@@ -435,23 +435,23 @@ export default function CompaniesManager() {
                   {isColumnVisible('totalinscripciones') && (
                     <th
                       onClick={() => handleSort('totalinscripciones')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap"
                     >
-                      <div className="flex items-center gap-1">
-                        Nº Muestras
+                      <div className="flex items-center justify-center gap-1">
+                        Muestras
                         {getSortIcon('totalinscripciones')}
                       </div>
                     </th>
                   )}
                   {isColumnVisible('telefono') && (
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider min-w-[120px] max-w-[140px]">
                       Teléfonos
                     </th>
                   )}
                   {isColumnVisible('email') && (
                     <th
                       onClick={() => handleSort('email')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 min-w-[160px] max-w-[200px]"
                     >
                       <div className="flex items-center gap-1">
                         Email
@@ -460,19 +460,19 @@ export default function CompaniesManager() {
                     </th>
                   )}
                   {isColumnVisible('pagado') && (
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
                       Pagado
                     </th>
                   )}
                   {isColumnVisible('status') && (
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
                       Estado
                     </th>
                   )}
                   {isColumnVisible('pais') && (
                     <th
                       onClick={() => handleSort('pais')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap max-w-[100px]"
                     >
                       <div className="flex items-center gap-1">
                         País
@@ -480,7 +480,7 @@ export default function CompaniesManager() {
                       </div>
                     </th>
                   )}
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
+                  <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
                     Acciones
                   </th>
                 </tr>
@@ -489,34 +489,37 @@ export default function CompaniesManager() {
                 {filteredCompanies.map((company) => (
                   <tr key={company.id} className="hover:bg-gray-50">
                     {isColumnVisible('pedido') && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-900">
                         {company.pedido || '-'}
                       </td>
                     )}
                     {isColumnVisible('name') && (
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                      <td className="px-2 py-3 max-w-[220px]">
+                        <div className="text-xs font-medium text-gray-900 truncate" title={company.name}>
                           {company.name}
                         </div>
                         {company.contact_person && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs text-gray-500 truncate" title={company.contact_person}>
                             {company.contact_person}
                           </div>
                         )}
                       </td>
                     )}
                     {isColumnVisible('totalinscripciones') && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {company.totalinscripciones || company.samples.length}
+                      <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-900 text-center">
+                        <span className="inline-flex items-center justify-center w-7 h-7 bg-amber-100 text-amber-800 rounded-full font-medium">
+                          {company.totalinscripciones || company.samples.length}
+                        </span>
                       </td>
                     )}
                     {isColumnVisible('telefono') && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="flex flex-col gap-1">
+                      <td className="px-2 py-3 text-xs max-w-[140px]">
+                        <div className="flex flex-col gap-0.5">
                           {(company.telefono || company.phone) && (
                             <a 
                               href={`tel:${company.telefono || company.phone}`} 
-                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                              className="text-blue-600 hover:text-blue-800 hover:underline truncate"
+                              title={company.telefono || company.phone}
                             >
                               {company.telefono || company.phone}
                             </a>
@@ -524,7 +527,8 @@ export default function CompaniesManager() {
                           {company.movil && (
                             <a 
                               href={`tel:${company.movil}`} 
-                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                              className="text-blue-600 hover:text-blue-800 hover:underline truncate"
+                              title={company.movil}
                             >
                               {company.movil}
                             </a>
@@ -534,17 +538,18 @@ export default function CompaniesManager() {
                       </td>
                     )}
                     {isColumnVisible('email') && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-2 py-3 text-xs max-w-[200px]">
                         <a 
                           href={`mailto:${company.email}`} 
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                          className="text-blue-600 hover:text-blue-800 hover:underline truncate block"
+                          title={company.email}
                         >
                           {company.email}
                         </a>
                       </td>
                     )}
                     {isColumnVisible('pagado') && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-2 py-3 whitespace-nowrap text-xs text-center">
                         {(() => {
                           const status = company.status?.toLowerCase();
                           const isPagado = (company as any).pago_confirmado;
@@ -576,7 +581,7 @@ export default function CompaniesManager() {
                       </td>
                     )}
                     {isColumnVisible('status') && (
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-3 whitespace-nowrap text-center">
                         {changingStatus?.companyId === company.id ? (
                           <select
                             value={company.status}
@@ -602,26 +607,26 @@ export default function CompaniesManager() {
                       </td>
                     )}
                     {isColumnVisible('pais') && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-500 max-w-[100px] truncate" title={company.pais || company.country}>
                         {company.pais || company.country || '-'}
                       </td>
                     )}
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-2 py-3 whitespace-nowrap text-center">
+                      <div className="flex justify-center gap-1">
                         <button
                           onClick={() => setSelectedCompany(company)}
-                          className="text-primary-600 hover:text-primary-900"
+                          className="p-1 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
                           title="Ver detalles"
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye className="w-4 h-4" />
                         </button>
                         {/* Email action removed: not needed on companies list */}
                         <button
                           onClick={() => setShowDeleteConfirm(company)}
-                          className="text-red-600 hover:text-red-900"
+                          className="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
                           title="Eliminar"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
