@@ -397,7 +397,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </button>
             </div>
           </div>
-          </div>
         </div>
       )}
 
