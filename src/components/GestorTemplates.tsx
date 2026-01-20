@@ -154,40 +154,125 @@ export default function GestorTemplates() {
   const plantillasPredefinidas = [
     {
       nombre: 'Concurso Básico Vinos',
-      descripcion: 'Template con categorías básicas de vinos (tinto, blanco, rosado)',
-      categorias: ['Vino Tinto', 'Vino Blanco', 'Vino Rosado'],
+      descripcion: 'Template con categorías básicas de vinos',
+      categorias: [
+        'Vino Tinto Joven',
+        'Vino Tinto Crianza',
+        'Vino Blanco Joven',
+        'Vino Blanco Fermentado en Barrica',
+        'Vino Rosado',
+        'Vino Espumoso'
+      ],
       mesas: 3,
       catadores: 8
     },
     {
       nombre: 'Concurso Básico Aceites',
-      descripcion: 'Template con categorías de aceites de oliva',
-      categorias: ['AOVE Frutado Intenso', 'AOVE Frutado Medio', 'AOVE Frutado Suave'],
+      descripcion: 'Template con categorías de aceites de oliva virgen extra',
+      categorias: [
+        'AOVE Frutado Verde Intenso',
+        'AOVE Frutado Verde Medio',
+        'AOVE Frutado Verde Ligero',
+        'AOVE Frutado Maduro Intenso',
+        'AOVE Frutado Maduro Medio',
+        'AOVE Ecológico'
+      ],
       mesas: 2,
-      catadores: 5
+      catadores: 6
     },
     {
-      nombre: 'Concurso Completo',
-      descripcion: 'Template con vinos, aceites y categorías especiales',
-      categorias: ['Vino Tinto', 'Vino Blanco', 'Vino Rosado', 'Vino Espumoso', 'AOVE', 'Vino Dulce'],
+      nombre: 'Concurso Completo Virtus',
+      descripcion: 'Template completo con vinos, aceites y categorías especiales',
+      categorias: [
+        'Vino Tinto Joven',
+        'Vino Tinto Crianza',
+        'Vino Tinto Reserva',
+        'Vino Blanco Joven',
+        'Vino Blanco Fermentado en Barrica',
+        'Vino Rosado',
+        'Vino Espumoso',
+        'Vino Dulce',
+        'AOVE Frutado Verde Intenso',
+        'AOVE Frutado Verde Medio',
+        'AOVE Frutado Maduro',
+        'AOVE Ecológico'
+      ],
       mesas: 5,
-      catadores: 12
+      catadores: 10
+    },
+    {
+      nombre: 'Solo Vinos Premium',
+      descripcion: 'Categorías premium para vinos de alta gama',
+      categorias: [
+        'Vino Tinto Gran Reserva',
+        'Vino Tinto Reserva',
+        'Vino Tinto Crianza',
+        'Vino Blanco Fermentado en Barrica',
+        'Vino Espumoso Brut Nature',
+        'Vino Dulce de Pasificación'
+      ],
+      mesas: 3,
+      catadores: 9
     }
   ];
 
-  const cargarPlantilla = (plantilla: typeof plantillasPredefinidas[0]) => {
+  const cargarPlantilla = async (plantilla: typeof plantillasPredefinidas[0]) => {
     const confirmar = window.confirm(
       `¿Cargar la plantilla "${plantilla.nombre}"?\n\n` +
       `${plantilla.descripcion}\n\n` +
       `- ${plantilla.categorias.length} categorías\n` +
       `- ${plantilla.mesas} mesas\n` +
-      `- ${plantilla.catadores} catadores por mesa`
+      `- ${plantilla.catadores} catadores por mesa\n\n` +
+      `⚠️ Esto sobrescribirá las categorías y mesas existentes.`
     );
 
     if (!confirmar) return;
 
-    // Aquí implementarías la lógica real de carga
-    alert('Función en desarrollo: La plantilla se cargará automáticamente');
+    setLoading(true);
+    try {
+      // 1. Eliminar categorías y mesas existentes
+      await supabase.from('categorias').delete().neq('id', 0);
+      await supabase.from('mesas').delete().neq('id', 0);
+
+      // 2. Crear categorías según la plantilla
+      const categoriasData = plantilla.categorias.map((nombre, index) => ({
+        nombre,
+        descripcion: `Categoría ${nombre}`,
+        orden: index + 1,
+        activa: true
+      }));
+
+      const { error: catError } = await supabase
+        .from('categorias')
+        .insert(categoriasData);
+      
+      if (catError) throw catError;
+
+      // 3. Crear mesas
+      const mesasData = Array.from({ length: plantilla.mesas }, (_, i) => ({
+        numero: i + 1,
+        nombre: `Mesa ${i + 1}`,
+        capacidad_catadores: plantilla.catadores,
+        activa: true
+      }));
+
+      const { error: mesasError } = await supabase
+        .from('mesas')
+        .insert(mesasData);
+      
+      if (mesasError) throw mesasError;
+
+      alert(`✅ Plantilla "${plantilla.nombre}" cargada correctamente:\n\n` +
+        `✓ ${categoriasData.length} categorías creadas\n` +
+        `✓ ${mesasData.length} mesas creadas`);
+      
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error cargando plantilla:', error);
+      alert('❌ Error al cargar la plantilla: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -286,10 +371,20 @@ export default function GestorTemplates() {
 
                 <button
                   onClick={() => cargarPlantilla(plantilla)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                  disabled={loading}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
                 >
-                  <CheckCircle className="w-4 h-4" />
-                  Usar Template
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Cargando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Usar Template
+                    </>
+                  )}
                 </button>
               </div>
             </div>
