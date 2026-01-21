@@ -59,26 +59,7 @@ export default function DiagnosticoSupabase() {
       tests.push({ name: 'Tabla muestras', status: 'error', message: e.message, error: e });
     }
 
-    // Test 4: Tabla dispositivos
-    try {
-      const { data, error } = await supabase.from('dispositivos').select('id').limit(1);
-      if (error) throw error;
-      const { count } = await supabase.from('dispositivos').select('*', { count: 'exact', head: true });
-      const cnt = Number(count ?? 0);
-      tests.push({ 
-        name: 'Tabla dispositivos', 
-        status: cnt === 0 ? 'warning' : 'success', 
-        message: cnt === 0 ? 'Tabla existe pero vacía' : `${cnt} registros encontrados`,
-        count: cnt
-      });
-    } catch (e: any) {
-      tests.push({ 
-        name: 'Tabla dispositivos', 
-        status: 'error', 
-        message: e.code === '42P01' ? 'Tabla NO EXISTE - Necesitas ejecutar la migración' : e.message,
-        error: e 
-      });
-    }
+    // Test 4: (deshabilitado) Tabla dispositivos eliminada del sistema
 
     // Test 5: Tabla empresas
     try {
@@ -207,9 +188,7 @@ export default function DiagnosticoSupabase() {
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h3 className="font-semibold text-blue-900 mb-2">💡 Soluciones Sugeridas</h3>
                   <ul className="text-sm text-blue-800 space-y-2">
-                    {resultados.some(r => r.message.includes('NO EXISTE')) && (
-                      <li>• <strong>Tabla dispositivos no existe:</strong> Ejecuta la migración <code className="bg-blue-100 px-1 rounded">20251109000000_create_dispositivos_table.sql</code> en Supabase</li>
-                    )}
+                    {/* Dispositivos removidos: no hay migración aplicable */}
                     {resultados.some(r => r.status === 'warning') && (
                       <li>• <strong>Tablas vacías:</strong> Verifica las políticas RLS en Supabase o inserta datos de prueba</li>
                     )}

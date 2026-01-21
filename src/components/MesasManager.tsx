@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { RefreshCw, Users } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
+import { RefreshCw, Users } from "lucide-react";
 
 type Usuario = {
   id: string;
@@ -16,29 +16,31 @@ type Usuario = {
 
 export default function MesasManager() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [usuariosLogueados, setUsuariosLogueados] = useState<Set<string>>(new Set());
+  const [usuariosLogueados, setUsuariosLogueados] = useState<Set<string>>(
+    new Set(),
+  );
   const [loading, setLoading] = useState(true);
   const [currentCatadorId, setCurrentCatadorId] = useState<string | null>(null);
   const [currentTablet, setCurrentTablet] = useState<number | null>(null);
 
   useEffect(() => {
     // Detectar si hay sesión de catador activa (modo tablet)
-    const catadorId = sessionStorage.getItem('catador_id');
-    const tabletNumber = sessionStorage.getItem('tablet_number');
-    
+    const catadorId = sessionStorage.getItem("catador_id");
+    const tabletNumber = sessionStorage.getItem("tablet_number");
+
     if (catadorId) {
       setCurrentCatadorId(catadorId);
-      console.log('👤 Catador logueado detectado:', catadorId);
+      console.log("👤 Catador logueado detectado:", catadorId);
     }
-    
+
     if (tabletNumber) {
       setCurrentTablet(Number(tabletNumber));
-      console.log('📱 Tablet actual:', tabletNumber);
+      console.log("📱 Tablet actual:", tabletNumber);
     }
 
     fetchUsuarios();
     subscribeToPresence();
-    
+
     return () => {
       // Cleanup: remover suscripción al salir
       supabase.removeAllChannels();
@@ -48,21 +50,21 @@ export default function MesasManager() {
   const fetchUsuarios = async () => {
     try {
       const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .not('mesa', 'is', null)
-        .order('mesa', { ascending: true })
-        .order('puesto', { ascending: true });
+        .from("usuarios")
+        .select("*")
+        .not("mesa", "is", null)
+        .order("mesa", { ascending: true })
+        .order("puesto", { ascending: true });
 
       if (error) {
-        console.error('Error al cargar mesas:', error);
+        console.error("Error al cargar mesas:", error);
         throw error;
       }
-      
+
       console.log(`Mesas: ${data?.length || 0} usuarios cargados`);
       setUsuarios(data || []);
     } catch (error) {
-      console.error('Error crítico en mesas:', error);
+      console.error("Error crítico en mesas:", error);
     } finally {
       setLoading(false);
     }
@@ -70,19 +72,19 @@ export default function MesasManager() {
 
   const subscribeToPresence = async () => {
     // Crear canal de presencia para tracking en tiempo real
-    const channel = supabase.channel('online-users', {
+    const channel = supabase.channel("online-users", {
       config: {
         presence: {
-          key: 'user_id',
+          key: "user_id",
         },
       },
     });
 
     channel
-      .on('presence', { event: 'sync' }, () => {
+      .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const onlineUserIds = new Set<string>();
-        
+
         Object.keys(state).forEach((presenceKey) => {
           const presences = state[presenceKey];
           presences.forEach((presence: any) => {
@@ -91,13 +93,15 @@ export default function MesasManager() {
             }
           });
         });
-        
+
         setUsuariosLogueados(onlineUserIds);
       })
       .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
+        if (status === "SUBSCRIBED") {
           // Trackear presencia del usuario actual si está logueado
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           if (session) {
             await channel.track({
               user_id: session.user.id,
@@ -115,39 +119,41 @@ export default function MesasManager() {
 
   const getMesaBg = (mesaNum: number) => {
     const colors = [
-      'bg-rose-100 border-rose-400',
-      'bg-orange-100 border-orange-400',
-      'bg-amber-100 border-amber-400',
-      'bg-lime-100 border-lime-400',
-      'bg-emerald-100 border-emerald-400',
+      "bg-rose-100 border-rose-400",
+      "bg-orange-100 border-orange-400",
+      "bg-amber-100 border-amber-400",
+      "bg-lime-100 border-lime-400",
+      "bg-emerald-100 border-emerald-400",
     ];
     return colors[(mesaNum - 1) % colors.length];
   };
 
   const getMesaHeaderBg = (mesaNum: number) => {
     const colors = [
-      'bg-gradient-to-r from-rose-500 to-rose-600',
-      'bg-gradient-to-r from-orange-500 to-orange-600',
-      'bg-gradient-to-r from-amber-500 to-amber-600',
-      'bg-gradient-to-r from-lime-500 to-lime-600',
-      'bg-gradient-to-r from-emerald-500 to-emerald-600',
+      "bg-gradient-to-r from-rose-500 to-rose-600",
+      "bg-gradient-to-r from-orange-500 to-orange-600",
+      "bg-gradient-to-r from-amber-500 to-amber-600",
+      "bg-gradient-to-r from-lime-500 to-lime-600",
+      "bg-gradient-to-r from-emerald-500 to-emerald-600",
     ];
     return colors[(mesaNum - 1) % colors.length];
   };
 
   const getRolColor = (rol: string | null) => {
-    if (!rol) return 'bg-gray-100 text-gray-700';
-    if (rol === 'Administrador') return 'bg-purple-100 text-purple-800 border-purple-300';
-    if (rol === 'Presidente') return 'bg-blue-100 text-blue-800 border-blue-300';
-    return 'bg-green-100 text-green-800 border-green-300';
+    if (!rol) return "bg-gray-100 text-gray-700";
+    if (rol === "Administrador")
+      return "bg-purple-100 text-purple-800 border-purple-300";
+    if (rol === "Presidente")
+      return "bg-blue-100 text-blue-800 border-blue-300";
+    return "bg-green-100 text-green-800 border-green-300";
   };
 
   const getUsuariosPorMesa = (mesaNum: number) => {
-    return usuarios.filter(u => u.mesa === mesaNum);
+    return usuarios.filter((u) => u.mesa === mesaNum);
   };
 
   const getTotalAsignados = () => {
-    return usuarios.filter(u => u.puesto !== null).length;
+    return usuarios.filter((u) => u.puesto !== null).length;
   };
 
   if (loading) {
@@ -160,7 +166,7 @@ export default function MesasManager() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -168,7 +174,12 @@ export default function MesasManager() {
           <div>
             <h2 className="text-2xl font-bold">Distribución por Mesas</h2>
             <p className="text-sm text-gray-600">
-              {getTotalAsignados()} catadores asignados en {[1,2,3,4,5].filter(m => getUsuariosPorMesa(m).length > 0).length} mesas activas
+              {getTotalAsignados()} catadores asignados en{" "}
+              {
+                [1, 2, 3, 4, 5].filter((m) => getUsuariosPorMesa(m).length > 0)
+                  .length
+              }{" "}
+              mesas activas
             </p>
           </div>
         </div>
@@ -187,7 +198,9 @@ export default function MesasManager() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {[1, 2, 3, 4, 5].map((mesaNum) => {
           const usuariosEnMesa = getUsuariosPorMesa(mesaNum);
-          const ocupados = usuariosEnMesa.filter(u => u.puesto !== null).length;
+          const ocupados = usuariosEnMesa.filter(
+            (u) => u.puesto !== null,
+          ).length;
 
           return (
             <div
@@ -195,8 +208,12 @@ export default function MesasManager() {
               className={`border-3 rounded-xl overflow-hidden shadow-xl ${getMesaBg(mesaNum)}`}
             >
               {/* Header de Mesa */}
-              <div className={`${getMesaHeaderBg(mesaNum)} text-white px-4 py-3`}>
-                <div className="font-bold text-xl text-center">MESA {mesaNum}</div>
+              <div
+                className={`${getMesaHeaderBg(mesaNum)} text-white px-4 py-3`}
+              >
+                <div className="font-bold text-xl text-center">
+                  MESA {mesaNum}
+                </div>
                 <div className="text-sm text-center opacity-95 font-medium">
                   {ocupados}/5 catadores
                 </div>
@@ -207,68 +224,97 @@ export default function MesasManager() {
                 {/* Encabezados de columnas */}
                 <div className="flex items-center justify-between gap-2 px-3 pb-1 border-b-2 border-gray-400">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="w-6 text-xs font-bold text-gray-600">#</span>
+                    <span className="w-6 text-xs font-bold text-gray-600">
+                      #
+                    </span>
                     <span className="w-2"></span>
-                    <span className="text-xs font-bold text-gray-600 flex-1">Nombre</span>
+                    <span className="text-xs font-bold text-gray-600 flex-1">
+                      Nombre
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className="text-xs font-bold text-gray-600">Rol</span>
-                    <span className="text-xs font-bold text-gray-600 w-12 text-center">Tablet</span>
+                    <span className="text-xs font-bold text-gray-600 w-12 text-center">
+                      Tablet
+                    </span>
                   </div>
                 </div>
 
                 {[1, 2, 3, 4, 5].map((puestoNum) => {
-                  const usuario = usuariosEnMesa.find(u => u.puesto === puestoNum);
-                  const logueado = usuario ? isUsuarioLogueado(usuario.user_id) : false;
-                  const esCatadorActual = usuario && (
-                    usuario.id === currentCatadorId || 
-                    (currentTablet && Number(usuario.tablet) === currentTablet)
+                  const usuario = usuariosEnMesa.find(
+                    (u) => u.puesto === puestoNum,
                   );
-                  
+                  const logueado = usuario
+                    ? isUsuarioLogueado(usuario.user_id)
+                    : false;
+                  const esCatadorActual =
+                    usuario &&
+                    (usuario.id === currentCatadorId ||
+                      (currentTablet &&
+                        Number(usuario.tablet) === currentTablet));
+
                   return (
                     <div
                       key={puestoNum}
                       className={`rounded-lg border-2 px-3 py-2 transition-all ${
                         esCatadorActual
-                          ? 'bg-green-50 border-green-400 shadow-md ring-2 ring-green-200'
-                          : usuario 
-                            ? 'bg-white border-gray-300 shadow-sm hover:shadow-md' 
-                            : 'bg-gray-50 border-gray-200 border-dashed opacity-60'
+                          ? "bg-green-50 border-green-400 shadow-md ring-2 ring-green-200"
+                          : usuario
+                            ? "bg-white border-gray-300 shadow-sm hover:shadow-md"
+                            : "bg-gray-50 border-gray-200 border-dashed opacity-60"
                       }`}
                     >
                       {usuario ? (
                         <div className="flex items-center justify-between gap-2 text-xs">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 ${
-                              esCatadorActual
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-700 text-white'
-                            }`}>
+                            <span
+                              className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 ${
+                                esCatadorActual
+                                  ? "bg-green-600 text-white"
+                                  : "bg-gray-700 text-white"
+                              }`}
+                            >
                               {puestoNum}
                             </span>
                             <span
                               className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                logueado ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                                logueado
+                                  ? "bg-green-500 animate-pulse"
+                                  : "bg-gray-400"
                               }`}
-                              title={logueado ? 'Conectado' : 'Desconectado'}
+                              title={logueado ? "Conectado" : "Desconectado"}
                             />
-                            <span className={`font-bold truncate flex-1 ${
-                              esCatadorActual ? 'text-green-900' : 'text-gray-900'
-                            }`}>
+                            <span
+                              className={`font-bold truncate flex-1 ${
+                                esCatadorActual
+                                  ? "text-green-900"
+                                  : "text-gray-900"
+                              }`}
+                            >
                               {usuario.nombre}
-                              {esCatadorActual && <span className="ml-1 text-green-600">👤</span>}
+                              {esCatadorActual && (
+                                <span className="ml-1 text-green-600">👤</span>
+                              )}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getRolColor(usuario.rol)}`}>
-                              {usuario.rol === 'Administrador' ? 'Admin' : usuario.rol === 'Presidente' ? 'Presidente' : 'Catador'}
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getRolColor(usuario.rol)}`}
+                            >
+                              {usuario.rol === "Administrador"
+                                ? "Admin"
+                                : usuario.rol === "Presidente"
+                                  ? "Presidente"
+                                  : "Catador"}
                             </span>
                             {usuario.tablet && (
-                              <span className={`text-xs px-2 py-0.5 rounded font-mono font-semibold ${
-                                esCatadorActual
-                                  ? 'bg-green-200 text-green-800'
-                                  : 'bg-gray-200 text-gray-700'
-                              }`}>
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded font-mono font-semibold ${
+                                  esCatadorActual
+                                    ? "bg-green-200 text-green-800"
+                                    : "bg-gray-200 text-gray-700"
+                                }`}
+                              >
                                 {usuario.tablet}
                               </span>
                             )}
@@ -293,7 +339,11 @@ export default function MesasManager() {
               <div className="px-3 pb-3">
                 <div className="text-xs text-gray-700 bg-white rounded-lg px-3 py-2 border-2 border-gray-300 font-medium text-center">
                   {ocupados > 0 ? (
-                    <><strong>{ocupados}</strong> catador{ocupados !== 1 ? 'es' : ''} asignado{ocupados !== 1 ? 's' : ''}</>
+                    <>
+                      <strong>{ocupados}</strong> catador
+                      {ocupados !== 1 ? "es" : ""} asignado
+                      {ocupados !== 1 ? "s" : ""}
+                    </>
                   ) : (
                     <>Mesa vacía</>
                   )}
@@ -306,7 +356,9 @@ export default function MesasManager() {
 
       {/* Leyenda de roles y estados */}
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-300 rounded-xl p-4 shadow-md">
-        <h3 className="text-sm font-bold text-gray-800 mb-3 text-center">Leyenda</h3>
+        <h3 className="text-sm font-bold text-gray-800 mb-3 text-center">
+          Leyenda
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Estados de conexión */}
           <div>
@@ -354,7 +406,9 @@ export default function MesasManager() {
       {usuarios.length === 0 && (
         <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
           <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay catadores asignados</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No hay catadores asignados
+          </h3>
           <p className="text-gray-500">
             Ve a Gestión de Catadores para asignar mesas y puestos.
           </p>

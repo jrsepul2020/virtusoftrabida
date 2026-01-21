@@ -56,29 +56,7 @@ async function diagnostico() {
     console.error('💥 Error en muestras:', e);
   }
 
-  // Verificar tabla dispositivos
-  try {
-    console.log('\n📋 Verificando tabla DISPOSITIVOS...');
-    const { data: dispositivos, error: dispositivosErr } = await supabase
-      .from('dispositivos')
-      .select('id, tablet_number, nombre_asignado')
-      .limit(5);
-    
-    if (dispositivosErr) {
-      console.error('❌ Error en dispositivos:', dispositivosErr);
-      console.error('Detalles:', {
-        message: dispositivosErr.message,
-        code: dispositivosErr.code,
-        details: dispositivosErr.details,
-        hint: dispositivosErr.hint
-      });
-    } else {
-      console.log(`✅ Dispositivos encontrados: ${dispositivos?.length || 0}`);
-      console.log('📊 Muestra:', dispositivos);
-    }
-  } catch (e) {
-    console.error('💥 Error en dispositivos:', e);
-  }
+  // Dispositivos table removed from diagnostics
 
   // Verificar tabla empresas
   try {

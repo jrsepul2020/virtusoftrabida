@@ -1,38 +1,90 @@
-import { useState, useEffect } from 'react';
-import { Building2, BarChart3, Layers, List, Users, Menu, X, Grid3X3, Mail, LogOut, FolderTree, LucideIcon, FileText, Smartphone, Settings, Camera, Trophy, CreditCard, Tag, Send, Barcode, ClipboardList, Download, Upload, Package, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
-import { usePWAInstall } from '../hooks/usePWAInstall';
-import { supabase } from '../lib/supabase';
-import CompaniesManager from './CompaniesManager';
-import InscripcionesManager from './InscripcionesManager';
-import UnifiedInscriptionForm from './UnifiedInscriptionForm';
-import SimpleSamplesList from './SimpleSamplesList';
-import PrintSamples from './PrintSamples';
-import TandasManager from './TandasManager';
-import StatisticsManager from './StatisticsManager';
-import MesasManager from './MesasManager';
-import EmailTest from './EmailTest';
-import CatadoresManager from './CatadoresManager';
-import GestionTandas from './GestionTandas';
-import ListadoEmpresas from './ListadoEmpresas';
-import DispositivosManager from './DispositivosManager';
-import SettingsManager from './SettingsManager';
-import MailrelayManager from './MailrelayManager';
-import ManageSamples from './ManageSamples';
-import Chequeo from './Chequeo';
-import PantallasManager from './PantallasManager';
-import BottlePhotosGallery from './BottlePhotosGallery';
-import ResultadosCatas from './ResultadosCatas';
-import PuntuacionesManager from './PuntuacionesManager';
-import PayPalDashboard from './PayPalDashboard';
-import CategoriasManager from './CategoriasManager';
-import BackupManager from './BackupManager';
-import ComunicacionesManager from './ComunicacionesManager';
-import EtiquetadoMuestras from './EtiquetadoMuestras';
-import UsuariosManager from './UsuariosManager';
-import UltimasInscripciones from './UltimasInscripciones';
-import GestorTemplates from './GestorTemplates';
+import { useState, useEffect } from "react";
+import {
+  Building2,
+  BarChart3,
+  Layers,
+  List,
+  Users,
+  Menu,
+  X,
+  Grid3X3,
+  Mail,
+  LogOut,
+  FolderTree,
+  LucideIcon,
+  FileText,
+  Settings,
+  Camera,
+  Trophy,
+  CreditCard,
+  Tag,
+  Send,
+  Barcode,
+  ClipboardList,
+  Download,
+  Upload,
+  Package,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  User,
+} from "lucide-react";
+import { usePWAInstall } from "../hooks/usePWAInstall";
+import { supabase } from "../lib/supabase";
+import CompaniesManager from "./CompaniesManager";
+import InscripcionesManager from "./InscripcionesManager";
+import UnifiedInscriptionForm from "./UnifiedInscriptionForm";
+import SimpleSamplesList from "./SimpleSamplesList";
+import PrintSamples from "./PrintSamples";
+import TandasManager from "./TandasManager";
+import StatisticsManager from "./StatisticsManager";
+import MesasManager from "./MesasManager";
+import EmailTest from "./EmailTest";
+import CatadoresManager from "./CatadoresManager";
+import GestionTandas from "./GestionTandas";
+import ListadoEmpresas from "./ListadoEmpresas";
+// Dispositivos management removed from UI (component deleted)
+import SettingsManager from "./SettingsManager";
+import MailrelayManager from "./MailrelayManager";
+import ManageSamples from "./ManageSamples";
+import Chequeo from "./Chequeo";
+import PantallasManager from "./PantallasManager";
+import BottlePhotosGallery from "./BottlePhotosGallery";
+import ResultadosCatas from "./ResultadosCatas";
+import PuntuacionesManager from "./PuntuacionesManager";
+import PayPalDashboard from "./PayPalDashboard";
+import CategoriasManager from "./CategoriasManager";
+import BackupManager from "./BackupManager";
+import ComunicacionesManager from "./ComunicacionesManager";
+import EtiquetadoMuestras from "./EtiquetadoMuestras";
+import UsuariosManager from "./UsuariosManager";
+import UltimasInscripciones from "./UltimasInscripciones";
+import GestorTemplates from "./GestorTemplates";
+import UserProfile from "./UserProfile";
 
-type Tab = 'statistics' | 'inscripciones' | 'companies' | 'listadoEmpresas' | 'simpleList' | 'gestionMuestras' | 'categorias' | 'chequeo' | 'crearTandas' | 'gestionTandas' | 'mesas' | 'puntuaciones' | 'catadores' | 'dispositivos' | 'paypal' | 'print' | 'form' | 'emailTest' | 'configuracion' | 'usuarios' | 'pantallas' | 'fotosBotellas' | 'resultados' | 'backup' | 'comunicaciones' | 'mailrelay' | 'etiquetado' | 'templates';
+type Tab =
+  | "statistics"
+  | "inscripciones"
+  | "companies"
+  | "muestras"
+  | "tandas"
+  | "mesas"
+  | "puntuaciones"
+  | "catadores"
+  | "paypal"
+  | "print"
+  | "form"
+  | "emailTest"
+  | "configuracion"
+  | "usuarios"
+  | "pantallas"
+  | "fotosBotellas"
+  | "resultados"
+  | "backup"
+  | "comunicaciones"
+  | "mailrelay"
+  | "templates"
+  | "profile";
 
 interface MenuItem {
   id: string;
@@ -52,39 +104,61 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('statistics');
+  const [activeTab, setActiveTab] = useState<Tab>("statistics");
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [pantallasKey, setPantallasKey] = useState(0);
-  const [currentUser, setCurrentUser] = useState<{ nombre: string; email: string } | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard', 'inscriptions', 'tastings', 'admin']));
+  const [currentUser, setCurrentUser] = useState<{
+    nombre: string;
+    email: string;
+  } | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(["dashboard", "inscriptions", "tastings", "admin"]),
+  );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    const saved = localStorage.getItem("sidebarCollapsed");
+    return saved === "true";
+  });
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem("sidebarCollapsed", String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
 
   // Obtener datos del usuario actual
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session?.user) {
           // Buscar en tabla usuarios
           const { data: userData } = await supabase
-            .from('usuarios')
-            .select('nombre, email')
-            .eq('id', session.user.id)
+            .from("usuarios")
+            .select("nombre, email")
+            .eq("id", session.user.id)
             .single();
-          
+
           if (userData) {
             setCurrentUser({ nombre: userData.nombre, email: userData.email });
           } else {
             // Fallback al email de auth
-            setCurrentUser({ 
-              nombre: session.user.email?.split('@')[0] || 'Usuario', 
-              email: session.user.email || '' 
+            setCurrentUser({
+              nombre: session.user.email?.split("@")[0] || "Usuario",
+              email: session.user.email || "",
             });
           }
         }
       } catch (error) {
-        console.error('Error obteniendo usuario:', error);
+        console.error("Error obteniendo usuario:", error);
       }
     };
     fetchCurrentUser();
@@ -92,24 +166,24 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const handleNavigateToSamplesByCategory = (category: string) => {
     setCategoryFilter(category);
-    setActiveTab('simpleList');
+    setActiveTab("muestras");
   };
 
   const handleTabChange = (tab: Tab) => {
     // Si cambiamos de pestaña manualmente, limpiamos el filtro
-    if (tab !== 'simpleList') {
+    if (tab !== "muestras") {
       setCategoryFilter(undefined);
     }
     // Si pulsamos en pantallas, forzar recarga
-    if (tab === 'pantallas') {
-      setPantallasKey(prev => prev + 1);
+    if (tab === "pantallas") {
+      setPantallasKey((prev) => prev + 1);
     }
     setActiveTab(tab);
     setShowMobileMenu(false);
   };
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(sectionId)) {
         newSet.delete(sectionId);
@@ -122,122 +196,130 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const menuSections: MenuSection[] = [
     {
-      id: 'dashboard',
-      title: 'PANEL PRINCIPAL',
+      id: "dashboard",
+      title: "PANEL PRINCIPAL",
       items: [
-        { id: 'statistics', label: 'Estadísticas', icon: BarChart3 },
-        { id: 'inscripciones', label: 'Inscripciones', icon: ClipboardList },
-      ]
+        { id: "statistics", label: "Estadísticas", icon: BarChart3 },
+        { id: "inscripciones", label: "Inscripciones", icon: ClipboardList },
+      ],
     },
     {
-      id: 'inscriptions',
-      title: 'GESTIÓN DE INSCRIPCIONES',
+      id: "inscriptions",
+      title: "GESTIÓN DE INSCRIPCIONES",
       items: [
-        { id: 'companies', label: 'Empresas', icon: Building2 },
-        { id: 'listadoEmpresas', label: 'Listado Empresas', icon: FileText },
-        { id: 'simpleList', label: 'Listado Muestras', icon: List },
-        { id: 'gestionMuestras', label: 'Gestión Muestras', icon: List },
-        { id: 'etiquetado', label: 'Etiquetado Muestras', icon: Barcode },
-        { id: 'categorias', label: 'Categorías', icon: Tag },
-        { id: 'fotosBotellas', label: 'Fotos Botellas', icon: Camera },
-        { id: 'chequeo', label: 'Chequeo', icon: List },
-      ]
+        { id: "companies", label: "Empresas", icon: Building2 },
+        { id: "muestras", label: "Muestras", icon: List },
+        { id: "fotosBotellas", label: "Fotos Botellas", icon: Camera },
+      ],
     },
     {
-      id: 'tastings',
-      title: 'CATAS Y EVALUACIONES',
+      id: "tastings",
+      title: "CATAS Y EVALUACIONES",
       items: [
-        { id: 'crearTandas', label: 'Crear Tandas', icon: Layers },
-        { id: 'gestionTandas', label: 'Gestión Tandas', icon: FolderTree },
-        { id: 'resultados', label: 'Resultados Catas', icon: Trophy },
-        { id: 'puntuaciones', label: 'Puntuaciones', icon: BarChart3 },
-        { id: 'catadores', label: 'Catadores', icon: Users },
-        { id: 'mesas', label: 'Mesas', icon: Grid3X3 },
-        { id: 'dispositivos', label: 'Dispositivos', icon: Smartphone },
-      ]
+        { id: "tandas", label: "Tandas", icon: FolderTree },
+        { id: "resultados", label: "Resultados Catas", icon: Trophy },
+        { id: "puntuaciones", label: "Puntuaciones", icon: BarChart3 },
+        { id: "catadores", label: "Catadores", icon: Users },
+        { id: "mesas", label: "Mesas", icon: Grid3X3 },
+        // Dispositivos removed from UI
+      ],
     },
     {
-      id: 'admin',
-      title: 'ADMINISTRACIÓN',
+      id: "admin",
+      title: "ADMINISTRACIÓN",
       items: [
-        { id: 'comunicaciones', label: 'Comunicaciones', icon: Send },
-        { id: 'mailrelay', label: 'Mailrelay', icon: Mail },
-        { id: 'paypal', label: 'PAYPAL', icon: CreditCard, highlight: true },
-        { id: 'emailTest', label: 'Probar Emails', icon: Mail },
-        { id: 'templates', label: 'Templates', icon: Package },
-        { id: 'usuarios', label: 'Usuarios', icon: Users },
-        { id: 'configuracion', label: 'Configuración', icon: Settings },
-      ]
-    }
+        { id: "comunicaciones", label: "Comunicaciones", icon: Send },
+        { id: "mailrelay", label: "Mailrelay", icon: Mail },
+        { id: "paypal", label: "PAYPAL", icon: CreditCard },
+        { id: "emailTest", label: "Probar Emails", icon: Mail },
+        { id: "templates", label: "Templates", icon: Package },
+        { id: "usuarios", label: "Usuarios", icon: Users },
+        { id: "configuracion", label: "Configuración", icon: Settings },
+      ],
+    },
   ];
 
   return (
     <div className="flex flex-1 bg-gray-100 min-h-screen">
       {/* Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className={`flex flex-col bg-[#2B3D22] min-h-screen lg:h-screen lg:sticky lg:top-0 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}> 
-          {/* Logo/Header */}
-          <div className="flex items-center h-16 px-4 justify-between bg-[#1E2A16] shadow-sm flex-shrink-0">
-            {!sidebarCollapsed && (
+        <div
+          className={`flex flex-col bg-[#3D5432] min-h-screen lg:h-screen lg:sticky lg:top-0 transition-all duration-300 ${
+            isSidebarCollapsed ? "w-16" : "w-64"
+          }`}
+        >
+          {/* Logo/Header with Toggle */}
+          <div className="flex items-center h-16 px-4 justify-between bg-[#3D5432] shadow-sm flex-shrink-0">
+            {!isSidebarCollapsed && (
               <div className="flex items-center gap-3 text-white">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm">V</div>
-                <h2 className="text-base font-semibold text-white truncate">VIRTUS ADMIN</h2>
+                <img
+                  src="/logo-blanco-virtus.png"
+                  alt="Virtus"
+                  className="h-10 w-auto"
+                />
               </div>
             )}
             <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors ml-auto"
-              title={sidebarCollapsed ? 'Expandir menú' : 'Contraer menú'}
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-lg hover:bg-[#4a6540] text-white transition-colors ml-auto"
+              title={
+                isSidebarCollapsed ? "Expandir sidebar" : "Colapsar sidebar"
+              }
             >
-              {sidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+              {isSidebarCollapsed ? (
+                <ChevronRight className="w-5 h-5" />
+              ) : (
+                <ChevronLeft className="w-5 h-5" />
+              )}
             </button>
           </div>
-          
+
           {/* Navigation */}
           <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
             {menuSections.map((section) => (
               <div key={section.id} className="mb-2">
-                {/* Section Header */}
-                {!sidebarCollapsed && (
+                {/* Section Header - Hidden when collapsed */}
+                {!isSidebarCollapsed && (
                   <button
                     onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-white/50 hover:text-white/70 transition-colors uppercase tracking-wider"
+                    className="w-full flex items-center justify-between px-2 py-1 text-[9px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-wider"
                   >
                     <span>{section.title}</span>
                     {expandedSections.has(section.id) ? (
-                      <ChevronDown className="w-3 h-3" />
+                      <ChevronDown className="w-3 h-3 text-white/80" />
                     ) : (
-                      <ChevronRight className="w-3 h-3" />
+                      <ChevronRight className="w-3 h-3 text-white/60" />
                     )}
                   </button>
                 )}
-                
+
                 {/* Section Items */}
-                {(sidebarCollapsed || expandedSections.has(section.id)) && (
-                  <div className="space-y-0.5">
+                {(isSidebarCollapsed || expandedSections.has(section.id)) && (
+                  <div className="space-y-0">
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
-                      const isHighlight = item.highlight;
                       return (
                         <button
                           key={item.id}
                           onClick={() => handleTabChange(item.id as Tab)}
                           title={item.label}
-                          className={`w-full group flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                            isHighlight
-                              ? isActive
-                                ? 'bg-red-700 text-white shadow-lg'
-                                : 'bg-red-600 text-white hover:bg-red-700'
-                              : isActive
-                                ? 'bg-[#66462e] text-white shadow-lg'
-                                : 'text-white/80 hover:bg-white/10 hover:text-white'
+                          className={`w-full group flex items-center gap-2 ${
+                            isSidebarCollapsed ? "justify-center px-2" : "px-3"
+                          } py-2 text-[11px] font-medium rounded-lg transition-all duration-200 ${
+                            isActive
+                              ? "bg-red-800 text-white shadow-lg"
+                              : "text-white/80 hover:bg-red-700 hover:text-white"
                           }`}
                         >
-                          <Icon className={`w-4 h-4 flex-shrink-0 ${isHighlight ? 'text-white' : isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`} />
-                          {!sidebarCollapsed && (
+                          <Icon
+                            className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-white" : "text-white/70 group-hover:text-white"}`}
+                          />
+                          {!isSidebarCollapsed && (
                             <>
-                              <span className="truncate flex-1 text-left">{item.label}</span>
+                              <span className="truncate flex-1 text-left text-[13px]">
+                                {item.label}
+                              </span>
                               {isActive && (
                                 <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                               )}
@@ -248,60 +330,22 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     })}
                   </div>
                 )}
-                
+
                 {/* Separator line between sections (only when expanded) */}
-                {!sidebarCollapsed && section.id !== 'admin' && (
-                  <div className="mt-2 pt-2">
+                {section.id !== "admin" && (
+                  <div className="mt-1 pt-1">
                     <div className="border-t border-white/10"></div>
                   </div>
                 )}
               </div>
             ))}
           </nav>
-          
-          {/* Footer */}
-          <div className={`p-2 border-t border-white/10 flex-shrink-0 ${sidebarCollapsed ? 'px-2' : ''}`}>
-            {!sidebarCollapsed ? (
-              <>
-                <div className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-colors cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#66462e] rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-xs">{currentUser?.nombre?.charAt(0).toUpperCase() || 'U'}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white truncate">{currentUser?.nombre || 'Cargando...'}</p>
-                      <p className="text-[10px] text-white/60 truncate">{currentUser?.email || ''}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-2 space-y-1">
-                  <AdminPWAInstall />
-                  <button 
-                    onClick={onLogout}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                    title="Cerrar sesión"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex justify-center">
-                  <div className="w-10 h-10 bg-[#66462e] rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">{currentUser?.nombre?.charAt(0).toUpperCase() || 'U'}</span>
-                  </div>
-                </div>
-                <button 
-                  onClick={onLogout}
-                  className="w-full flex justify-center p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                  title="Cerrar sesión"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+
+          {/* Footer - PWA Install only */}
+          <div className={`p-3 border-t border-white/10 flex-shrink-0`}>
+            <div className="space-y-1">
+              <AdminPWAInstall />
+            </div>
           </div>
         </div>
       </div>
@@ -309,15 +353,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       {/* Mobile sidebar overlay */}
       {showMobileMenu && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowMobileMenu(false)}></div>
-          <div className="fixed inset-y-0 left-0 w-72 bg-[#2B3D22] shadow-xl flex flex-col">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50"
+            onClick={() => setShowMobileMenu(false)}
+          ></div>
+          <div className="fixed inset-y-0 left-0 w-72 bg-[#3D5432] shadow-xl flex flex-col">
             {/* Mobile Header */}
-            <div className="flex items-center justify-between h-16 px-4 bg-[#1E2A16]">
+            <div className="flex items-center justify-between h-16 px-4 bg-[#3D5432]">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm">
-                  <span className="text-white">V</span>
-                </div>
-                <h2 className="text-base font-semibold text-white">VIRTUS ADMIN</h2>
+                <img
+                  src="/logo-blanco-virtus.png"
+                  alt="Virtus"
+                  className="h-10 w-auto"
+                />
               </div>
               <button
                 onClick={() => setShowMobileMenu(false)}
@@ -326,15 +374,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             {/* Mobile Navigation */}
-            <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+            <nav className="flex-1 px-2 py-2 space-y-0 overflow-y-auto">
               {menuSections.map((section) => (
                 <div key={section.id} className="mb-2">
                   {/* Section Header */}
                   <button
                     onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-white/50 hover:text-white/70 transition-colors uppercase tracking-wider"
+                    className="w-full flex items-center justify-between px-2 py-1 text-[9px] font-bold text-white/50 hover:text-white/70 transition-colors uppercase tracking-wider"
                   >
                     <span>{section.title}</span>
                     {expandedSections.has(section.id) ? (
@@ -343,10 +391,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <ChevronRight className="w-3 h-3" />
                     )}
                   </button>
-                  
+
                   {/* Section Items */}
                   {expandedSections.has(section.id) && (
-                    <div className="space-y-0.5">
+                    <div className="space-y-0">
                       {section.items.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
@@ -355,18 +403,22 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <button
                             key={item.id}
                             onClick={() => handleTabChange(item.id as Tab)}
-                            className={`w-full group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                            className={`w-full group flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-lg transition-all duration-200 ${
                               isHighlight
                                 ? isActive
-                                  ? 'bg-red-700 text-white shadow-lg'
-                                  : 'bg-red-600 text-white hover:bg-red-700'
+                                  ? "bg-red-700 text-white shadow-lg"
+                                  : "bg-red-600 text-white hover:bg-red-700"
                                 : isActive
-                                  ? 'bg-[#66462e] text-white shadow-lg'
-                                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                  ? "bg-[#b91c1c] text-white shadow-lg"
+                                  : "text-white/80 hover:bg-white/10 hover:text-white"
                             }`}
                           >
-                            <Icon className={`w-5 h-5 flex-shrink-0 ${isHighlight ? 'text-white' : isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`} />
-                            <span className="truncate flex-1 text-left">{item.label}</span>
+                            <Icon
+                              className={`w-3 h-3 flex-shrink-0 ${isHighlight ? "text-white" : isActive ? "text-white" : "text-white/70 group-hover:text-white"}`}
+                            />
+                            <span className="truncate flex-1 text-left text-[13px]">
+                              {item.label}
+                            </span>
                             {isActive && (
                               <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                             )}
@@ -375,9 +427,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       })}
                     </div>
                   )}
-                  
+
                   {/* Separator line between sections */}
-                  {section.id !== 'admin' && (
+                  {section.id !== "admin" && (
                     <div className="mt-2 pt-2">
                       <div className="border-t border-white/10"></div>
                     </div>
@@ -385,10 +437,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               ))}
             </nav>
-            
+
             {/* Mobile Footer */}
             <div className="p-3 border-t border-white/10">
-              <button 
+              <button
                 onClick={onLogout}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
@@ -404,45 +456,193 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Floating mobile menu button */}
         {!showMobileMenu && (
-          <button
-            onClick={() => setShowMobileMenu(true)}
-            className="fixed top-3 left-3 z-40 p-2 rounded-lg bg-[#1E2A16] text-white shadow-md lg:hidden"
-            aria-label="Abrir menú"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <div className="fixed top-3 left-3 z-40 lg:hidden">
+            <button
+              onClick={() => setShowMobileMenu(true)}
+              className="p-2 rounded-lg bg-[#3D5432] text-white shadow-md"
+              aria-label="Abrir menú"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
         )}
+
+        {/* Top bar */}
+        <div className="sticky top-0 z-30 bg-[#5A7A4A] text-white border-b border-[#6a8a5a]">
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Quick Navigation Buttons */}
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={() => handleTabChange("statistics")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    activeTab === "statistics"
+                      ? "bg-white/20 text-white"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  Estadísticas
+                </button>
+                <button
+                  onClick={() => handleTabChange("inscripciones")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    activeTab === "inscripciones"
+                      ? "bg-white/20 text-white"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  Inscripciones
+                </button>
+                <button
+                  onClick={() => handleTabChange("muestras")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    activeTab === "muestras"
+                      ? "bg-white/20 text-white"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  Listado de Muestras
+                </button>
+              </div>
+            </div>
+
+            {/* Right side buttons */}
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setActiveTab("configuracion")}
+                className="p-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Abrir configuración"
+                title="Configuración global"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+
+              {/* User Menu Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/10 transition-colors border border-transparent hover:border-white/20"
+                >
+                  <div className="w-8 h-8 bg-[#b91c1c] rounded-full flex items-center justify-center text-white font-bold border-2 border-[#5A7A4A]">
+                    {currentUser?.nombre?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <ChevronDown
+                    className={`w-4 h-4 text-white transition-transform ${showUserMenu ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {showUserMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowUserMenu(false)}
+                    ></div>
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 py-2 border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+                      {/* User Header */}
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {currentUser?.nombre || "Usuario"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {currentUser?.email || ""}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span className="text-xs text-green-600 font-medium">
+                            Activo
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setActiveTab("profile");
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                        >
+                          <User className="w-4 h-4 text-gray-400" />
+                          Detalles del perfil
+                        </button>
+                        <button
+                          onClick={() => {
+                            setActiveTab("profile"); // Navigate to profile, logic in component handles tab
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                        >
+                          <Settings className="w-4 h-4 text-gray-400" />
+                          Configuración de la cuenta
+                        </button>
+                      </div>
+
+                      <div className="border-t border-gray-100 mt-1 pt-1">
+                        <button
+                          onClick={onLogout}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Cerrar sesión
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className={activeTab === 'listadoEmpresas' ? 'p-2' : 'p-4'}>
-            {activeTab === 'statistics' && <StatisticsManager onNavigateToSamples={handleNavigateToSamplesByCategory} />}
-            {activeTab === 'inscripciones' && <InscripcionesManager onNewInscripcion={() => setActiveTab('form')} />}
-            {activeTab === 'companies' && <CompaniesManager />}
-            {activeTab === 'listadoEmpresas' && <ListadoEmpresas />}
-            {activeTab === 'simpleList' && <SimpleSamplesList onNavigateToPrint={() => setActiveTab('print')} initialCategoryFilter={categoryFilter} />}
-            {activeTab === 'gestionMuestras' && <ManageSamples />}
-            {activeTab === 'etiquetado' && <EtiquetadoMuestras />}
-            {activeTab === 'categorias' && <CategoriasManager />}
-            {activeTab === 'fotosBotellas' && <BottlePhotosGallery onBack={() => setActiveTab('gestionMuestras')} />}
-            {activeTab === 'chequeo' && <Chequeo />}
-            {activeTab === 'crearTandas' && <TandasManager />}
-            {activeTab === 'gestionTandas' && <GestionTandas />}
-            {activeTab === 'resultados' && <ResultadosCatas />}
-            {activeTab === 'puntuaciones' && <PuntuacionesManager />}
-            {activeTab === 'mesas' && <MesasManager />}
-            {activeTab === 'catadores' && <CatadoresManager />}
-            {activeTab === 'dispositivos' && <DispositivosManager />}
-            {activeTab === 'comunicaciones' && <ComunicacionesManager />}
-            {activeTab === 'mailrelay' && <MailrelayManager />}
-            {activeTab === 'paypal' && <PayPalDashboard />}
-            {activeTab === 'print' && <PrintSamples />}
-            {activeTab === 'form' && <UnifiedInscriptionForm isAdmin={true} />}
-            {activeTab === 'emailTest' && <EmailTest />}
-            {activeTab === 'configuracion' && <SettingsManager onNavigate={(tab) => setActiveTab(tab as Tab)} />}
-            {activeTab === 'usuarios' && <UsuariosManager />}
-            {activeTab === 'backup' && <BackupManager />}
-            {activeTab === 'pantallas' && <PantallasManager key={pantallasKey} />}
+          <div className="p-4">
+            {activeTab === "statistics" && (
+              <StatisticsManager
+                onNavigateToSamples={handleNavigateToSamplesByCategory}
+              />
+            )}
+            {activeTab === "inscripciones" && (
+              <InscripcionesManager
+                onNewInscripcion={() => setActiveTab("form")}
+              />
+            )}
+            {activeTab === "companies" && <CompaniesManager />}
+            {activeTab === "muestras" && (
+              <SimpleSamplesList
+                onNavigateToPrint={() => setActiveTab("print")}
+                initialCategoryFilter={categoryFilter}
+              />
+            )}
+            {activeTab === "fotosBotellas" && (
+              <BottlePhotosGallery onBack={() => setActiveTab("muestras")} />
+            )}
+            {activeTab === "tandas" && <TandasTabsInline />}
+            {activeTab === "resultados" && <ResultadosCatas />}
+            {activeTab === "puntuaciones" && <PuntuacionesManager />}
+            {activeTab === "mesas" && <MesasManager />}
+            {activeTab === "catadores" && <CatadoresManager />}
+            {/* Dispositivos manager removed from admin UI */}
+            {activeTab === "comunicaciones" && <ComunicacionesManager />}
+            {activeTab === "mailrelay" && <MailrelayManager />}
+            {activeTab === "paypal" && <PayPalDashboard />}
+            {activeTab === "templates" && <GestorTemplates />}
+            {activeTab === "print" && <PrintSamples />}
+            {activeTab === "form" && <UnifiedInscriptionForm isAdmin={true} />}
+            {activeTab === "emailTest" && <EmailTest />}
+            {activeTab === "configuracion" && (
+              <SettingsManager onNavigate={(tab) => setActiveTab(tab as Tab)} />
+            )}
+            {activeTab === "usuarios" && <UsuariosManager />}
+            {activeTab === "backup" && <BackupManager />}
+            {activeTab === "profile" && (
+              <UserProfile onBack={() => setActiveTab("statistics")} />
+            )}
+            {activeTab === "pantallas" && (
+              <PantallasManager key={pantallasKey} />
+            )}
           </div>
         </div>
       </div>
@@ -457,12 +657,45 @@ function AdminPWAInstall() {
 
   return (
     <button
-      onClick={() => installApp().catch(err => console.error('Install failed', err))}
+      onClick={() =>
+        installApp().catch((err) => console.error("Install failed", err))
+      }
       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
       title="Instalar app"
     >
       <Download className="w-4 h-4" />
       <span>Instalar App</span>
     </button>
+  );
+}
+
+// Inline TandasTabs to avoid separate module resolution issues
+function TandasTabsInline() {
+  const [tab, setTab] = useState<"crear" | "gestion">("crear");
+
+  return (
+    <div className="p-4">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="inline-flex rounded-lg bg-gray-50 p-1">
+          <button
+            onClick={() => setTab("crear")}
+            className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${tab === "crear" ? "bg-[#b91c1c] text-white" : "text-gray-600 hover:bg-gray-100"}`}
+          >
+            Crear tandas
+          </button>
+          <button
+            onClick={() => setTab("gestion")}
+            className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${tab === "gestion" ? "bg-[#b91c1c] text-white" : "text-gray-600 hover:bg-gray-100"}`}
+          >
+            Gestión de tandas
+          </button>
+        </div>
+      </div>
+
+      <div>
+        {tab === "crear" && <TandasManager />}
+        {tab === "gestion" && <GestionTandas />}
+      </div>
+    </div>
   );
 }

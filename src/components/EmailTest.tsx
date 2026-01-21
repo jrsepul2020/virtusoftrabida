@@ -1,90 +1,98 @@
-import React, { useState } from 'react';
-import { Mail, Send, CheckCircle, XCircle, Loader } from 'lucide-react';
+import React, { useState } from "react";
+import { Mail, Send, CheckCircle, XCircle, Loader } from "lucide-react";
 
 const EmailTest: React.FC = () => {
-  const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [testStatus, setTestStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const [responseData, setResponseData] = useState<any>(null);
 
   const sendTestEmail = async () => {
-    setTestStatus('loading');
-    setErrorMessage('');
+    setTestStatus("loading");
+    setErrorMessage("");
     setResponseData(null);
 
     // Detectar si estamos en desarrollo local
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
 
     // Datos de prueba específicos para jrsepul2000@gmail.com
     const testData = {
       empresa: {
-        nombre_empresa: 'PRUEBA DEL SISTEMA',
-        nif: 'TEST123456789',
-        persona_contacto: 'Administrador del Sistema',
-        email: 'jrsepul2000@gmail.com',
-        telefono: '959000000',
-        movil: '600000000',
-        direccion: 'Sistema de Pruebas',
-        poblacion: 'Huelva',
-        codigo_postal: '21000',
-        ciudad: 'Huelva',
-        pais: 'España',
-        pagina_web: 'www.virtuslarabida.com',
-        medio_conocio: 'Prueba del Sistema',
-        observaciones: '🧪 EMAIL DE PRUEBA DEL SISTEMA - ' + new Date().toLocaleString('es-ES'),
-        num_muestras: 1
+        nombre_empresa: "PRUEBA DEL SISTEMA",
+        nif: "TEST123456789",
+        persona_contacto: "Administrador del Sistema",
+        email: "jrsepul2000@gmail.com",
+        telefono: "959000000",
+        movil: "600000000",
+        direccion: "Sistema de Pruebas",
+        poblacion: "Huelva",
+        codigo_postal: "21000",
+        ciudad: "Huelva",
+        pais: "España",
+        pagina_web: "www.virtuslarabida.com",
+        medio_conocio: "Prueba del Sistema",
+        observaciones:
+          "🧪 EMAIL DE PRUEBA DEL SISTEMA - " +
+          new Date().toLocaleString("es-ES"),
+        num_muestras: 1,
       },
       muestras: [
         {
           codigo: 999,
-          nombre_muestra: '🧪 MUESTRA DE PRUEBA DEL SISTEMA',
-          categoria: 'PRUEBA',
-          origen: 'Sistema',
-          pais: 'España'
-        }
+          nombre_muestra: "🧪 MUESTRA DE PRUEBA DEL SISTEMA",
+          categoria: "PRUEBA",
+          origen: "Sistema",
+          pais: "España",
+        },
       ],
       precio: {
         pagadas: 0,
         gratis: 1,
-        total: 0
+        total: 0,
       },
-      metodoPago: 'transferencia'
+      metodoPago: "transferencia",
     };
 
     try {
-      console.log('Enviando email de prueba...');
-      
+      console.log("Enviando email de prueba...");
+
       if (isLocalhost) {
         // Simulación para desarrollo local
-        console.log('🧪 MODO DESARROLLO LOCAL - Simulando envío de email');
-        console.log('📧 Datos que se enviarían:', testData);
-        
+        console.log("🧪 MODO DESARROLLO LOCAL - Simulando envío de email");
+        console.log("📧 Datos que se enviarían:", testData);
+
         // Simular delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        setTestStatus('success');
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        setTestStatus("success");
         setResponseData({
           success: true,
-          message: 'Email simulado en desarrollo local',
+          message: "Email simulado en desarrollo local",
           simulation: true,
-          destinatarios: [testData.empresa.email, 'jrsepul2000@gmail.com'],
-          nota: 'En producción (Vercel) se enviarían emails reales via Brevo'
+          destinatarios: [testData.empresa.email, "jrsepul2000@gmail.com"],
+          nota: "En producción (Vercel) se enviarían emails reales via Brevo",
         });
-        
-        console.log('✅ Simulación completada - En producción se enviarían emails reales');
+
+        console.log(
+          "✅ Simulación completada - En producción se enviarían emails reales",
+        );
         return;
       }
-      
+
       // Llamada real a la API (solo funciona en producción/Vercel)
-      const response = await fetch('/api/send-inscription-email', {
-        method: 'POST',
+      const response = await fetch("/api/send-inscription-email", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(testData),
       });
 
       const responseText = await response.text();
-      
+
       try {
         const responseJson = JSON.parse(responseText);
         setResponseData(responseJson);
@@ -93,70 +101,90 @@ const EmailTest: React.FC = () => {
       }
 
       if (response.ok) {
-        setTestStatus('success');
-        console.log('Email enviado correctamente:', responseText);
+        setTestStatus("success");
+        console.log("Email enviado correctamente:", responseText);
       } else {
-        setTestStatus('error');
+        setTestStatus("error");
         setErrorMessage(`Error ${response.status}: ${responseText}`);
-        console.error('Error enviando email:', response.status, responseText);
+        console.error("Error enviando email:", response.status, responseText);
       }
     } catch (error) {
-      setTestStatus('error');
+      setTestStatus("error");
       setErrorMessage(`Error de red: ${error}`);
-      console.error('Error de red:', error);
+      console.error("Error de red:", error);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow-md">
       <div className="flex items-center gap-3 mb-6">
         <Mail className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-800">Prueba de Envío de Emails</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          Prueba de Envío de Emails
+        </h2>
       </div>
 
       <div className="mb-6">
         <p className="text-gray-600 mb-4">
-          <strong>🎯 Envío directo a jrsepul2000@gmail.com</strong><br/>
-          Esta herramienta envía un email de prueba directamente al administrador 
-          usando el sistema de inscripciones con datos de prueba identificables.
+          <strong>🎯 Envío directo a jrsepul2000@gmail.com</strong>
+          <br />
+          Esta herramienta envía un email de prueba directamente al
+          administrador usando el sistema de inscripciones con datos de prueba
+          identificables.
         </p>
-        
+
         <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
-          <h3 className="font-semibold text-red-700 mb-2">📧 Email de Prueba</h3>
+          <h3 className="font-semibold text-red-700 mb-2">
+            📧 Email de Prueba
+          </h3>
           <ul className="text-sm text-red-600 space-y-1">
-            <li>• <strong>Destinatario:</strong> jrsepul2000@gmail.com</li>
-            <li>• <strong>Asunto:</strong> "Nueva inscripción: PRUEBA DEL SISTEMA"</li>
-            <li>• <strong>Contenido:</strong> Email completo con datos de prueba marcados</li>
-            <li>• <strong>Propósito:</strong> Verificar funcionamiento del sistema de emails</li>
+            <li>
+              • <strong>Destinatario:</strong> jrsepul2000@gmail.com
+            </li>
+            <li>
+              • <strong>Asunto:</strong> "Nueva inscripción: PRUEBA DEL SISTEMA"
+            </li>
+            <li>
+              • <strong>Contenido:</strong> Email completo con datos de prueba
+              marcados
+            </li>
+            <li>
+              • <strong>Propósito:</strong> Verificar funcionamiento del sistema
+              de emails
+            </li>
           </ul>
         </div>
 
         <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
           <p className="text-sm text-yellow-700">
-            ⚠️ <strong>Importante:</strong> Este email aparecerá como una inscripción real en tu bandeja de entrada.
-            Los datos están claramente marcados como "PRUEBA DEL SISTEMA" para identificarlos fácilmente.
+            ⚠️ <strong>Importante:</strong> Este email aparecerá como una
+            inscripción real en tu bandeja de entrada. Los datos están
+            claramente marcados como "PRUEBA DEL SISTEMA" para identificarlos
+            fácilmente.
           </p>
         </div>
 
         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-3">
           <p className="text-sm text-blue-700">
-            🧪 <strong>Desarrollo vs Producción:</strong><br/>
-            • <strong>Localhost:</strong> Se simula el envío (no se envían emails reales)<br/>
-            • <strong>Vercel:</strong> Se envían emails reales via Brevo API
+            🧪 <strong>Desarrollo vs Producción:</strong>
+            <br />• <strong>Localhost:</strong> Se simula el envío (no se envían
+            emails reales)
+            <br />• <strong>Vercel:</strong> Se envían emails reales via Brevo
+            API
           </p>
         </div>
       </div>
 
       <button
         onClick={sendTestEmail}
-        disabled={testStatus === 'loading'}
+        disabled={testStatus === "loading"}
         className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-          testStatus === 'loading'
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-red-600 hover:bg-red-700 text-white'
+          testStatus === "loading"
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-red-600 hover:bg-red-700 text-white"
         }`}
       >
-        {testStatus === 'loading' ? (
+        {testStatus === "loading" ? (
           <>
             <Loader className="w-5 h-5 animate-spin" />
             Enviando email de prueba...
@@ -170,37 +198,49 @@ const EmailTest: React.FC = () => {
       </button>
 
       {/* Resultados */}
-      {testStatus === 'success' && (
+      {testStatus === "success" && (
         <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
             <h3 className="font-semibold text-green-800">
-              {responseData?.simulation 
-                ? '🧪 Simulación completada!' 
-                : '¡Email enviado a jrsepul2000@gmail.com!'
-              }
+              {responseData?.simulation
+                ? "🧪 Simulación completada!"
+                : "¡Email enviado a jrsepul2000@gmail.com!"}
             </h3>
           </div>
           {responseData?.simulation ? (
             <div className="text-green-700 text-sm space-y-2">
-              <p><strong>✅ Simulación en desarrollo local</strong></p>
-              <p>El sistema está funcionando correctamente. En desarrollo local se simula el envío de emails.</p>
+              <p>
+                <strong>✅ Simulación en desarrollo local</strong>
+              </p>
+              <p>
+                El sistema está funcionando correctamente. En desarrollo local
+                se simula el envío de emails.
+              </p>
               <div className="bg-green-100 p-2 rounded mt-2">
-                <p className="text-xs"><strong>📧 Emails que se enviarían en producción:</strong></p>
+                <p className="text-xs">
+                  <strong>📧 Emails que se enviarían en producción:</strong>
+                </p>
                 <ul className="text-xs mt-1 space-y-1">
                   <li>• Email de confirmación → jrsepul2000@gmail.com</li>
-                  <li>• Email de notificación administrativa → jrsepul2000@gmail.com</li>
+                  <li>
+                    • Email de notificación administrativa →
+                    jrsepul2000@gmail.com
+                  </li>
                 </ul>
               </div>
               <p className="text-xs text-green-600 mt-2">
-                💡 <strong>Para prueba real:</strong> Despliega en Vercel con las variables de entorno configuradas.
+                💡 <strong>Para prueba real:</strong> Despliega en Vercel con
+                las variables de entorno configuradas.
               </p>
             </div>
           ) : (
             <p className="text-green-700 text-sm">
-              <strong>✅ Sistema funcionando correctamente</strong><br/>
-              Se ha enviado un email de prueba a jrsepul2000@gmail.com. 
-              Revisa tu bandeja de entrada (incluyendo spam/promociones) para ver el email de confirmación de inscripción con datos de prueba.
+              <strong>✅ Sistema funcionando correctamente</strong>
+              <br />
+              Se ha enviado un email de prueba a jrsepul2000@gmail.com. Revisa
+              tu bandeja de entrada (incluyendo spam/promociones) para ver el
+              email de confirmación de inscripción con datos de prueba.
             </p>
           )}
           {responseData && (
@@ -216,7 +256,7 @@ const EmailTest: React.FC = () => {
         </div>
       )}
 
-      {testStatus === 'error' && (
+      {testStatus === "error" && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <XCircle className="w-5 h-5 text-red-600" />
@@ -228,7 +268,7 @@ const EmailTest: React.FC = () => {
           <div className="bg-red-100 p-3 rounded text-sm text-red-800 font-mono">
             {errorMessage}
           </div>
-          
+
           <div className="mt-3 text-sm text-red-700">
             <h4 className="font-semibold mb-1">Posibles causas:</h4>
             <ul className="space-y-1 text-xs">
@@ -255,14 +295,28 @@ const EmailTest: React.FC = () => {
 
       {/* Información adicional */}
       <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="font-semibold text-blue-800 mb-2">Información Técnica</h3>
+        <h3 className="font-semibold text-blue-800 mb-2">
+          Información Técnica
+        </h3>
         <div className="text-sm text-blue-700 space-y-1">
-          <p><strong>📡 Endpoint:</strong> /api/send-inscription-email</p>
-          <p><strong>🔧 Proveedor:</strong> Brevo (SendinBlue) API v3</p>
-          <p><strong>📬 Destinatario:</strong> jrsepul2000@gmail.com</p>
-          <p><strong>🧪 Empresa de prueba:</strong> "PRUEBA DEL SISTEMA"</p>
-          <p><strong>⏰ Timestamp:</strong> Se incluye fecha/hora actual</p>
-          <p><strong>🏷️ Identificación:</strong> Datos marcados como prueba</p>
+          <p>
+            <strong>📡 Endpoint:</strong> /api/send-inscription-email
+          </p>
+          <p>
+            <strong>🔧 Proveedor:</strong> Brevo (SendinBlue) API v3
+          </p>
+          <p>
+            <strong>📬 Destinatario:</strong> jrsepul2000@gmail.com
+          </p>
+          <p>
+            <strong>🧪 Empresa de prueba:</strong> "PRUEBA DEL SISTEMA"
+          </p>
+          <p>
+            <strong>⏰ Timestamp:</strong> Se incluye fecha/hora actual
+          </p>
+          <p>
+            <strong>🏷️ Identificación:</strong> Datos marcados como prueba
+          </p>
         </div>
       </div>
     </div>

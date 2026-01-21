@@ -15,7 +15,6 @@ import MesasManager from './MesasManager';
 import MesasVisualizacion from './MesasVisualizacion';
 import AsignacionesMesas from './AsignacionesMesas';
 import CatadoresManager from './CatadoresManager';
-import DispositivosManager from './DispositivosManager';
 import UnifiedInscriptionForm from './UnifiedInscriptionForm';
 import SettingsManager from './SettingsManager';
 import DiagnosticoSupabase from './DiagnosticoSupabase';
@@ -49,7 +48,6 @@ const componentMap: Record<string, ComponentType<any>> = {
   'MesasVisualizacion': MesasVisualizacion,
   'AsignacionesMesas': AsignacionesMesas,
   'CatadoresManager': CatadoresManager,
-  'DispositivosManager': DispositivosManager,
   'UnifiedInscriptionForm': () => <UnifiedInscriptionForm isAdmin={true} />,
   'SettingsManager': SettingsManager,
   'DiagnosticoSupabase': DiagnosticoSupabase,
@@ -113,7 +111,7 @@ const allComponents: ComponentInfo[] = [
   { name: 'CatadorDashboard', path: 'src/components/CatadorDashboard.tsx', category: 'Catadores', description: '📱 Panel del catador: ver sus tandas asignadas, registrar puntuaciones. Requiere login.', canPreview: false },
 
   // Dispositivos
-  { name: 'DispositivosManager', path: 'src/components/DispositivosManager.tsx', category: 'Dispositivos', description: '📱 Gestionar tablets/dispositivos autorizados para que catadores registren puntuaciones.', canPreview: true },
+
 
   // Inscripción
   { name: 'UnifiedInscriptionForm', path: 'src/components/UnifiedInscriptionForm.tsx', category: 'Inscripción', description: '📝 Formulario completo de inscripción pública: datos empresa, muestras, pago.', canPreview: true },

@@ -1,9 +1,19 @@
-import { useState, useEffect } from 'react';
-import ImageUploader from './ImageUploader';
-import { supabase } from '../lib/supabase';
-import { useConfiguracion, queryClient } from '../lib/queryCache';
-import { Settings, Plus, Edit2, Save, Trash2, Activity, Database, Monitor, Wrench } from 'lucide-react';
-import DiagnosticoSupabase from './DiagnosticoSupabase';
+import { useState, useEffect } from "react";
+import ImageUploader from "./ImageUploader";
+import { supabase } from "../lib/supabase";
+import { useConfiguracion, queryClient } from "../lib/queryCache";
+import {
+  Settings,
+  Plus,
+  Edit2,
+  Save,
+  Trash2,
+  Activity,
+  Database,
+  Monitor,
+  Wrench,
+} from "lucide-react";
+import DiagnosticoSupabase from "./DiagnosticoSupabase";
 
 interface StatusConfig {
   id: string;
@@ -22,79 +32,83 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   const [statuses, setStatuses] = useState<StatusConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingStatus, setEditingStatus] = useState<StatusConfig | null>(null);
-  const [newStatus, setNewStatus] = useState<Partial<StatusConfig> | null>(null);
+  const [newStatus, setNewStatus] = useState<Partial<StatusConfig> | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'estados' | 'diagnostico' | 'herramientas' | 'email'>('herramientas');
+  const [activeTab, setActiveTab] = useState<
+    "estados" | "diagnostico" | "herramientas" | "email"
+  >("herramientas");
 
   // Configuración general (clave/valor)
   const { data: configData, isLoading: configLoading } = useConfiguracion();
-  const [adminEmail, setAdminEmail] = useState('');
+  const [adminEmail, setAdminEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
   // Branding / UI settings
-  const [siteTitle, setSiteTitle] = useState('International Virtus La Rábida');
-  const [primaryColor, setPrimaryColor] = useState('#0ea5a4');
+  const [siteTitle, setSiteTitle] = useState("International Virtus La Rábida");
+  const [primaryColor, setPrimaryColor] = useState("#0ea5a4");
   const [heroFullscreen, setHeroFullscreen] = useState(false);
-  const [coverImageUrl, setCoverImageUrl] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
-  const [faviconUrl, setFaviconUrl] = useState('');
-  const [footerText, setFooterText] = useState('');
-  const [successText, setSuccessText] = useState('');
-  const [heroText, setHeroText] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [faviconUrl, setFaviconUrl] = useState("");
+  const [footerText, setFooterText] = useState("");
+  const [successText, setSuccessText] = useState("");
+  const [heroText, setHeroText] = useState("");
   const [savingBranding, setSavingBranding] = useState(false);
-  const [accentColor, setAccentColor] = useState('#f59e42');
-  const [themeMode, setThemeMode] = useState('auto'); // 'light' | 'dark' | 'auto'
+  const [accentColor, setAccentColor] = useState("#f59e42");
+  const [themeMode, setThemeMode] = useState("auto"); // 'light' | 'dark' | 'auto'
   // Integraciones / Automatización
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [analyticsId, setAnalyticsId] = useState('');
-  const [notificationEmail, setNotificationEmail] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [analyticsId, setAnalyticsId] = useState("");
+  const [notificationEmail, setNotificationEmail] = useState("");
   const [savingIntegrations, setSavingIntegrations] = useState(false);
 
   useEffect(() => {
     if (configData) {
-      setAdminEmail(configData.email_envio ?? '');
-      setSiteTitle(configData.site_title ?? 'International Virtus La Rábida');
-      setPrimaryColor(configData.primary_color ?? '#0ea5a4');
-      setHeroFullscreen(configData.hero_fullscreen === 'true');
-      setCoverImageUrl(configData.cover_image_url ?? '');
-      setLogoUrl(configData.logo_url ?? '');
-      setFaviconUrl(configData.favicon_url ?? '');
-      setFooterText(configData.footer_text ?? '');
-      setSuccessText(configData.success_text ?? '');
-      setHeroText(configData.hero_text ?? '');
-      setAccentColor(configData.accent_color ?? '#f59e42');
-      setThemeMode(configData.theme_mode ?? 'auto');
-      setWebhookUrl(configData.webhook_url ?? '');
-      setAnalyticsId(configData.analytics_id ?? '');
-      setNotificationEmail(configData.notification_email ?? '');
+      setAdminEmail(configData.email_envio ?? "");
+      setSiteTitle(configData.site_title ?? "International Virtus La Rábida");
+      setPrimaryColor(configData.primary_color ?? "#0ea5a4");
+      setHeroFullscreen(configData.hero_fullscreen === "true");
+      setCoverImageUrl(configData.cover_image_url ?? "");
+      setLogoUrl(configData.logo_url ?? "");
+      setFaviconUrl(configData.favicon_url ?? "");
+      setFooterText(configData.footer_text ?? "");
+      setSuccessText(configData.success_text ?? "");
+      setHeroText(configData.hero_text ?? "");
+      setAccentColor(configData.accent_color ?? "#f59e42");
+      setThemeMode(configData.theme_mode ?? "auto");
+      setWebhookUrl(configData.webhook_url ?? "");
+      setAnalyticsId(configData.analytics_id ?? "");
+      setNotificationEmail(configData.notification_email ?? "");
     }
   }, [configData]);
 
   // Estados por defecto
   const defaultStatuses: StatusConfig[] = [
     {
-      id: 'pending',
-      label: 'Pendiente',
-      value: 'pending',
-      bg_color: 'bg-yellow-100',
-      text_color: 'text-yellow-800',
-      is_default: true
+      id: "pending",
+      label: "Pendiente",
+      value: "pending",
+      bg_color: "bg-yellow-100",
+      text_color: "text-yellow-800",
+      is_default: true,
     },
     {
-      id: 'approved',
-      label: 'Aprobada',
-      value: 'approved',
-      bg_color: 'bg-green-100',
-      text_color: 'text-green-800',
-      is_default: true
+      id: "approved",
+      label: "Aprobada",
+      value: "approved",
+      bg_color: "bg-green-100",
+      text_color: "text-green-800",
+      is_default: true,
     },
     {
-      id: 'rejected',
-      label: 'Rechazada',
-      value: 'rejected',
-      bg_color: 'bg-red-100',
-      text_color: 'text-red-800',
-      is_default: true
-    }
+      id: "rejected",
+      label: "Rechazada",
+      value: "rejected",
+      bg_color: "bg-red-100",
+      text_color: "text-red-800",
+      is_default: true,
+    },
   ];
 
   useEffect(() => {
@@ -106,9 +120,9 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
     try {
       // Intentar cargar desde base de datos
       const { data: customStatuses, error } = await supabase
-        .from('status_configs')
-        .select('*')
-        .order('is_default', { ascending: false });
+        .from("status_configs")
+        .select("*")
+        .order("is_default", { ascending: false });
 
       if (error) {
         setStatuses(defaultStatuses);
@@ -130,24 +144,22 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
       // Asegurarse de que la tabla existe
       await ensureStatusTable();
 
-      const { error } = await supabase
-        .from('status_configs')
-        .upsert({
-          id: status.id,
-          label: status.label,
-          value: status.value,
-          bg_color: status.bg_color,
-          text_color: status.text_color,
-          is_default: status.is_default
-        });
+      const { error } = await supabase.from("status_configs").upsert({
+        id: status.id,
+        label: status.label,
+        value: status.value,
+        bg_color: status.bg_color,
+        text_color: status.text_color,
+        is_default: status.is_default,
+      });
 
       if (error) throw error;
 
       await loadStatuses();
       setEditingStatus(null);
     } catch (error) {
-      console.error('Error saving status:', error);
-      alert('Error al guardar el estado');
+      console.error("Error saving status:", error);
+      alert("Error al guardar el estado");
     } finally {
       setSaving(false);
     }
@@ -164,13 +176,13 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
         id: newStatus.value,
         label: newStatus.label,
         value: newStatus.value,
-        bg_color: newStatus.bg_color || 'bg-gray-100',
-        text_color: newStatus.text_color || 'text-gray-800',
-        is_default: false
+        bg_color: newStatus.bg_color || "bg-gray-100",
+        text_color: newStatus.text_color || "text-gray-800",
+        is_default: false,
       };
 
       const { error } = await supabase
-        .from('status_configs')
+        .from("status_configs")
         .insert([statusData]);
 
       if (error) throw error;
@@ -178,8 +190,8 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
       await loadStatuses();
       setNewStatus(null);
     } catch (error) {
-      console.error('Error creating status:', error);
-      alert('Error al crear el estado');
+      console.error("Error creating status:", error);
+      alert("Error al crear el estado");
     } finally {
       setSaving(false);
     }
@@ -187,59 +199,62 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
 
   const handleDeleteStatus = async (status: StatusConfig) => {
     if (status.is_default) {
-      alert('No se pueden eliminar los estados por defecto');
+      alert("No se pueden eliminar los estados por defecto");
       return;
     }
 
-    if (!confirm(`¿Estás seguro de eliminar el estado "${status.label}"?`)) return;
+    if (!confirm(`¿Estás seguro de eliminar el estado "${status.label}"?`))
+      return;
 
     try {
       const { error } = await supabase
-        .from('status_configs')
+        .from("status_configs")
         .delete()
-        .eq('id', status.id);
+        .eq("id", status.id);
 
       if (error) throw error;
 
       await loadStatuses();
     } catch (error) {
-      console.error('Error deleting status:', error);
-      alert('Error al eliminar el estado');
+      console.error("Error deleting status:", error);
+      alert("Error al eliminar el estado");
     }
   };
 
   const ensureStatusTable = async () => {
     try {
       // Crear tabla si no existe
-      const { error } = await supabase.rpc('create_status_configs_table');
-      if (error && !error.message.includes('already exists')) {
-        console.log('Creando tabla status_configs...');
+      const { error } = await supabase.rpc("create_status_configs_table");
+      if (error && !error.message.includes("already exists")) {
+        console.log("Creando tabla status_configs...");
       }
     } catch (error) {
       // La tabla probablemente ya existe o la función RPC no está disponible
-      console.log('Tabla status_configs existe o será creada automáticamente');
+      console.log("Tabla status_configs existe o será creada automáticamente");
     }
   };
 
   const getStatusBadge = (status: StatusConfig) => (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.bg_color} ${status.text_color}`}>
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${status.bg_color} ${status.text_color}`}
+    >
       {status.label}
     </span>
   );
 
   const colorOptions = [
-    { bg: 'bg-gray-100', text: 'text-gray-800', name: 'Gris' },
-    { bg: 'bg-blue-100', text: 'text-blue-800', name: 'Azul' },
-    { bg: 'bg-green-100', text: 'text-green-800', name: 'Verde' },
-    { bg: 'bg-yellow-100', text: 'text-yellow-800', name: 'Amarillo' },
-    { bg: 'bg-red-100', text: 'text-red-800', name: 'Rojo' },
-    { bg: 'bg-purple-100', text: 'text-purple-800', name: 'Morado' },
-    { bg: 'bg-pink-100', text: 'text-pink-800', name: 'Rosa' },
-    { bg: 'bg-indigo-100', text: 'text-indigo-800', name: 'Índigo' },
+    { bg: "bg-gray-100", text: "text-gray-800", name: "Gris" },
+    { bg: "bg-blue-100", text: "text-blue-800", name: "Azul" },
+    { bg: "bg-green-100", text: "text-green-800", name: "Verde" },
+    { bg: "bg-yellow-100", text: "text-yellow-800", name: "Amarillo" },
+    { bg: "bg-red-100", text: "text-red-800", name: "Rojo" },
+    { bg: "bg-purple-100", text: "text-purple-800", name: "Morado" },
+    { bg: "bg-pink-100", text: "text-pink-800", name: "Rosa" },
+    { bg: "bg-indigo-100", text: "text-indigo-800", name: "Índigo" },
   ];
 
   // Solo mostrar loader si estamos cargando estados iniciales
-  if (loading && activeTab === 'estados') {
+  if (loading && activeTab === "estados") {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-xl text-gray-600">Cargando configuración...</div>
@@ -248,55 +263,57 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto p-4">
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         {/* Header con Tabs */}
         <div className="border-b border-gray-200">
           <div className="flex items-center gap-3 px-6 py-4">
             <Settings className="w-6 h-6 text-gray-600" />
-            <h2 className="text-xl font-semibold text-gray-800">Configuración del Sistema</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Configuración del Sistema
+            </h2>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex border-b border-gray-200">
             <button
-              onClick={() => setActiveTab('estados')}
+              onClick={() => setActiveTab("estados")}
               className={`px-6 py-3 font-medium text-sm transition-colors ${
-                activeTab === 'estados'
-                  ? 'border-b-2 border-red-600 text-red-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "estados"
+                  ? "border-b-2 border-red-600 text-red-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               Estados de Empresa
             </button>
             <button
-              onClick={() => setActiveTab('diagnostico')}
+              onClick={() => setActiveTab("diagnostico")}
               className={`px-6 py-3 font-medium text-sm transition-colors flex items-center gap-2 ${
-                activeTab === 'diagnostico'
-                  ? 'border-b-2 border-red-600 text-red-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "diagnostico"
+                  ? "border-b-2 border-red-600 text-red-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Activity className="w-4 h-4" />
               Diagnóstico
             </button>
             <button
-              onClick={() => setActiveTab('herramientas')}
+              onClick={() => setActiveTab("herramientas")}
               className={`px-6 py-3 font-medium text-sm transition-colors flex items-center gap-2 ${
-                activeTab === 'herramientas'
-                  ? 'border-b-2 border-red-600 text-red-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "herramientas"
+                  ? "border-b-2 border-red-600 text-red-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               <Wrench className="w-4 h-4" />
               Herramientas
             </button>
             <button
-              onClick={() => setActiveTab('email')}
+              onClick={() => setActiveTab("email")}
               className={`px-6 py-3 font-medium text-sm transition-colors ${
-                activeTab === 'email'
-                  ? 'border-b-2 border-red-600 text-red-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                activeTab === "email"
+                  ? "border-b-2 border-red-600 text-red-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               Email de envío
@@ -306,105 +323,139 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
 
         {/* Contenido */}
         <div className="p-6">
-          {activeTab === 'estados' && (
+          {activeTab === "estados" && (
             <div className="space-y-8">
               {/* Gestión de Estados */}
               <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-700">Estados de Empresa</h3>
-              <button
-                onClick={() => setNewStatus({ label: '', value: '', bg_color: 'bg-gray-100', text_color: 'text-gray-800' })}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Nuevo Estado
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {statuses.map((status) => (
-                <div key={status.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    {getStatusBadge(status)}
-                    <div>
-                      <div className="font-medium text-gray-900">{status.label}</div>
-                      <div className="text-sm text-gray-500">Valor: {status.value}</div>
-                    </div>
-                    {status.is_default && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Por defecto</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setEditingStatus(status)}
-                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    {!status.is_default && (
-                      <button
-                        onClick={() => handleDeleteStatus(status)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-700">
+                    Estados de Empresa
+                  </h3>
+                  <button
+                    onClick={() =>
+                      setNewStatus({
+                        label: "",
+                        value: "",
+                        bg_color: "bg-gray-100",
+                        text_color: "text-gray-800",
+                      })
+                    }
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Nuevo Estado
+                  </button>
                 </div>
-              ))}
-            </div>
-          </div>
+
+                <div className="space-y-3">
+                  {statuses.map((status) => (
+                    <div
+                      key={status.id}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        {getStatusBadge(status)}
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {status.label}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Valor: {status.value}
+                          </div>
+                        </div>
+                        {status.is_default && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                            Por defecto
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingStatus(status)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        {!status.is_default && (
+                          <button
+                            onClick={() => handleDeleteStatus(status)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
-          {activeTab === 'diagnostico' && (
-            <DiagnosticoSupabase />
-          )}
+          {activeTab === "diagnostico" && <DiagnosticoSupabase />}
 
-          {activeTab === 'herramientas' && (
+          {activeTab === "herramientas" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-700 mb-4">🔧 Herramientas del Sistema</h3>
+                <h3 className="text-lg font-medium text-gray-700 mb-4">
+                  🔧 Herramientas del Sistema
+                </h3>
                 <p className="text-sm text-gray-500 mb-6">
-                  Acceda a herramientas avanzadas de administración y mantenimiento del sistema.
+                  Acceda a herramientas avanzadas de administración y
+                  mantenimiento del sistema.
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
-                  onClick={() => onNavigate?.('backup')}
+                  onClick={() => onNavigate?.("backup")}
                   className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all hover:shadow-md"
                 >
                   <div className="p-3 bg-blue-600 rounded-xl">
                     <Database className="w-7 h-7 text-white" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-gray-800 text-lg">Respaldos</p>
-                    <p className="text-sm text-gray-500">Exportar e importar datos del sistema</p>
+                    <p className="font-semibold text-gray-800 text-lg">
+                      Respaldos
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Exportar e importar datos del sistema
+                    </p>
                   </div>
                 </button>
-                
+
                 <button
-                  onClick={() => onNavigate?.('pantallas')}
+                  onClick={() => onNavigate?.("pantallas")}
                   className="flex items-center gap-4 p-5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl hover:from-purple-100 hover:to-pink-100 transition-all hover:shadow-md"
                 >
                   <div className="p-3 bg-purple-600 rounded-xl">
                     <Monitor className="w-7 h-7 text-white" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-gray-800 text-lg">Pantallas</p>
-                    <p className="text-sm text-gray-500">Explorador de componentes del sistema</p>
+                    <p className="font-semibold text-gray-800 text-lg">
+                      Pantallas
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Explorador de componentes del sistema
+                    </p>
                   </div>
                 </button>
               </div>
 
               {/* Integraciones y automatización */}
               <div className="mt-6 bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                <h4 className="font-medium text-gray-800 mb-2">Integraciones y automatización</h4>
-                <p className="text-sm text-gray-500 mb-4">Webhooks para eventos, Google Analytics y email de notificaciones.</p>
+                <h4 className="font-medium text-gray-800 mb-2">
+                  Integraciones y automatización
+                </h4>
+                <p className="text-sm text-gray-500 mb-4">
+                  Webhooks para eventos, Google Analytics y email de
+                  notificaciones.
+                </p>
                 <div className="space-y-3 max-w-xl">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Webhook URL (`webhook_url`)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Webhook URL (`webhook_url`)
+                    </label>
                     <input
                       type="url"
                       value={webhookUrl}
@@ -412,10 +463,14 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                       placeholder="https://tu-endpoint.com/webhook"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Recibe eventos clave (inscripción, pago, error) vía POST.</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Recibe eventos clave (inscripción, pago, error) vía POST.
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Google Analytics ID (`analytics_id`)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Google Analytics ID (`analytics_id`)
+                    </label>
                     <input
                       type="text"
                       value={analyticsId}
@@ -425,7 +480,9 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Email de notificación (`notification_email`)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Email de notificación (`notification_email`)
+                    </label>
                     <input
                       type="email"
                       value={notificationEmail}
@@ -433,7 +490,9 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                       placeholder="alertas@dominio.com"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Recibirá alertas de eventos y errores críticos.</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Recibirá alertas de eventos y errores críticos.
+                    </p>
                   </div>
 
                   <div className="flex gap-3 pt-2">
@@ -442,32 +501,41 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                         setSavingIntegrations(true);
                         try {
                           const ops = [
-                            { clave: 'webhook_url', valor: webhookUrl },
-                            { clave: 'analytics_id', valor: analyticsId },
-                            { clave: 'notification_email', valor: notificationEmail },
+                            { clave: "webhook_url", valor: webhookUrl },
+                            { clave: "analytics_id", valor: analyticsId },
+                            {
+                              clave: "notification_email",
+                              valor: notificationEmail,
+                            },
                           ];
                           for (const op of ops) {
-                            const { error } = await supabase.from('configuracion').upsert(op);
+                            const { error } = await supabase
+                              .from("configuracion")
+                              .upsert(op);
                             if (error) throw error;
                           }
-                          queryClient.invalidateQueries({ queryKey: ['configuracion'] });
-                          alert('Integraciones guardadas');
+                          queryClient.invalidateQueries({
+                            queryKey: ["configuracion"],
+                          });
+                          alert("Integraciones guardadas");
                         } catch (err) {
-                          console.error('Error guardando integraciones', err);
-                          alert('Error al guardar');
+                          console.error("Error guardando integraciones", err);
+                          alert("Error al guardar");
                         } finally {
                           setSavingIntegrations(false);
                         }
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
-                      {savingIntegrations ? 'Guardando...' : 'Guardar'}
+                      {savingIntegrations ? "Guardando..." : "Guardar"}
                     </button>
                     <button
                       onClick={() => {
-                        setWebhookUrl(configData?.webhook_url ?? '');
-                        setAnalyticsId(configData?.analytics_id ?? '');
-                        setNotificationEmail(configData?.notification_email ?? '');
+                        setWebhookUrl(configData?.webhook_url ?? "");
+                        setAnalyticsId(configData?.analytics_id ?? "");
+                        setNotificationEmail(
+                          configData?.notification_email ?? "",
+                        );
                       }}
                       className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
                     >
@@ -481,28 +549,32 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
               <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div className="grid gap-8 lg:grid-cols-2">
                   <div className="space-y-3">
-                    <h5 className="font-semibold text-gray-700">Vista previa en vivo</h5>
+                    <h5 className="font-semibold text-gray-700">
+                      Vista previa en vivo
+                    </h5>
                     <div
                       className="rounded-lg overflow-hidden border border-gray-200 shadow-sm"
                       style={{
-                        background: themeMode === 'dark' ? '#222' : '#fff',
-                        color: themeMode === 'dark' ? '#fff' : '#222',
+                        background: themeMode === "dark" ? "#222" : "#fff",
+                        color: themeMode === "dark" ? "#fff" : "#222",
                         borderColor: primaryColor,
                         maxWidth: 480,
-                        margin: '0 auto',
+                        margin: "0 auto",
                       }}
                     >
                       <div
                         style={{
-                          backgroundImage: coverImageUrl ? `url(${coverImageUrl})` : undefined,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
+                          backgroundImage: coverImageUrl
+                            ? `url(${coverImageUrl})`
+                            : undefined,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
                           minHeight: heroFullscreen ? 240 : 120,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          position: 'relative',
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          position: "relative",
                           borderBottom: `4px solid ${accentColor}`,
                           padding: 24,
                         }}
@@ -511,22 +583,31 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                           <img
                             src={logoUrl}
                             alt="Logo preview"
-                            style={{ width: 72, height: 72, objectFit: 'contain', background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0002', marginBottom: 12 }}
+                            style={{
+                              width: 72,
+                              height: 72,
+                              objectFit: "contain",
+                              background: "#fff",
+                              borderRadius: 16,
+                              boxShadow: "0 2px 8px #0002",
+                              marginBottom: 12,
+                            }}
                             loading="lazy"
                             decoding="async"
                           />
                         )}
                         <div
                           style={{
-                            background: themeMode === 'dark' ? '#222a' : '#fff8',
+                            background:
+                              themeMode === "dark" ? "#222a" : "#fff8",
                             borderRadius: 8,
-                            padding: '8px 16px',
+                            padding: "8px 16px",
                             fontWeight: 600,
                             fontSize: 20,
                             color: primaryColor,
-                            textAlign: 'center',
-                            maxWidth: '90%',
-                            margin: '0 auto',
+                            textAlign: "center",
+                            maxWidth: "90%",
+                            margin: "0 auto",
                           }}
                         >
                           {siteTitle}
@@ -535,13 +616,14 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                           <div
                             style={{
                               marginTop: 8,
-                              background: themeMode === 'dark' ? '#222a' : '#fff8',
+                              background:
+                                themeMode === "dark" ? "#222a" : "#fff8",
                               borderRadius: 6,
-                              padding: '6px 12px',
+                              padding: "6px 12px",
                               fontSize: 15,
-                              color: '#444',
-                              textAlign: 'center',
-                              maxWidth: '90%',
+                              color: "#444",
+                              textAlign: "center",
+                              maxWidth: "90%",
                             }}
                           >
                             {heroText}
@@ -552,9 +634,9 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                         <div
                           style={{
                             background: accentColor,
-                            color: '#fff',
-                            padding: '12px 16px',
-                            textAlign: 'center',
+                            color: "#fff",
+                            padding: "12px 16px",
+                            textAlign: "center",
                             fontWeight: 500,
                             fontSize: 16,
                             borderBottom: `2px solid ${primaryColor}`,
@@ -565,25 +647,29 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                       )}
                       <div
                         style={{
-                          background: themeMode === 'dark' ? '#111' : '#f8fafc',
-                          color: themeMode === 'dark' ? '#eee' : '#222',
-                          padding: '10px 18px',
+                          background: themeMode === "dark" ? "#111" : "#f8fafc",
+                          color: themeMode === "dark" ? "#eee" : "#222",
+                          padding: "10px 18px",
                           fontSize: 13,
-                          textAlign: 'center',
+                          textAlign: "center",
                           borderTop: `2px solid ${accentColor}`,
                         }}
                       >
-                        {footerText || '© 2025 International Virtus La Rábida'}
+                        {footerText || "© 2025 International Virtus La Rábida"}
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-4 max-w-xl">
                     <h4 className="font-medium text-gray-800">Branding / UI</h4>
-                    <p className="text-sm text-gray-500">Ajustes visuales, imágenes y textos clave del sitio.</p>
+                    <p className="text-sm text-gray-500">
+                      Ajustes visuales, imágenes y textos clave del sitio.
+                    </p>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Título del sitio (`site_title`)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Título del sitio (`site_title`)
+                      </label>
                       <input
                         type="text"
                         value={siteTitle}
@@ -594,7 +680,9 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Color primario (`primary_color`)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Color primario (`primary_color`)
+                      </label>
                       <div className="flex items-center gap-3 mt-1">
                         <input
                           type="color"
@@ -613,7 +701,9 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Color acento (`accent_color`)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Color acento (`accent_color`)
+                      </label>
                       <div className="flex items-center gap-3 mt-1">
                         <input
                           type="color"
@@ -632,10 +722,12 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Tema visual (`theme_mode`)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Tema visual (`theme_mode`)
+                      </label>
                       <select
                         value={themeMode}
-                        onChange={e => setThemeMode(e.target.value)}
+                        onChange={(e) => setThemeMode(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
                       >
                         <option value="auto">Automático (según sistema)</option>
@@ -646,15 +738,22 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Hero fullscreen (`hero_fullscreen`)</label>
-                        <p className="text-xs text-gray-500">Si está activo, la portada usará `h-screen` para ocupar toda la pantalla.</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Hero fullscreen (`hero_fullscreen`)
+                        </label>
+                        <p className="text-xs text-gray-500">
+                          Si está activo, la portada usará `h-screen` para
+                          ocupar toda la pantalla.
+                        </p>
                       </div>
                       <div>
                         <label className="inline-flex items-center">
                           <input
                             type="checkbox"
                             checked={heroFullscreen}
-                            onChange={(e) => setHeroFullscreen(e.target.checked)}
+                            onChange={(e) =>
+                              setHeroFullscreen(e.target.checked)
+                            }
                             className="form-checkbox h-5 w-5 text-green-600"
                           />
                         </label>
@@ -683,10 +782,12 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     />
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Texto de portada (`hero_text`)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Texto de portada (`hero_text`)
+                      </label>
                       <textarea
                         value={heroText}
-                        onChange={e => setHeroText(e.target.value)}
+                        onChange={(e) => setHeroText(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
                         rows={2}
                         placeholder="Texto principal de la portada"
@@ -694,10 +795,12 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Mensaje de éxito (`success_text`)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Mensaje de éxito (`success_text`)
+                      </label>
                       <textarea
                         value={successText}
-                        onChange={e => setSuccessText(e.target.value)}
+                        onChange={(e) => setSuccessText(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
                         rows={2}
                         placeholder="Mensaje mostrado tras inscripción exitosa"
@@ -705,10 +808,12 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Pie de página (`footer_text`)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Pie de página (`footer_text`)
+                      </label>
                       <textarea
                         value={footerText}
-                        onChange={e => setFooterText(e.target.value)}
+                        onChange={(e) => setFooterText(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg mt-1"
                         rows={2}
                         placeholder="Texto del pie de página"
@@ -721,49 +826,69 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                           setSavingBranding(true);
                           try {
                             const ops = [
-                              { clave: 'site_title', valor: siteTitle },
-                              { clave: 'primary_color', valor: primaryColor },
-                              { clave: 'accent_color', valor: accentColor },
-                              { clave: 'theme_mode', valor: themeMode },
-                              { clave: 'hero_fullscreen', valor: heroFullscreen ? 'true' : 'false' },
-                              { clave: 'cover_image_url', valor: coverImageUrl },
-                              { clave: 'logo_url', valor: logoUrl },
-                              { clave: 'favicon_url', valor: faviconUrl },
-                              { clave: 'footer_text', valor: footerText },
-                              { clave: 'success_text', valor: successText },
-                              { clave: 'hero_text', valor: heroText },
+                              { clave: "site_title", valor: siteTitle },
+                              { clave: "primary_color", valor: primaryColor },
+                              { clave: "accent_color", valor: accentColor },
+                              { clave: "theme_mode", valor: themeMode },
+                              {
+                                clave: "hero_fullscreen",
+                                valor: heroFullscreen ? "true" : "false",
+                              },
+                              {
+                                clave: "cover_image_url",
+                                valor: coverImageUrl,
+                              },
+                              { clave: "logo_url", valor: logoUrl },
+                              { clave: "favicon_url", valor: faviconUrl },
+                              { clave: "footer_text", valor: footerText },
+                              { clave: "success_text", valor: successText },
+                              { clave: "hero_text", valor: heroText },
                             ];
 
                             for (const op of ops) {
-                              const { error } = await supabase.from('configuracion').upsert(op);
+                              const { error } = await supabase
+                                .from("configuracion")
+                                .upsert(op);
                               if (error) throw error;
                             }
 
-                            queryClient.invalidateQueries({ queryKey: ['configuracion'] });
-                            alert('Ajustes guardados');
+                            queryClient.invalidateQueries({
+                              queryKey: ["configuracion"],
+                            });
+                            alert("Ajustes guardados");
                           } catch (err) {
-                            console.error('Error guardando branding settings', err);
-                            alert('Error al guardar los ajustes');
+                            console.error(
+                              "Error guardando branding settings",
+                              err,
+                            );
+                            alert("Error al guardar los ajustes");
                           } finally {
                             setSavingBranding(false);
                           }
                         }}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                       >
-                        {savingBranding ? 'Guardando...' : 'Guardar ajustes'}
+                        {savingBranding ? "Guardando..." : "Guardar ajustes"}
                       </button>
 
                       <button
                         onClick={() => {
-                          setSiteTitle(configData?.site_title ?? 'International Virtus La Rábida');
-                          setPrimaryColor(configData?.primary_color ?? '#0ea5a4');
-                          setHeroFullscreen(configData?.hero_fullscreen === 'true');
-                          setCoverImageUrl(configData?.cover_image_url ?? '');
-                          setLogoUrl(configData?.logo_url ?? '');
-                          setFaviconUrl(configData?.favicon_url ?? '');
-                          setFooterText(configData?.footer_text ?? '');
-                          setSuccessText(configData?.success_text ?? '');
-                          setHeroText(configData?.hero_text ?? '');
+                          setSiteTitle(
+                            configData?.site_title ??
+                              "International Virtus La Rábida",
+                          );
+                          setPrimaryColor(
+                            configData?.primary_color ?? "#0ea5a4",
+                          );
+                          setHeroFullscreen(
+                            configData?.hero_fullscreen === "true",
+                          );
+                          setCoverImageUrl(configData?.cover_image_url ?? "");
+                          setLogoUrl(configData?.logo_url ?? "");
+                          setFaviconUrl(configData?.favicon_url ?? "");
+                          setFooterText(configData?.footer_text ?? "");
+                          setSuccessText(configData?.success_text ?? "");
+                          setHeroText(configData?.hero_text ?? "");
                         }}
                         className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
                       >
@@ -776,16 +901,24 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
             </div>
           )}
 
-          {activeTab === 'email' && (
+          {activeTab === "email" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-700 mb-4">Email de envío</h3>
-                <p className="text-sm text-gray-500 mb-4">Dirección de email usada como administrador para recibir inscripciones y notificaciones. Clave: <code>email_envio</code></p>
+                <h3 className="text-lg font-medium text-gray-700 mb-4">
+                  Email de envío
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Dirección de email usada como administrador para recibir
+                  inscripciones y notificaciones. Clave:{" "}
+                  <code>email_envio</code>
+                </p>
                 <div className="max-w-lg">
-                  <label className="block text-sm text-gray-700 mb-2">Email administrador</label>
+                  <label className="block text-sm text-gray-700 mb-2">
+                    Email administrador
+                  </label>
                   <input
                     type="email"
-                    value={adminEmail || (configData?.email_envio ?? '')}
+                    value={adminEmail || (configData?.email_envio ?? "")}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     placeholder="inscripciones@internationalvirtus.com"
                     className="w-full px-4 py-2 rounded-lg border border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
@@ -795,25 +928,31 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                       onClick={async () => {
                         setSavingEmail(true);
                         try {
-                          const emailToSave = adminEmail || configData?.email_envio || '';
+                          const emailToSave =
+                            adminEmail || configData?.email_envio || "";
                           const { error } = await supabase
-                            .from('configuracion')
-                            .upsert({ clave: 'email_envio', valor: emailToSave });
+                            .from("configuracion")
+                            .upsert({
+                              clave: "email_envio",
+                              valor: emailToSave,
+                            });
                           if (error) throw error;
-                          alert('Email guardado correctamente');
+                          alert("Email guardado correctamente");
                         } catch (err) {
-                          console.error('Error guardando email de envío', err);
-                          alert('Error guardando email');
+                          console.error("Error guardando email de envío", err);
+                          alert("Error guardando email");
                         } finally {
                           setSavingEmail(false);
                         }
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
-                      {savingEmail ? 'Guardando...' : 'Guardar'}
+                      {savingEmail ? "Guardando..." : "Guardar"}
                     </button>
                     <button
-                      onClick={() => setAdminEmail(configData?.email_envio ?? '')}
+                      onClick={() =>
+                        setAdminEmail(configData?.email_envio ?? "")
+                      }
                       className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
                     >
                       Restaurar
@@ -830,43 +969,68 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
       {newStatus && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Crear Nuevo Estado</h3>
-            
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Crear Nuevo Estado
+            </h3>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Estado</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre del Estado
+                </label>
                 <input
                   type="text"
-                  value={newStatus.label || ''}
-                  onChange={(e) => setNewStatus({ ...newStatus, label: e.target.value })}
+                  value={newStatus.label || ""}
+                  onChange={(e) =>
+                    setNewStatus({ ...newStatus, label: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Ej: En Revisión"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Valor (ID)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Valor (ID)
+                </label>
                 <input
                   type="text"
-                  value={newStatus.value || ''}
-                  onChange={(e) => setNewStatus({ ...newStatus, value: e.target.value.replace(/\s+/g, '_').toLowerCase() })}
+                  value={newStatus.value || ""}
+                  onChange={(e) =>
+                    setNewStatus({
+                      ...newStatus,
+                      value: e.target.value.replace(/\s+/g, "_").toLowerCase(),
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Ej: en_revision"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Color
+                </label>
                 <div className="grid grid-cols-4 gap-2">
                   {colorOptions.map((color) => (
                     <button
                       key={color.name}
-                      onClick={() => setNewStatus({ ...newStatus, bg_color: color.bg, text_color: color.text })}
+                      onClick={() =>
+                        setNewStatus({
+                          ...newStatus,
+                          bg_color: color.bg,
+                          text_color: color.text,
+                        })
+                      }
                       className={`p-2 rounded-lg border-2 transition-colors ${
-                        newStatus.bg_color === color.bg ? 'border-blue-500' : 'border-gray-200'
+                        newStatus.bg_color === color.bg
+                          ? "border-blue-500"
+                          : "border-gray-200"
                       }`}
                     >
-                      <span className={`px-2 py-1 rounded text-xs ${color.bg} ${color.text}`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${color.bg} ${color.text}`}
+                      >
                         {color.name}
                       </span>
                     </button>
@@ -877,8 +1041,10 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
               <div className="pt-2">
                 <span className="text-sm text-gray-600">Vista previa:</span>
                 <div className="mt-1">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${newStatus.bg_color} ${newStatus.text_color}`}>
-                    {newStatus.label || 'Nuevo Estado'}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${newStatus.bg_color} ${newStatus.text_color}`}
+                  >
+                    {newStatus.label || "Nuevo Estado"}
                   </span>
                 </div>
               </div>
@@ -890,7 +1056,7 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                 disabled={saving || !newStatus.label || !newStatus.value}
                 className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? 'Creando...' : 'Crear Estado'}
+                {saving ? "Creando..." : "Crear Estado"}
               </button>
               <button
                 onClick={() => setNewStatus(null)}
@@ -908,43 +1074,71 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
       {editingStatus && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Editar Estado</h3>
-            
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Editar Estado
+            </h3>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Estado</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre del Estado
+                </label>
                 <input
                   type="text"
                   value={editingStatus.label}
-                  onChange={(e) => setEditingStatus({ ...editingStatus, label: e.target.value })}
+                  onChange={(e) =>
+                    setEditingStatus({
+                      ...editingStatus,
+                      label: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   disabled={editingStatus.is_default}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Valor (ID)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Valor (ID)
+                </label>
                 <input
                   type="text"
                   value={editingStatus.value}
-                  onChange={(e) => setEditingStatus({ ...editingStatus, value: e.target.value })}
+                  onChange={(e) =>
+                    setEditingStatus({
+                      ...editingStatus,
+                      value: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   disabled={editingStatus.is_default}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Color
+                </label>
                 <div className="grid grid-cols-4 gap-2">
                   {colorOptions.map((color) => (
                     <button
                       key={color.name}
-                      onClick={() => setEditingStatus({ ...editingStatus, bg_color: color.bg, text_color: color.text })}
+                      onClick={() =>
+                        setEditingStatus({
+                          ...editingStatus,
+                          bg_color: color.bg,
+                          text_color: color.text,
+                        })
+                      }
                       className={`p-2 rounded-lg border-2 transition-colors ${
-                        editingStatus.bg_color === color.bg ? 'border-blue-500' : 'border-gray-200'
+                        editingStatus.bg_color === color.bg
+                          ? "border-blue-500"
+                          : "border-gray-200"
                       }`}
                     >
-                      <span className={`px-2 py-1 rounded text-xs ${color.bg} ${color.text}`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${color.bg} ${color.text}`}
+                      >
                         {color.name}
                       </span>
                     </button>
@@ -954,15 +1148,14 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
 
               <div className="pt-2">
                 <span className="text-sm text-gray-600">Vista previa:</span>
-                <div className="mt-1">
-                  {getStatusBadge(editingStatus)}
-                </div>
+                <div className="mt-1">{getStatusBadge(editingStatus)}</div>
               </div>
 
               {editingStatus.is_default && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-blue-800 text-sm">
-                    ℹ️ Los estados por defecto solo permiten cambiar el color, no el nombre o valor.
+                    ℹ️ Los estados por defecto solo permiten cambiar el color,
+                    no el nombre o valor.
                   </p>
                 </div>
               )}
@@ -975,7 +1168,7 @@ export default function SettingsManager({ onNavigate }: SettingsManagerProps) {
                 className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                {saving ? 'Guardando...' : 'Guardar'}
+                {saving ? "Guardando..." : "Guardar"}
               </button>
               <button
                 onClick={() => setEditingStatus(null)}
