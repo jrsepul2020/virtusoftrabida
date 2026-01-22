@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { checkDeviceAccess, loadUserRole } from '../lib/deviceAccessControl';
 import { Lock, Mail, X, Shield, AlertTriangle } from 'lucide-react';
@@ -19,6 +19,9 @@ export default function LoginForm({ onLogin, onBack }: Props) {
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement | null>(null);
+
+  const QUICK_PASSWORD = 'Sevill20c@-2026';
 
   // Safe error message function to prevent information leakage
   const getSafeErrorMessage = (error: any): string => {
@@ -299,15 +302,26 @@ export default function LoginForm({ onLogin, onBack }: Props) {
         </button>
 
         {/* Header con ícono */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full mb-4 shadow-lg">
-            <Shield className="w-8 h-8 text-white" />
+          <div className="text-center mb-6 sm:mb-8">
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                setPassword(QUICK_PASSWORD);
+                setShowPassword(true);
+                setTimeout(() => passwordInputRef.current?.focus(), 50);
+              }}
+              title="Pegar contraseña rápida"
+              className="inline-flex items-center justify-center w-full overflow-hidden"
+            >
+              <img src="/logo-bandera-1.png" alt="Logo organización" className="mx-auto h-12 object-contain" />
+            </button>
           </div>
           <h2 id="login-title" className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
-            Panel de Administración
+            Acceso exclusivo Personal
           </h2>
           <p id="login-subtitle" className="text-gray-500 text-sm">
-            Acceso exclusivo para administradores
+            Solo administradores
           </p>
         </div>
 
@@ -403,13 +417,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
             )}
           </button>
 
-          <button
-            type="button"
-            onClick={() => setShowForgotPassword(true)}
-            className="w-full text-gray-600 hover:text-gray-800 py-2 text-sm font-medium transition-colors"
-          >
-            ¿Olvidaste tu contraseña?
-          </button>
+          {/* Forgot password removed per request */}
         </form>
 
         {/* Footer */}

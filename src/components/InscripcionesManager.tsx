@@ -558,16 +558,16 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-2 sm:p-4 w-full overflow-x-hidden">
       {/* Estadísticas compactas en una fila */}
-      <div className="bg-white rounded-lg shadow p-3">
-        <div className="flex flex-wrap items-center gap-4 text-sm">
+      <div className="bg-white rounded-lg shadow p-3 w-full">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
           <button
             onClick={() => {
               setFilterRevisada("all");
               setFilterStatus("all");
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors whitespace-nowrap"
           >
             <span className="text-gray-600">Total:</span>
             <span className="font-bold text-gray-800">{stats.total}</span>
@@ -577,9 +577,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
               setFilterRevisada("pendiente");
               setFilterStatus("all");
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 transition-colors whitespace-nowrap"
           >
-            <span className="text-red-600">⏳ Pendientes:</span>
+            <span className="text-red-600">⏳ Pend.:</span>
             <span className="font-bold text-red-700">{stats.pendientes}</span>
           </button>
           <button
@@ -587,9 +587,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
               setFilterRevisada("revisada");
               setFilterStatus("all");
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 transition-colors whitespace-nowrap"
           >
-            <span className="text-green-600">✅ Revisadas:</span>
+            <span className="text-green-600">✅ Revis.:</span>
             <span className="font-bold text-green-700">{stats.revisadas}</span>
           </button>
           <button
@@ -597,12 +597,12 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
               setFilterStatus("pagado");
               setFilterRevisada("all");
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors whitespace-nowrap"
           >
             <span className="text-blue-600">💳 Pagadas:</span>
             <span className="font-bold text-blue-700">{stats.pagadas}</span>
           </button>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50">
+          <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-amber-50 whitespace-nowrap">
             <span className="text-amber-600">🍷 Muestras:</span>
             <span className="font-bold text-amber-700">
               {stats.totalMuestras}
@@ -612,31 +612,36 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
       </div>
 
       {/* Filtros y acciones */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex flex-wrap gap-3 items-center">
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 w-full">
+        <div className="space-y-3">
+          {/* Búsqueda - ancho completo responsive */}
+          <div className="w-full">
             <input
               type="text"
-              placeholder="Buscar por nombre, email, pedido o país..."
+              placeholder="Buscar por nombre, email, pedido..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500 w-96"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
             />
+          </div>
 
-            {onNewInscripcion && (
-              <button
-                onClick={onNewInscripcion}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Nueva Inscripción
-              </button>
-            )}
+          {/* Botón nueva inscripción */}
+          {onNewInscripcion && (
+            <button
+              onClick={onNewInscripcion}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Nueva Inscripción
+            </button>
+          )}
 
+          {/* Filtros en fila con wrap */}
+          <div className="flex flex-wrap gap-2">
             <select
               value={filterRevisada}
               onChange={(e) => setFilterRevisada(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
+              className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="all">Todas</option>
               <option value="pendiente">Pendientes revisión</option>
@@ -646,7 +651,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
+              className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="all">Todos los estados</option>
               <option value="pending">Pendiente</option>
@@ -656,43 +661,44 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
             </select>
           </div>
 
-          <div className="flex gap-2">
+          {/* Acciones en fila con wrap */}
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={fetchInscripciones}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm"
             >
-              <RefreshCw className="w-4 h-4" />
-              Actualizar
+              <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Actualizar</span>
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              title="Imprimir listado"
+              className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm"
+              title="Imprimir"
             >
-              <Printer className="w-4 h-4" />
-              Imprimir
+              <Printer className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Imprimir</span>
             </button>
             <button
               onClick={handlePrintPDF}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              title="Imprimir como PDF"
+              className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm"
+              title="PDF"
             >
-              <FileText className="w-4 h-4" />
-              PDF
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">PDF</span>
             </button>
             <button
               onClick={exportToExcel}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm"
             >
-              <Download className="w-4 h-4" />
-              Excel
+              <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Excel</span>
             </button>
             <button
               onClick={handleDeleteSelectedInscripciones}
               disabled={selectedInscripciones.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 text-xs sm:text-sm ml-auto"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3 sm:w-4 sm:h-4" />
               Eliminar ({selectedInscripciones.length})
             </button>
           </div>

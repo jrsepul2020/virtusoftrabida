@@ -57,6 +57,8 @@ export default function SimpleSamplesList({
   );
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 15;
 
   useEffect(() => {
     fetchSamples();
@@ -65,6 +67,11 @@ export default function SimpleSamplesList({
   useEffect(() => {
     filterAndSortSamples();
   }, [searchTerm, samples, sortField, sortDirection, selectedCategories]);
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategories, sortField, sortDirection, samples]);
 
   const fetchSamples = async () => {
     setLoading(true);
@@ -540,7 +547,9 @@ export default function SimpleSamplesList({
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {filteredSamples.map((sample, index) => (
+                  {filteredSamples
+                    .slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+                    .map((sample, index) => (
                     <tr
                       key={sample.id}
                       onClick={() => setEditingSample(sample)}
@@ -666,7 +675,9 @@ export default function SimpleSamplesList({
 
             {/* Vista de tarjetas para móvil */}
             <div className="md:hidden">
-              {filteredSamples.map((sample) => (
+              {filteredSamples
+                .slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+                .map((sample) => (
                 <div
                   key={sample.id}
                   onClick={() => setEditingSample(sample)}
@@ -798,8 +809,31 @@ export default function SimpleSamplesList({
             )}
           </div>
 
-          <div className="mt-3 text-sm text-gray-600">
-            Mostrando {filteredSamples.length} de {samples.length} muestras
+          {/* Paginación */}
+          <div className="flex items-center justify-between gap-4 mt-3">
+            <div className="text-sm text-gray-600">
+              Mostrando {Math.min(PAGE_SIZE, Math.max(0, filteredSamples.length - (currentPage - 1) * PAGE_SIZE))} de {filteredSamples.length} (total {samples.length})
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-md border bg-white text-sm disabled:opacity-40"
+              >
+                Anterior
+              </button>
+
+              <div className="text-sm text-gray-700 px-3 py-1">Página {currentPage} / {Math.max(1, Math.ceil(filteredSamples.length / PAGE_SIZE))}</div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(Math.max(1, Math.ceil(filteredSamples.length / PAGE_SIZE)), p + 1))}
+                disabled={currentPage >= Math.ceil(filteredSamples.length / PAGE_SIZE) || filteredSamples.length === 0}
+                className="px-3 py-1 rounded-md border bg-white text-sm disabled:opacity-40"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
 
           <SampleEditModal

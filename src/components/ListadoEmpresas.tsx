@@ -379,7 +379,7 @@ export default function ListadoEmpresas() {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table / Mobile list */}
         {filteredCompanies.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <p className="text-gray-500 text-lg">
@@ -397,9 +397,101 @@ export default function ListadoEmpresas() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+          <>
+            {/* Mobile: cards list (hidden on lg+) */}
+            <div className="lg:hidden space-y-3">
+              {filteredCompanies.map((company) => (
+                <div
+                  key={company.id}
+                  className="bg-white rounded-lg shadow-md border border-gray-200 p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {company.pedido ? (
+                          <span className="text-xs text-gray-700">Pedido:</span>
+                        ) : null}
+                        {company.pedido ? (
+                          <span className="text-sm font-semibold text-gray-900 truncate bg-gray-100 px-2 py-0.5 rounded">
+                            {company.pedido}
+                          </span>
+                        ) : null}
+                        <div className="flex-1">
+                          <div
+                            className="text-base font-semibold text-gray-900 truncate"
+                            title={company.name}
+                          >
+                            {company.name}
+                          </div>
+                          <div className="mt-1 text-sm text-gray-500 truncate">
+                            {company.email || company.contact_person || '-'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-sm text-gray-600 text-right">
+                      {company.country || company.pais || '-'}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-start">
+                        <span className="text-xs text-gray-500">N Muestras:</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 bg-primary-600 text-white rounded-full text-sm font-semibold">
+                          {company.totalinscripciones || 0}
+                        </span>
+                      </div>
+                      <div className="ml-2 flex items-center">
+                        <div className="text-sm">{getStatusBadge(company.status)}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewSamples(company);
+                        }}
+                        className="p-2 rounded-md text-green-600 hover:bg-green-50"
+                        aria-label="Ver muestras"
+                        title="Ver muestras"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditCompany(company);
+                        }}
+                        className="p-2 rounded-md text-blue-600 hover:bg-blue-50"
+                        aria-label="Editar empresa"
+                        title="Editar"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCompany(company.id, company.name);
+                        }}
+                        className="p-2 rounded-md text-red-600 hover:bg-red-50"
+                        aria-label="Eliminar empresa"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: table (hidden on small screens) */}
+            <div className="hidden lg:block bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-800">
                 <tr>
                   <th className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider w-12">
@@ -617,8 +709,9 @@ export default function ListadoEmpresas() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
-          </div>
+          </>
         )}
       </div>
 

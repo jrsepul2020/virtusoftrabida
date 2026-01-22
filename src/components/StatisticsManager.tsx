@@ -10,7 +10,6 @@ import {
   BarChart3,
   PieChartIcon,
   Users,
-  Trophy,
 } from "lucide-react";
 import {
   PieChart,
@@ -50,12 +49,6 @@ interface InscripcionPorDia {
   inscripciones: number;
 }
 
-type TopEmpresa = {
-  id: string;
-  nombre: string;
-  muestras: number;
-};
-
 interface StatisticsManagerProps {
   onNavigateToSamples?: (category: string) => void;
 }
@@ -67,14 +60,20 @@ export default function StatisticsManager({
   const [inscripcionesPorDia, setInscripcionesPorDia] = useState<
     InscripcionPorDia[]
   >([]);
-  const [topEmpresas, setTopEmpresas] = useState<TopEmpresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"resumen" | "graficos">("resumen");
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     fetchCountsEmpresasMuestras();
     fetchInscripcionesPorDia();
-    fetchTopEmpresas();
+  }, []);
+
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 640);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   const fetchInscripcionesPorDia = async () => {
@@ -147,33 +146,6 @@ export default function StatisticsManager({
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchTopEmpresas = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("empresas")
-        .select("id, name, muestras(count)")
-        .limit(50);
-
-      if (error) throw error;
-
-      const normalized = (data || []).map((row: any) => ({
-        id: row.id,
-        nombre: row.name || "Sin nombre",
-        muestras: Array.isArray(row.muestras)
-          ? (row.muestras[0]?.count ?? 0)
-          : 0,
-      }));
-
-      const sorted = normalized
-        .sort((a, b) => b.muestras - a.muestras)
-        .slice(0, 5);
-      setTopEmpresas(sorted);
-    } catch (error) {
-      console.error("Error fetching top empresas:", error);
-      setTopEmpresas([]);
     }
   };
 
@@ -420,6 +392,7 @@ export default function StatisticsManager({
     );
   };
 
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -429,7 +402,7 @@ export default function StatisticsManager({
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 p-2 sm:p-3 md:p-4 w-full">
+    <div className="space-y-4 md:space-y-6 p-2 sm:p-3 md:p-4 w-full overflow-x-hidden">
       {/* Tabs con estilo destacado en rojo intenso */}
       <div className="bg-gray-50 rounded-lg p-1 inline-flex gap-1 shadow-sm w-full sm:w-auto justify-center sm:justify-start">
         <button
@@ -456,43 +429,27 @@ export default function StatisticsManager({
         </button>
       </div>
 
-      {/* Mini gráficos de barras por grupo - Solo en pestaña Resumen */}
-      {activeTab === "resumen" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <MiniBarChart title="VINOS" data={vinosData} icon={Wine} />
-          <MiniBarChart
-            title="ESPUMOSOS Y GENEROSOS"
-            data={espumososGenerososData}
-            icon={Sparkles}
-          />
-          <MiniBarChart
-            title="ESPIRITUOSOS Y AROMATIZADOS"
-            data={espirituososAromatizadosData}
-            icon={Wine}
-          />
-          <MiniBarChart
-            title="ACEITES DE OLIVA"
-            data={aceitesData}
-            icon={Droplet}
-          />
-        </div>
-      )}
-
       {activeTab === "graficos" ? (
         <div className="space-y-4 md:space-y-6">
           {/* Gráfico de evolución de inscripciones */}
-          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5">
+          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5 min-w-0">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               <h3 className="text-base sm:text-lg font-bold text-gray-800">
                 Evolución de Inscripciones
               </h3>
             </div>
-            <div className="h-48 sm:h-56 md:h-64">
+            <div className="h-48 sm:h-56 md:h-64 overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={inscripcionesPorDia}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="fecha" tick={{ fontSize: 9 }} angle={-45} textAnchor="end" height={60} />
+                  <XAxis
+                    dataKey="fecha"
+                    tick={{ fontSize: 9 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
                   <Line
@@ -510,14 +467,14 @@ export default function StatisticsManager({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             {/* Gráfico de Pie */}
-            <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5">
+            <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5 min-w-0">
               <div className="flex items-center gap-2 mb-4">
                 <PieChartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 <h3 className="text-base sm:text-lg font-bold text-gray-800">
                   Distribución por Categoría
                 </h3>
               </div>
-              <div className="h-48 sm:h-56 md:h-64">
+              <div className="h-48 sm:h-56 md:h-64 overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -528,10 +485,15 @@ export default function StatisticsManager({
                       outerRadius={60}
                       paddingAngle={2}
                       dataKey="value"
-                      label={({ name, percent }) =>
-                        `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                      label={
+                        isMobile
+                          ? false
+                          : ({ name, percent }) =>
+                              `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                       }
-                      labelLine={{ stroke: "#666", strokeWidth: 1 }}
+                      labelLine={
+                        isMobile ? false : { stroke: "#666", strokeWidth: 1 }
+                      }
                     >
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -544,14 +506,14 @@ export default function StatisticsManager({
             </div>
 
             {/* Gráfico de Barras */}
-            <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5">
+            <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5 min-w-0">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                 <h3 className="text-base sm:text-lg font-bold text-gray-800">
                   Muestras por Categoría
                 </h3>
               </div>
-              <div className="h-48 sm:h-56 md:h-64">
+              <div className="h-48 sm:h-56 md:h-64 overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={barData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />
@@ -563,11 +525,7 @@ export default function StatisticsManager({
                       width={60}
                     />
                     <Tooltip />
-                    <Bar
-                      dataKey="cantidad"
-                      fill="#10B981"
-                      radius={[0, 4, 4, 0]}
-                    />
+                    <Bar dataKey="cantidad" fill="#10B981" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -576,6 +534,24 @@ export default function StatisticsManager({
         </div>
       ) : (
         <>
+          {/* Mini gráficos de barras por grupo - Solo en pestaña Resumen */}
+          {activeTab === "resumen" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+              <MiniBarChart title="VINOS" data={vinosData} icon={Wine} />
+              <MiniBarChart
+                title="ESPUMOSOS Y GENEROSOS"
+                data={espumososGenerososData}
+                icon={Sparkles}
+              />
+              <MiniBarChart
+                title="ESPIRITUOSOS Y AROMATIZADOS"
+                data={espirituososAromatizadosData}
+                icon={Wine}
+              />
+              <MiniBarChart title="ACEITES DE OLIVA" data={aceitesData} icon={Droplet} />
+            </div>
+          )}
+
           {/* Dashboard Principal */}
           <div className="space-y-4 md:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
@@ -618,18 +594,10 @@ export default function StatisticsManager({
                 sparklineData={sparklineData}
                 ariaLabel="Inscripciones acumuladas"
               />
-              <StatsCard
-                title="Top Empresas"
-                value={topEmpresas.length}
-                icon={Trophy}
-                iconColorClass="bg-gradient-to-br from-amber-500 to-amber-600"
-                sparklineData={sparklineData}
-                ariaLabel="Empresas con más muestras"
-              />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-              <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5">
+              <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5 min-w-0">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
@@ -639,7 +607,7 @@ export default function StatisticsManager({
                   </div>
                   <span className="text-xs text-gray-500">Últimos días</span>
                 </div>
-                <div className="h-48 sm:h-64">
+                <div className="h-48 sm:h-64 overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={inscripcionesPorDia}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
@@ -659,14 +627,14 @@ export default function StatisticsManager({
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5 min-w-0">
                 <div className="flex items-center gap-2 mb-4">
                   <PieChartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   <h3 className="text-sm sm:text-base font-semibold text-gray-900">
                     Distribución por tipo
                   </h3>
                 </div>
-                <div className="h-48 sm:h-64">
+                <div className="h-48 sm:h-64 overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -688,10 +656,7 @@ export default function StatisticsManager({
                 </div>
                 <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-[10px] sm:text-xs text-gray-500">
                   {pieData.slice(0, 4).map((item) => (
-                    <div
-                      key={item.name}
-                      className="flex items-center justify-between gap-2"
-                    >
+                    <div key={item.name} className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                         <span
                           className="h-2 w-2 rounded-full flex-shrink-0"
@@ -699,61 +664,13 @@ export default function StatisticsManager({
                         />
                         <span className="truncate">{item.name}</span>
                       </div>
-                      <span className="font-semibold text-gray-700">
-                        {item.value}
-                      </span>
+                      <span className="font-semibold text-gray-700">{item.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900">
-                    Top empresas
-                  </h3>
-                </div>
-                <span className="text-[10px] sm:text-xs text-gray-500">
-                  Muestras registradas
-                </span>
-              </div>
-              <div className="space-y-3">
-                {topEmpresas.length === 0 && (
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    Sin datos disponibles.
-                  </p>
-                )}
-                {topEmpresas.map((empresa, index) => (
-                  <div key={empresa.id} className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-semibold text-xs sm:text-sm flex-shrink-0">
-                      {empresa.nombre.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between text-xs sm:text-sm font-medium text-gray-800 gap-2">
-                        <span className="truncate">{empresa.nombre}</span>
-                        <span className="text-gray-600 flex-shrink-0">
-                          {empresa.muestras}
-                        </span>
-                      </div>
-                      <div className="mt-1 h-1.5 rounded-full bg-slate-100">
-                        <div
-                          className="h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
-                          style={{
-                            width: `${Math.min(100, ((empresa.muestras || 0) / Math.max(1, topEmpresas[0]?.muestras || 1)) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-[10px] sm:text-xs font-semibold text-gray-500 flex-shrink-0">
-                      #{index + 1}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </>
       )}

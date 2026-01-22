@@ -73,9 +73,9 @@ function StatsCardBase({
           <Icon className="w-5 h-5" />
         </span>
       </div>
-      <div className="mt-3 h-12">
+      <div className="mt-3 h-12 w-full overflow-hidden">
         {normalizedSparkline.length > 1 ? (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={normalizedSparkline}>
               <Line
                 type="monotone"

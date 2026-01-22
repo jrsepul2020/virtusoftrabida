@@ -166,14 +166,14 @@ export default function MesasManager() {
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-2 sm:p-4 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
-          <Users className="w-6 h-6 text-blue-600" />
+          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
           <div>
-            <h2 className="text-2xl font-bold">Distribución por Mesas</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-xl sm:text-2xl font-bold">Distribución por Mesas</h2>
+            <p className="text-xs sm:text-sm text-gray-600">
               {getTotalAsignados()} catadores asignados en{" "}
               {
                 [1, 2, 3, 4, 5].filter((m) => getUsuariosPorMesa(m).length > 0)
@@ -187,15 +187,15 @@ export default function MesasManager() {
           onClick={() => {
             fetchUsuarios();
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap"
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
           Actualizar
         </button>
       </div>
 
       {/* Grid de 5 Mesas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 w-full">
         {[1, 2, 3, 4, 5].map((mesaNum) => {
           const usuariosEnMesa = getUsuariosPorMesa(mesaNum);
           const ocupados = usuariosEnMesa.filter(

@@ -442,53 +442,53 @@ export default function UsuariosManager() {
   };
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-2 sm:p-4 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
           <div className="flex items-center gap-3">
-            <Users className="w-8 h-8 text-primary-600" />
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Gestión de Usuarios
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Administra usuarios, roles y dispositivos vinculados
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                Administra usuarios, roles y dispositivos
               </p>
             </div>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition whitespace-nowrap"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             Crear Usuario
           </button>
         </div>
 
         {/* Acciones */}
-        <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-xs sm:text-sm whitespace-nowrap"
           >
-            <Printer className="w-4 h-4" />
-            Imprimir
+            <Printer className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Imprimir</span>
           </button>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-800 rounded-lg hover:bg-purple-200 transition"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-purple-100 text-purple-800 rounded-lg hover:bg-purple-200 transition text-xs sm:text-sm whitespace-nowrap"
             title="Imprimir a PDF"
           >
-            <FileDown className="w-4 h-4" />
-            Imprimir PDF
+            <FileDown className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">PDF</span>
           </button>
           <button
             onClick={exportToExcel}
-            className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition text-xs sm:text-sm whitespace-nowrap"
           >
-            <FileSpreadsheet className="w-4 h-4" />
-            Excel
+            <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Excel</span>
           </button>
           <button
             onClick={cargarUsuarios}
@@ -496,30 +496,30 @@ export default function UsuariosManager() {
             className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
             title="Refrescar"
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
 
         {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
           <input
             type="text"
             placeholder="Buscar nombre"
             value={filters.nombre}
             onChange={(e) => setFilters({ ...filters, nombre: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <input
             type="text"
             placeholder="Buscar email"
             value={filters.email}
             onChange={(e) => setFilters({ ...filters, email: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <select
             value={filterRol}
             onChange={(e) => setFilterRol(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           >
             <option value="todos">Rol (todos)</option>
             <option value="SuperAdmin">SuperAdmin</option>
@@ -532,19 +532,19 @@ export default function UsuariosManager() {
             placeholder="País"
             value={filters.pais}
             onChange={(e) => setFilters({ ...filters, pais: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <input
             type="text"
             placeholder="Mesa"
             value={filters.mesa}
             onChange={(e) => setFilters({ ...filters, mesa: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <select
             value={filters.estado}
             onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           >
             <option value="">Estado (todos)</option>
             <option value="activo">Activo</option>

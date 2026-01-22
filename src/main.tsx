@@ -88,6 +88,9 @@ if (!import.meta.env.DEV) {
 }
 */
 
+// Keep the install prompt disabled, but define the variable for type safety
+let deferredPrompt: any = null;
+
 function showInstallPrompt_DISABLED() {
   // Create a subtle install prompt
   const installBanner = document.createElement('div');

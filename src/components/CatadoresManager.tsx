@@ -577,23 +577,23 @@ export default function CatadoresManager() {
   }
 
   return (
-    <div className="space-y-6 p-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
-          <Users className="w-6 h-6 text-blue-600" />
-          <h2 className="text-2xl font-bold">Gestión de Catadores</h2>
+          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+          <h2 className="text-xl sm:text-2xl font-bold">Gestión de Catadores</h2>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           Nuevo Catador
         </button>
       </div>
 
       {/* Botones para vaciar campos */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 w-full">
         <button
           onClick={() => handleVaciarCampo("rol")}
           disabled={saving}
@@ -638,7 +638,7 @@ export default function CatadoresManager() {
                 onChange={(e) =>
                   setFormData({ ...formData, codigocatador: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded text-sm sm:text-base"
                 placeholder="Código"
               />
             </div>

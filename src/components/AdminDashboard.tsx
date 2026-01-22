@@ -36,6 +36,7 @@ import CompaniesManager from "./CompaniesManager";
 import InscripcionesManager from "./InscripcionesManager";
 import UnifiedInscriptionForm from "./UnifiedInscriptionForm";
 import SimpleSamplesList from "./SimpleSamplesList";
+import GestionMuestras from "./GestionMuestras";
 import PrintSamples from "./PrintSamples";
 import TandasManager from "./TandasManager";
 import StatisticsManager from "./StatisticsManager";
@@ -62,11 +63,11 @@ import UsuariosManager from "./UsuariosManager";
 import UltimasInscripciones from "./UltimasInscripciones";
 import GestorTemplates from "./GestorTemplates";
 import UserProfile from "./UserProfile";
-import Estadisticas2 from "./Estadisticas2";
+// Removed: Estadisticas2 and CompaniesManager2 screens (no longer used)
 
 type Tab =
   | "statistics"
-  | "estadisticas2"
+  
   | "inscripciones"
   | "companies"
   | "muestras"
@@ -129,9 +130,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const breadcrumbLabels: Record<Tab, string> = {
     statistics: "Panel",
-    estadisticas2: "Estadísticas 2",
+    
     inscripciones: "Inscripciones",
     companies: "Empresas",
+    
     muestras: "Muestras",
     tandas: "Tandas",
     mesas: "Mesas",
@@ -152,6 +154,33 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     mailrelay: "Mailrelay",
     templates: "Templates",
     profile: "Perfil",
+  };
+
+  // Map tab -> source filename for quick reference in breadcrumb
+  const tabToFile: Record<Tab, string | undefined> = {
+    statistics: 'StatisticsManager.tsx',
+    inscripciones: 'InscripcionesManager.tsx',
+    companies: 'CompaniesManager.tsx',
+    muestras: 'GestionMuestras.tsx',
+    tandas: 'TandasManager.tsx',
+    mesas: 'MesasManager.tsx',
+    puntuaciones: 'PuntuacionesManager.tsx',
+    catadores: 'CatadoresManager.tsx',
+    dispositivos: 'DispositivosManager.tsx',
+    paypal: 'PayPalDashboard.tsx',
+    print: 'PrintSamples.tsx',
+    form: 'UnifiedInscriptionForm.tsx',
+    emailTest: 'EmailTest.tsx',
+    configuracion: 'SettingsManager.tsx',
+    usuarios: 'UsuariosManager.tsx',
+    pantallas: 'PantallasManager.tsx',
+    fotosBotellas: 'BottlePhotosGallery.tsx',
+    resultados: 'ResultadosCatas.tsx',
+    backup: 'BackupManager.tsx',
+    comunicaciones: 'ComunicacionesManager.tsx',
+    mailrelay: 'MailrelayManager.tsx',
+    templates: 'GestorTemplates.tsx',
+    profile: 'UserProfile.tsx',
   };
 
   // Persist sidebar state
@@ -231,7 +260,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       title: "PANEL PRINCIPAL",
       items: [
         { id: "statistics", label: "Estadísticas", icon: BarChart3 },
-        { id: "estadisticas2", label: "Estadísticas 2", icon: BarChart3, highlight: true },
         { id: "inscripciones", label: "Inscripciones", icon: ClipboardList },
       ],
     },
@@ -635,24 +663,28 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <span>Inicio</span>
               <span className="text-gray-300">/</span>
               <span className="text-gray-700 font-medium">{breadcrumbLabels[activeTab]}</span>
+              {tabToFile[activeTab] && (
+                <>
+                  <span className="text-gray-300">/</span>
+                  <span className="text-xs text-gray-400">{tabToFile[activeTab]}</span>
+                </>
+              )}
             </div>
             {activeTab === "statistics" && (
               <StatisticsManager
                 onNavigateToSamples={handleNavigateToSamplesByCategory}
               />
             )}
-            {activeTab === "estadisticas2" && <Estadisticas2 />}
+            {/* Estadisticas2 removed */}
             {activeTab === "inscripciones" && (
               <InscripcionesManager
                 onNewInscripcion={() => setActiveTab("form")}
               />
             )}
             {activeTab === "companies" && <CompaniesManager />}
+            {/* CompaniesManager2 removed */}
             {activeTab === "muestras" && (
-              <SimpleSamplesList
-                onNavigateToPrint={() => setActiveTab("print")}
-                initialCategoryFilter={categoryFilter}
-              />
+              <GestionMuestras initialCategoryFilter={categoryFilter} />
             )}
             {activeTab === "fotosBotellas" && (
               <BottlePhotosGallery onBack={() => setActiveTab("muestras")} />

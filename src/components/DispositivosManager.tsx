@@ -194,12 +194,12 @@ export default function DispositivosManager() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+    <div className="p-3 sm:p-6 w-full overflow-x-hidden">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
           Gestión de Dispositivos
         </h2>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600">
           Control de acceso basado en dispositivos. Aprueba o revoca el acceso de dispositivos registrados.
         </p>
       </div>

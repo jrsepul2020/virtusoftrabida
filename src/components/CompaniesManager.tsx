@@ -361,12 +361,12 @@ export default function CompaniesManager() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-2 sm:p-4 w-full overflow-x-hidden">
       {/* Tab Navigation */}
-      <div className="mb-6 inline-flex rounded-lg bg-gray-50 p-1 shadow-sm">
+      <div className="mb-4 sm:mb-6 inline-flex rounded-lg bg-gray-50 p-1 shadow-sm w-full sm:w-auto justify-center sm:justify-start">
         <button
           onClick={() => setActiveSubTab("empresas")}
-          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
+          className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap ${
             activeSubTab === "empresas"
               ? "bg-red-700 text-white shadow-md"
               : "bg-transparent text-gray-600 hover:bg-white hover:text-gray-900"
@@ -376,7 +376,7 @@ export default function CompaniesManager() {
         </button>
         <button
           onClick={() => setActiveSubTab("listado")}
-          className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
+          className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap ${
             activeSubTab === "listado"
               ? "bg-red-700 text-white shadow-md"
               : "bg-transparent text-gray-600 hover:bg-white hover:text-gray-900"
@@ -392,11 +392,11 @@ export default function CompaniesManager() {
       ) : (
         <>
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2">
               Gestión de Empresas
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Total: {filteredCompanies.length} empresa
               {filteredCompanies.length !== 1 ? "s" : ""}
               {searchTerm && ` (filtradas de ${companiesWithSamples.length})`}
@@ -404,53 +404,55 @@ export default function CompaniesManager() {
           </div>
 
           {/* Filters and Actions */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="mb-4 sm:mb-6 flex flex-col gap-2 sm:gap-4 w-full">
+            <div className="w-full relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
                 type="text"
-                placeholder="Buscar por nombre, email, país o contacto..."
+                placeholder="Buscar por nombre, email, país..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-9 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="all">Todos los estados</option>
-              {statusConfigs.map((config) => (
-                <option key={config.value} value={config.value}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="flex-1 min-w-[140px] px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+              >
+                <option value="all">Todos los estados</option>
+                {statusConfigs.map((config) => (
+                  <option key={config.value} value={config.value}>
+                    {config.label}
+                  </option>
+                ))}
+              </select>
 
-            <button
-              onClick={() => setShowColumnConfig(!showColumnConfig)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-            >
-              <Settings className="w-5 h-5" />
-              Columnas
-            </button>
+              <button
+                onClick={() => setShowColumnConfig(!showColumnConfig)}
+                className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"
+              >
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Columnas</span>
+              </button>
 
-            <button
-              onClick={exportToExcel}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-            >
-              <FileSpreadsheet className="w-5 h-5" />
-              Excel
-            </button>
+              <button
+                onClick={exportToExcel}
+                className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"
+              >
+                <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Excel</span>
+              </button>
 
-            <button
-              onClick={() => refetch()}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            >
-              Actualizar
-            </button>
+              <button
+                onClick={() => refetch()}
+                className="px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
+              >
+                Actualizar
+              </button>
+            </div>
           </div>
 
           {/* Column Configuration */}
@@ -497,267 +499,344 @@ export default function CompaniesManager() {
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-primary-600 text-white">
-                    <tr>
-                      {isColumnVisible("pedido") && (
-                        <th
-                          onClick={() => handleSort("pedido")}
-                          className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap"
-                        >
-                          <div className="flex items-center gap-1">
-                            Pedido
-                            {getSortIcon("pedido")}
-                          </div>
-                        </th>
-                      )}
-                      {isColumnVisible("name") && (
-                        <th
-                          onClick={() => handleSort("name")}
-                          className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 min-w-[180px] max-w-[220px]"
-                        >
-                          <div className="flex items-center gap-1">
-                            Nombre
-                            {getSortIcon("name")}
-                          </div>
-                        </th>
-                      )}
-                      {isColumnVisible("totalinscripciones") && (
-                        <th
-                          onClick={() => handleSort("totalinscripciones")}
-                          className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap"
-                        >
-                          <div className="flex items-center justify-center gap-1">
-                            Muestras
-                            {getSortIcon("totalinscripciones")}
-                          </div>
-                        </th>
-                      )}
-                      {isColumnVisible("telefono") && (
-                        <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider min-w-[120px] max-w-[140px]">
-                          Teléfonos
-                        </th>
-                      )}
-                      {isColumnVisible("email") && (
-                        <th
-                          onClick={() => handleSort("email")}
-                          className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 min-w-[160px] max-w-[200px]"
-                        >
-                          <div className="flex items-center gap-1">
-                            Email
-                            {getSortIcon("email")}
-                          </div>
-                        </th>
-                      )}
-                      {isColumnVisible("pagado") && (
-                        <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
-                          Pagado
-                        </th>
-                      )}
-                      {isColumnVisible("status") && (
-                        <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
-                          Estado
-                        </th>
-                      )}
-                      {isColumnVisible("pais") && (
-                        <th
-                          onClick={() => handleSort("pais")}
-                          className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap max-w-[100px]"
-                        >
-                          <div className="flex items-center gap-1">
-                            País
-                            {getSortIcon("pais")}
-                          </div>
-                        </th>
-                      )}
-                      <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredCompanies.map((company) => (
-                      <tr key={company.id} className="hover:bg-gray-50">
-                        {isColumnVisible("pedido") && (
-                          <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-900">
-                            {company.pedido || "-"}
-                          </td>
-                        )}
-                        {isColumnVisible("name") && (
-                          <td className="px-2 py-3 max-w-[220px]">
-                            <div
-                              className="text-xs font-medium text-gray-900 truncate"
+            <>
+              {/* Cards (móvil/tablet) */}
+              <div className="lg:hidden space-y-3">
+                {filteredCompanies.map((company) => {
+                  const pagadoStatus = company.status?.toLowerCase();
+                  const isPagado =
+                    (company as any).pago_confirmado ||
+                    pagadoStatus === "approved" ||
+                    pagadoStatus === "aprobada";
+
+                  return (
+                    <div
+                      key={company.id}
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="text-sm sm:text-base font-semibold text-gray-900 truncate"
                               title={company.name}
                             >
                               {company.name}
+                            </span>
+                            {company.pedido ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 flex-shrink-0">
+                                Pedido {company.pedido}
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500 truncate">
+                            {company.contact_person || company.email}
+                          </div>
+                        </div>
+
+                        <span
+                          className={`text-[10px] font-semibold rounded-full px-2 py-1 flex-shrink-0 ${getStatusConfig(company.status).bg_color} ${getStatusConfig(company.status).text_color}`}
+                        >
+                          {getStatusConfig(company.status).label}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2 sm:gap-3">
+                        <div>
+                          <p className="text-[10px] text-gray-500">Muestras</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {company.totalinscripciones || company.samples.length}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500">Pagado</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {isPagado ? "Sí" : "Pend."}
+                          </p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-[10px] text-gray-500">Email</p>
+                          <a
+                            href={`mailto:${company.email}`}
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block"
+                            title={company.email}
+                          >
+                            {company.email}
+                          </a>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-[10px] text-gray-500">País</p>
+                          <p className="text-sm text-gray-900 truncate">
+                            {company.pais || company.country || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setSelectedCompany(company)}
+                          className="flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg bg-primary-600 text-white hover:bg-primary-700 whitespace-nowrap"
+                        >
+                          Ver
+                        </button>
+                        <button
+                          onClick={() => setShowDeleteConfirm(company)}
+                          className="flex-1 px-3 py-2 text-xs sm:text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 whitespace-nowrap"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Tabla (desktop) */}
+              <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-primary-600 text-white">
+                      <tr>
+                        {isColumnVisible("pedido") && (
+                          <th
+                            onClick={() => handleSort("pedido")}
+                            className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap"
+                          >
+                            <div className="flex items-center gap-1">
+                              Pedido
+                              {getSortIcon("pedido")}
                             </div>
-                            {company.contact_person && (
-                              <div
-                                className="text-xs text-gray-500 truncate"
-                                title={company.contact_person}
-                              >
-                                {company.contact_person}
-                              </div>
-                            )}
-                          </td>
+                          </th>
+                        )}
+                        {isColumnVisible("name") && (
+                          <th
+                            onClick={() => handleSort("name")}
+                            className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 min-w-[180px] max-w-[220px]"
+                          >
+                            <div className="flex items-center gap-1">
+                              Nombre
+                              {getSortIcon("name")}
+                            </div>
+                          </th>
                         )}
                         {isColumnVisible("totalinscripciones") && (
-                          <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-900 text-center">
-                            <span className="inline-flex items-center justify-center w-7 h-7 bg-amber-100 text-amber-800 rounded-full font-medium">
-                              {company.totalinscripciones ||
-                                company.samples.length}
-                            </span>
-                          </td>
+                          <th
+                            onClick={() => handleSort("totalinscripciones")}
+                            className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap"
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              Muestras
+                              {getSortIcon("totalinscripciones")}
+                            </div>
+                          </th>
                         )}
                         {isColumnVisible("telefono") && (
-                          <td className="px-2 py-3 text-xs max-w-[140px]">
-                            <div className="flex flex-col gap-0.5">
-                              {(company.telefono || company.phone) && (
-                                <a
-                                  href={`tel:${company.telefono || company.phone}`}
-                                  className="text-blue-600 hover:text-blue-800 hover:underline truncate"
-                                  title={company.telefono || company.phone}
-                                >
-                                  {company.telefono || company.phone}
-                                </a>
-                              )}
-                              {company.movil && (
-                                <a
-                                  href={`tel:${company.movil}`}
-                                  className="text-blue-600 hover:text-blue-800 hover:underline truncate"
-                                  title={company.movil}
-                                >
-                                  {company.movil}
-                                </a>
-                              )}
-                              {!company.telefono &&
-                                !company.phone &&
-                                !company.movil &&
-                                "-"}
-                            </div>
-                          </td>
+                          <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider min-w-[120px] max-w-[140px]">
+                            Teléfonos
+                          </th>
                         )}
                         {isColumnVisible("email") && (
-                          <td className="px-2 py-3 text-xs max-w-[200px]">
-                            <a
-                              href={`mailto:${company.email}`}
-                              className="text-blue-600 hover:text-blue-800 hover:underline truncate block"
-                              title={company.email}
-                            >
-                              {company.email}
-                            </a>
-                          </td>
+                          <th
+                            onClick={() => handleSort("email")}
+                            className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 min-w-[160px] max-w-[200px]"
+                          >
+                            <div className="flex items-center gap-1">
+                              Email
+                              {getSortIcon("email")}
+                            </div>
+                          </th>
                         )}
                         {isColumnVisible("pagado") && (
-                          <td className="px-2 py-3 whitespace-nowrap text-xs text-center">
-                            {(() => {
-                              const status = company.status?.toLowerCase();
-                              const isPagado = (company as any).pago_confirmado;
-
-                              // Colores según estado
-                              if (
-                                status === "approved" ||
-                                status === "aprobada" ||
-                                isPagado
-                              ) {
-                                return (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                    Sí
-                                  </span>
-                                );
-                              } else if (
-                                status === "rejected" ||
-                                status === "rechazada"
-                              ) {
-                                return (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                    No
-                                  </span>
-                                );
-                              } else {
-                                return (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
-                                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                                    Pendiente
-                                  </span>
-                                );
-                              }
-                            })()}
-                          </td>
+                          <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
+                            Pagado
+                          </th>
                         )}
                         {isColumnVisible("status") && (
-                          <td className="px-2 py-3 whitespace-nowrap text-center">
-                            {changingStatus?.companyId === company.id ? (
-                              <select
-                                value={company.status}
-                                onChange={(e) =>
-                                  handleStatusChange(company.id, e.target.value)
-                                }
-                                className="text-sm rounded-full px-3 py-1 border border-gray-300"
-                                autoFocus
-                                onBlur={() => setChangingStatus(null)}
-                              >
-                                {statusConfigs.map((config) => (
-                                  <option
-                                    key={config.value}
-                                    value={config.value}
-                                  >
-                                    {config.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span
-                                onClick={() =>
-                                  setChangingStatus({
-                                    companyId: company.id,
-                                    currentStatus: company.status,
-                                  })
-                                }
-                                className={`inline-flex text-xs leading-5 font-semibold rounded-full px-3 py-1 cursor-pointer ${getStatusConfig(company.status).bg_color} ${getStatusConfig(company.status).text_color}`}
-                              >
-                                {getStatusConfig(company.status).label}
-                              </span>
-                            )}
-                          </td>
+                          <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
+                            Estado
+                          </th>
                         )}
                         {isColumnVisible("pais") && (
-                          <td
-                            className="px-2 py-3 whitespace-nowrap text-xs text-gray-500 max-w-[100px] truncate"
-                            title={company.pais || company.country}
+                          <th
+                            onClick={() => handleSort("pais")}
+                            className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700 whitespace-nowrap max-w-[100px]"
                           >
-                            {company.pais || company.country || "-"}
-                          </td>
+                            <div className="flex items-center gap-1">
+                              País
+                              {getSortIcon("pais")}
+                            </div>
+                          </th>
                         )}
-                        <td className="px-2 py-3 whitespace-nowrap text-center">
-                          <div className="flex justify-center gap-1">
-                            <button
-                              onClick={() => setSelectedCompany(company)}
-                              className="p-1 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
-                              title="Ver detalles"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            {/* Email action removed: not needed on companies list */}
-                            <button
-                              onClick={() => setShowDeleteConfirm(company)}
-                              className="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
-                              title="Eliminar"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+                        <th className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap">
+                          Acciones
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredCompanies.map((company) => (
+                        <tr key={company.id} className="hover:bg-gray-50">
+                          {isColumnVisible("pedido") && (
+                            <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-900">
+                              {company.pedido || "-"}
+                            </td>
+                          )}
+                          {isColumnVisible("name") && (
+                            <td className="px-2 py-3 max-w-[220px]">
+                              <div
+                                className="text-xs font-medium text-gray-900 truncate"
+                                title={company.name}
+                              >
+                                {company.name}
+                              </div>
+                              {company.contact_person && (
+                                <div
+                                  className="text-xs text-gray-500 truncate"
+                                  title={company.contact_person}
+                                >
+                                  {company.contact_person}
+                                </div>
+                              )}
+                            </td>
+                          )}
+                          {isColumnVisible("totalinscripciones") && (
+                            <td className="px-2 py-3 whitespace-nowrap text-xs text-gray-900 text-center">
+                              <span className="inline-flex items-center justify-center w-7 h-7 bg-amber-100 text-amber-800 rounded-full font-medium">
+                                {company.totalinscripciones || company.samples.length}
+                              </span>
+                            </td>
+                          )}
+                          {isColumnVisible("telefono") && (
+                            <td className="px-2 py-3 text-xs max-w-[140px]">
+                              <div className="flex flex-col gap-0.5">
+                                {(company.telefono || company.phone) && (
+                                  <a
+                                    href={`tel:${company.telefono || company.phone}`}
+                                    className="text-blue-600 hover:text-blue-800 hover:underline truncate"
+                                    title={company.telefono || company.phone}
+                                  >
+                                    {company.telefono || company.phone}
+                                  </a>
+                                )}
+                                {company.movil && (
+                                  <a
+                                    href={`tel:${company.movil}`}
+                                    className="text-blue-600 hover:text-blue-800 hover:underline truncate"
+                                    title={company.movil}
+                                  >
+                                    {company.movil}
+                                  </a>
+                                )}
+                                {!company.telefono && !company.phone && !company.movil && "-"}
+                              </div>
+                            </td>
+                          )}
+                          {isColumnVisible("email") && (
+                            <td className="px-2 py-3 text-xs max-w-[200px]">
+                              <a
+                                href={`mailto:${company.email}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline truncate block"
+                                title={company.email}
+                              >
+                                {company.email}
+                              </a>
+                            </td>
+                          )}
+                          {isColumnVisible("pagado") && (
+                            <td className="px-2 py-3 whitespace-nowrap text-xs text-center">
+                              {(() => {
+                                const status = company.status?.toLowerCase();
+                                const isPagado = (company as any).pago_confirmado;
+
+                                // Colores según estado
+                                if (status === "approved" || status === "aprobada" || isPagado) {
+                                  return (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                      Sí
+                                    </span>
+                                  );
+                                } else if (status === "rejected" || status === "rechazada") {
+                                  return (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                      No
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                      <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                      Pendiente
+                                    </span>
+                                  );
+                                }
+                              })()}
+                            </td>
+                          )}
+                          {isColumnVisible("status") && (
+                            <td className="px-2 py-3 whitespace-nowrap text-center">
+                              {changingStatus?.companyId === company.id ? (
+                                <select
+                                  value={company.status}
+                                  onChange={(e) => handleStatusChange(company.id, e.target.value)}
+                                  className="text-sm rounded-full px-3 py-1 border border-gray-300"
+                                  autoFocus
+                                  onBlur={() => setChangingStatus(null)}
+                                >
+                                  {statusConfigs.map((config) => (
+                                    <option key={config.value} value={config.value}>
+                                      {config.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span
+                                  onClick={() =>
+                                    setChangingStatus({
+                                      companyId: company.id,
+                                      currentStatus: company.status,
+                                    })
+                                  }
+                                  className={`inline-flex text-xs leading-5 font-semibold rounded-full px-3 py-1 cursor-pointer ${getStatusConfig(company.status).bg_color} ${getStatusConfig(company.status).text_color}`}
+                                >
+                                  {getStatusConfig(company.status).label}
+                                </span>
+                              )}
+                            </td>
+                          )}
+                          {isColumnVisible("pais") && (
+                            <td
+                              className="px-2 py-3 whitespace-nowrap text-xs text-gray-500 max-w-[100px] truncate"
+                              title={company.pais || company.country}
+                            >
+                              {company.pais || company.country || "-"}
+                            </td>
+                          )}
+                          <td className="px-2 py-3 whitespace-nowrap text-center">
+                            <div className="flex justify-center gap-1">
+                              <button
+                                onClick={() => setSelectedCompany(company)}
+                                className="p-1 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded"
+                                title="Ver detalles"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => setShowDeleteConfirm(company)}
+                                className="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Detail Modal */}
