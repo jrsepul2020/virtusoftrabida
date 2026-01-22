@@ -62,9 +62,11 @@ import UsuariosManager from "./UsuariosManager";
 import UltimasInscripciones from "./UltimasInscripciones";
 import GestorTemplates from "./GestorTemplates";
 import UserProfile from "./UserProfile";
+import Estadisticas2 from "./Estadisticas2";
 
 type Tab =
   | "statistics"
+  | "estadisticas2"
   | "inscripciones"
   | "companies"
   | "muestras"
@@ -127,6 +129,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const breadcrumbLabels: Record<Tab, string> = {
     statistics: "Panel",
+    estadisticas2: "Estadísticas 2",
     inscripciones: "Inscripciones",
     companies: "Empresas",
     muestras: "Muestras",
@@ -228,6 +231,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       title: "PANEL PRINCIPAL",
       items: [
         { id: "statistics", label: "Estadísticas", icon: BarChart3 },
+        { id: "estadisticas2", label: "Estadísticas 2", icon: BarChart3, highlight: true },
         { id: "inscripciones", label: "Inscripciones", icon: ClipboardList },
       ],
     },
@@ -637,6 +641,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 onNavigateToSamples={handleNavigateToSamplesByCategory}
               />
             )}
+            {activeTab === "estadisticas2" && <Estadisticas2 />}
             {activeTab === "inscripciones" && (
               <InscripcionesManager
                 onNewInscripcion={() => setActiveTab("form")}
