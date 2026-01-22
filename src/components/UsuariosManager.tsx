@@ -563,8 +563,131 @@ export default function UsuariosManager() {
         </div>
       </div>
 
+      {/* Cards móviles/tablet */}
+      <div className="lg:hidden p-3">
+        {loading ? (
+          <div className="p-6 text-center text-gray-600">Cargando usuarios...</div>
+        ) : usuariosFiltrados.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">No hay usuarios que coincidan</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {usuariosOrdenados.map((usuario) => (
+              <div
+                key={usuario.id}
+                className={`rounded-lg shadow-sm p-4 bg-white ${
+                  usuario.rol === "SuperAdmin"
+                    ? "bg-purple-50/50"
+                    : usuario.rol === "Administrador"
+                      ? "bg-primary-50/50"
+                      : usuario.rol === "Presidente"
+                        ? "bg-blue-50/50"
+                        : usuario.rol === "Catador"
+                          ? "bg-emerald-50/40"
+                          : ""
+                }`}
+                role="article"
+                aria-label={`Usuario ${usuario.nombre || usuario.email}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-gray-900 truncate">
+                      {usuario.nombre}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {usuario.email}
+                    </div>
+                  </div>
+                  <div className="text-xs font-medium text-gray-600">
+                    {usuario.rol}
+                  </div>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">País</span>
+                    <span className="text-gray-800">{usuario.pais || "—"}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Mesa / Puesto / Tablet</span>
+                    <span className="text-gray-800">
+                      {usuario.mesa ?? "-"} / {usuario.puesto ?? "-"} / {usuario.tablet ?? "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Código</span>
+                    <span className="text-gray-800">{usuario.codigocatador || "—"}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">Último login</span>
+                    <span className="text-gray-800">
+                      {usuario.last_login_at
+                        ? new Date(usuario.last_login_at).toLocaleString()
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <div className="text-xs text-gray-500 mb-1">Dispositivos</div>
+                  {usuario.dispositivos.length > 0 ? (
+                    <div className="space-y-1">
+                      {usuario.dispositivos.map((disp) => (
+                        <div key={disp.id} className="flex items-center gap-2 text-xs">
+                          <span className="text-gray-700">
+                            {disp.nombre_asignado || `Dispositivo ${disp.tablet_number || "?"}`}
+                          </span>
+                          {disp.activo && (
+                            <button
+                              onClick={() => revocarDispositivo(disp.id)}
+                              className="text-red-600 text-xs"
+                            >
+                              Revocar
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-gray-400">Sin dispositivos</div>
+                  )}
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  {usuario.activo ? (
+                    <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                      Activo
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                      Inactivo
+                    </span>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingUser(usuario)}
+                      className="px-2 py-1 text-xs rounded bg-primary-600 text-white"
+                      aria-label={`Editar ${usuario.nombre || usuario.email}`}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => eliminarUsuario(usuario)}
+                      className="px-2 py-1 text-xs rounded bg-red-500 text-white"
+                      aria-label={`Eliminar ${usuario.nombre || usuario.email}`}
+                    >
+                      Borrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Tabla de Usuarios */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="hidden lg:block bg-white rounded-xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center">
             <RefreshCw className="w-12 h-12 animate-spin mx-auto text-primary-600 mb-4" />
@@ -576,7 +699,7 @@ export default function UsuariosManager() {
             <p className="text-gray-500">No hay usuarios que coincidan</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div>
             <table className="w-full">
               <thead className="bg-[#1C2716] border-b border-gray-200 text-white">
                 <tr>

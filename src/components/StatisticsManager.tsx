@@ -429,7 +429,7 @@ export default function StatisticsManager({
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-6">
+    <div className="space-y-4 md:space-y-6 p-2 sm:p-3 md:p-4 w-full">
       {/* Tabs con estilo destacado en rojo intenso */}
       <div className="bg-gray-50 rounded-lg p-1 inline-flex gap-1 shadow-sm w-full sm:w-auto justify-center sm:justify-start">
         <button
@@ -481,7 +481,7 @@ export default function StatisticsManager({
       {activeTab === "graficos" ? (
         <div className="space-y-4 md:space-y-6">
           {/* Gráfico de evolución de inscripciones */}
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               <h3 className="text-base sm:text-lg font-bold text-gray-800">
@@ -510,7 +510,7 @@ export default function StatisticsManager({
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             {/* Gráfico de Pie */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+            <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <PieChartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 <h3 className="text-base sm:text-lg font-bold text-gray-800">
@@ -544,7 +544,7 @@ export default function StatisticsManager({
             </div>
 
             {/* Gráfico de Barras */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+            <div className="bg-white rounded-xl shadow-lg p-3 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                 <h3 className="text-base sm:text-lg font-bold text-gray-800">
@@ -629,7 +629,7 @@ export default function StatisticsManager({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-              <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-4 sm:p-6">
+              <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
@@ -659,7 +659,7 @@ export default function StatisticsManager({
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-4 sm:p-6">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <PieChartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   <h3 className="text-sm sm:text-base font-semibold text-gray-900">
@@ -708,7 +708,7 @@ export default function StatisticsManager({
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-4 sm:p-6">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5">
               <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />

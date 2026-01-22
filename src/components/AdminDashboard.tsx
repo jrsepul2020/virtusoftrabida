@@ -626,7 +626,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="p-4">
+          <div className="p-2 sm:p-3 md:p-4">
             <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
               <span>Inicio</span>
               <span className="text-gray-300">/</span>
