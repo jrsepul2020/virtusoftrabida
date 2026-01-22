@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 
 type View = 'home' | 'adminLogin' | 'admin' | 'catador' | 'inscripcion' | 'reglamento' | 'resultados' | 'diplomas';
@@ -36,6 +36,19 @@ export default function Header({
       setView('home');
     }
     setShowMobileMenu(false);
+  };
+
+  const handleLoginClick = () => {
+    if (import.meta.env.DEV) {
+      try {
+        localStorage.setItem('admin_unlocked', '1');
+        location.reload();
+      } catch (e) {
+        /* ignore */
+      }
+      return;
+    }
+    handleNavigation('adminLogin');
   };
 
   const menuItems = [
@@ -76,23 +89,6 @@ export default function Header({
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
-            {import.meta.env.DEV ? (
-              <button
-                onClick={() => {
-                  try {
-                    localStorage.setItem('admin_unlocked', '1');
-                    location.reload();
-                  } catch (e) {
-                    /* ignore */
-                  }
-                }}
-                className="px-3 py-2 text-sm font-semibold text-white bg-gray-800 rounded-md hover:bg-gray-900"
-                aria-label="Admin local"
-                title="Desbloquear admin (solo en local)"
-              >
-                Admin local
-              </button>
-            ) : null}
             <div className={`flex gap-2 ${isHomePage ? 'border border-transparent' : 'border border-gray-200'} rounded-md p-1`}>
               <button
                 onClick={() => setLang('es')}
@@ -131,6 +127,21 @@ export default function Header({
                 <span aria-hidden="true">🇵🇹</span>
               </button>
             </div>
+            {!isAdminLoggedIn && (
+              <button
+                onClick={handleLoginClick}
+                className={`${
+                  isHomePage
+                    ? 'text-white/80 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                } text-xs font-semibold flex items-center gap-1 px-2 py-1 rounded-md transition-colors`}
+                aria-label="Acceso"
+                title={import.meta.env.DEV ? 'Acceso local' : 'Acceso'}
+              >
+                <LogIn size={14} />
+                Acceso
+              </button>
+            )}
             {!isAdminLoggedIn ? null : (
               <div className="flex items-center space-x-3">
                 <span className="text-sm font-medium text-black" aria-label={t('nav.admin')}>
@@ -178,7 +189,7 @@ export default function Header({
                 </button>
               ))}
 
-              <div className="flex gap-2 px-3 py-2 border-t border-gray-200">
+              <div className="flex gap-2 px-3 py-2 border-t border-gray-200 items-center">
                 <button
                   onClick={() => setLang('es')}
                   className={`flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
@@ -209,24 +220,20 @@ export default function Header({
                 >
                   <span aria-hidden="true" className="text-lg">🇵🇹</span>
                 </button>
+                {!isAdminLoggedIn && (
+                  <button
+                    onClick={handleLoginClick}
+                    className="px-3 py-2 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900"
+                    aria-label="Acceso"
+                    title={import.meta.env.DEV ? 'Acceso local' : 'Acceso'}
+                  >
+                    <LogIn size={14} className="inline mr-1" />
+                    Acceso
+                  </button>
+                )}
               </div>
 
               <div className="border-t border-gray-200 pt-2 space-y-1">
-                {import.meta.env.DEV ? (
-                  <button
-                    onClick={() => {
-                      try {
-                        localStorage.setItem('admin_unlocked', '1');
-                        location.reload();
-                      } catch (e) {
-                        /* ignore */
-                      }
-                    }}
-                    className="text-sm text-left w-full px-3 py-2 rounded-md bg-gray-800 text-white"
-                  >
-                    Admin local
-                  </button>
-                ) : null}
                 {!isAdminLoggedIn ? null : (
                   <div className="space-y-2">
                     <div className="px-3 py-2 text-sm font-medium text-black" aria-label={t('nav.admin')}>

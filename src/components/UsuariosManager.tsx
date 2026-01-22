@@ -3,36 +3,59 @@ import { supabase } from "../lib/supabase";
 import {
   Users,
   Plus,
-  Search,
   RefreshCw,
-  Shield,
-  User,
-  Mail,
-  Calendar,
   Edit2,
   Trash2,
   Save,
   X,
   Eye,
   EyeOff,
-  AlertTriangle,
-  Lock,
-  KeyRound,
-  QrCode,
-  Clock3,
-  Activity,
+  Mail,
+  Shield,
+  User,
+  Smartphone,
+  CheckCircle,
+  XCircle,
+  ChevronUp,
+  ChevronDown,
+  Printer,
+  FileDown,
+  FileSpreadsheet,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 
 interface Usuario {
   id: string;
+  user_id: string | null;
   nombre: string;
   email: string;
   rol: string;
-  mesa?: number;
-  puesto?: number;
-  codigocatador?: string;
-  created_at: string;
+  mesa?: number | null;
+  puesto?: number | null;
+  codigocatador?: number | null;
+  tablet?: string | null;
+  pais?: string | null;
+  tandaencurso?: number | null;
+  codigo?: string | null;
+  clave?: string | null;
+  activo: boolean;
+  created_at?: string;
+}
+
+interface Dispositivo {
+  id: string;
+  device_fingerprint: string;
+  nombre_asignado?: string | null;
+  tablet_number?: number | null;
+  activo: boolean;
+  last_seen_at?: string;
+}
+
+interface UsuarioConDispositivos extends Usuario {
+  dispositivos: Dispositivo[];
+  auth_exists: boolean;
+  last_login_at?: string | null;
 }
 
 interface NuevoUsuario {
@@ -40,65 +63,96 @@ interface NuevoUsuario {
   password: string;
   nombre: string;
   rol: string;
-}
-
-interface AuditLog {
-  id?: number;
-  action: string;
-  user_id?: string | null;
-  actor_email?: string | null;
-  details?: string | null;
-  created_at?: string;
+  mesa?: number;
+  puesto?: number;
+  tablet?: string;
+  pais?: string;
+  codigocatador?: number;
+  codigo?: string;
 }
 
 export default function UsuariosManager() {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioConDispositivos[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [filterRol, setFilterRol] = useState<string>("todos");
+  const [filters, setFilters] = useState({
+    nombre: "",
+    email: "",
+    pais: "",
+    mesa: "",
+    codigocatador: "",
+    codigo: "",
+    tandaencurso: "",
+    estado: "",
+  });
+  const [sortField, setSortField] = useState<
+    | "nombre"
+    | "rol"
+    | "pais"
+    | "mesa"
+    | "codigocatador"
+    | "codigo"
+    | "tandaencurso"
+    | "created_at"
+    | "last_login"
+    | "activo"
+  >("nombre");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [mfaFactors, setMfaFactors] = useState<any[]>([]);
-  const [loadingMfa, setLoadingMfa] = useState(false);
-  const [enrollingMfa, setEnrollingMfa] = useState(false);
-  const [enrollData, setEnrollData] = useState<{
-    factorId: string;
-    uri?: string;
-    qr?: string;
-  } | null>(null);
-  const [challengeId, setChallengeId] = useState<string | null>(null);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [mfaError, setMfaError] = useState<string | null>(null);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [loadingAudit, setLoadingAudit] = useState(false);
-  const [auditError, setAuditError] = useState<string | null>(null);
-
   const [nuevoUsuario, setNuevoUsuario] = useState<NuevoUsuario>({
     email: "",
     password: "",
     nombre: "",
     rol: "Catador",
+    pais: "España",
   });
 
-  const roles = ["Admin", "Presidente", "Supervisor", "Catador"];
-
   useEffect(() => {
-    fetchUsuarios();
-    fetchMfaFactors();
-    fetchAuditLogs();
+    cargarUsuarios();
   }, []);
 
-  const fetchUsuarios = async () => {
-    setLoading(true);
+  const cargarUsuarios = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+
+      const { data: usuariosData, error: usuariosError } = await supabase
         .from("usuarios")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setUsuarios(data || []);
+      if (usuariosError) throw usuariosError;
+
+      const usuariosConDispositivos: UsuarioConDispositivos[] = await Promise.all(
+        (usuariosData || []).map(async (usuario) => {
+          const { data: dispositivosData } = await supabase
+            .from("dispositivos")
+            .select("*")
+            .eq("user_id", usuario.user_id)
+            .order("last_seen_at", { ascending: false });
+
+          let auth_exists = false;
+          let last_login_at: string | null = null;
+          if (usuario.user_id) {
+            const { data: authData, error: authError } =
+              await supabase.auth.admin.getUserById(usuario.user_id);
+            if (!authError) {
+              auth_exists = !!authData.user;
+              last_login_at = authData.user?.last_sign_in_at || null;
+            }
+          }
+
+          return {
+            ...usuario,
+            dispositivos: dispositivosData || [],
+            auth_exists,
+            last_login_at,
+          };
+        })
+      );
+
+      setUsuarios(usuariosConDispositivos);
     } catch (error: any) {
       console.error("Error cargando usuarios:", error);
       toast.error("Error al cargar usuarios");
@@ -107,101 +161,65 @@ export default function UsuariosManager() {
     }
   };
 
-  const fetchAuditLogs = async () => {
-    setLoadingAudit(true);
-    setAuditError(null);
+  const crearUsuario = async () => {
     try {
-      const { data, error } = await supabase
-        .from("auditoria_usuarios")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      setAuditLogs(data || []);
-    } catch (error: any) {
-      console.error("Error cargando auditoría:", error);
-      if (error?.code === "42P01") {
-        setAuditError(
-          "Tabla auditoria_usuarios no existe. Puedes crearla para registrar acciones.",
-        );
-      } else {
-        setAuditError("No se pudo cargar el historial de acciones");
-      }
-    } finally {
-      setLoadingAudit(false);
-    }
-  };
-
-  const logAudit = async (entry: AuditLog) => {
-    try {
-      const { error } = await supabase.from("auditoria_usuarios").insert(entry);
-      if (error) throw error;
-      fetchAuditLogs();
-    } catch (error: any) {
-      if (error?.code === "42P01") {
-        setAuditError("Tabla auditoria_usuarios no existe.");
-      } else {
-        console.warn("No se pudo registrar auditoría:", error.message);
-      }
-    }
-  };
-
-  const handleCreateUser = async () => {
-    if (!nuevoUsuario.email || !nuevoUsuario.password || !nuevoUsuario.nombre) {
-      toast.error("Completa todos los campos obligatorios");
-      return;
-    }
-
-    if (nuevoUsuario.password.length < 6) {
-      toast.error("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-
-    try {
-      // 1. Crear usuario en Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: nuevoUsuario.email,
-        password: nuevoUsuario.password,
-      });
-
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error("No se pudo crear el usuario");
+      if (!nuevoUsuario.email || !nuevoUsuario.password || !nuevoUsuario.nombre) {
+        toast.error("Completa todos los campos obligatorios");
+        return;
       }
 
-      // 2. Crear registro en tabla usuarios
-      const { error: dbError } = await supabase.from("usuarios").insert({
-        id: authData.user.id,
-        email: nuevoUsuario.email,
-        nombre: nuevoUsuario.nombre,
-        rol: nuevoUsuario.rol,
+      // Obtener token de sesión actual para autenticar el request
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("No hay sesión activa. Por favor, inicia sesión.");
+        return;
+      }
+
+      // Llamar al endpoint serverless que usa service role key
+      const response = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          email: nuevoUsuario.email,
+          password: nuevoUsuario.password,
+          nombre: nuevoUsuario.nombre,
+          rol: nuevoUsuario.rol,
+          mesa: nuevoUsuario.mesa,
+          puesto: nuevoUsuario.puesto,
+          tablet: nuevoUsuario.tablet,
+          pais: nuevoUsuario.pais,
+          codigocatador: nuevoUsuario.codigocatador,
+          codigo: nuevoUsuario.codigo,
+        }),
       });
 
-      if (dbError) throw dbError;
+      const result = await response.json();
 
-      logAudit({
-        action: "create_user",
-        user_id: authData.user.id,
-        actor_email: authData.user.email,
-        details: `Rol: ${nuevoUsuario.rol}`,
-      });
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al crear usuario');
+      }
 
       toast.success("Usuario creado correctamente");
       setShowCreateModal(false);
-      setNuevoUsuario({ email: "", password: "", nombre: "", rol: "Catador" });
-      fetchUsuarios();
+      setNuevoUsuario({
+        email: "",
+        password: "",
+        nombre: "",
+        rol: "Catador",
+        pais: "España",
+      });
+      cargarUsuarios();
     } catch (error: any) {
       console.error("Error creando usuario:", error);
-      if (error.message?.includes("already registered")) {
-        toast.error("Este email ya está registrado");
-      } else {
-        toast.error(error.message || "Error al crear usuario");
-      }
+      toast.error(error.message || "Error al crear usuario");
     }
   };
 
-  const handleUpdateUser = async () => {
+  const actualizarUsuario = async () => {
     if (!editingUser) return;
 
     try {
@@ -212,646 +230,521 @@ export default function UsuariosManager() {
           rol: editingUser.rol,
           mesa: editingUser.mesa,
           puesto: editingUser.puesto,
+          tablet: editingUser.tablet,
+          pais: editingUser.pais,
           codigocatador: editingUser.codigocatador,
+          activo: editingUser.activo,
         })
         .eq("id", editingUser.id);
 
       if (error) throw error;
 
-      logAudit({
-        action: "update_user",
-        user_id: editingUser.id,
-        details: `Rol: ${editingUser.rol}, Mesa: ${editingUser.mesa}, Puesto: ${editingUser.puesto}`,
-      });
-
       toast.success("Usuario actualizado");
       setEditingUser(null);
-      fetchUsuarios();
+      cargarUsuarios();
     } catch (error: any) {
       console.error("Error actualizando usuario:", error);
       toast.error("Error al actualizar usuario");
     }
   };
 
-  const handleDeleteUser = async (usuario: Usuario) => {
+  const eliminarUsuario = async (usuario: Usuario) => {
     if (
       !confirm(
-        `¿Estás seguro de eliminar a ${usuario.nombre}? Esta acción no se puede deshacer.`,
+        `¿Eliminar usuario ${usuario.nombre}? Esto eliminará también su acceso y dispositivos.`
       )
     ) {
       return;
     }
 
     try {
-      // Solo eliminar de la tabla usuarios (no podemos eliminar de auth sin admin)
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from("usuarios")
         .delete()
         .eq("id", usuario.id);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
-      logAudit({
-        action: "delete_user",
-        user_id: usuario.id,
-        details: `Email: ${usuario.email}`,
-      });
+      if (usuario.user_id) {
+        await supabase.auth.admin.deleteUser(usuario.user_id);
+      }
 
-      toast.success("Usuario eliminado de la base de datos");
-      fetchUsuarios();
+      toast.success("Usuario eliminado");
+      cargarUsuarios();
     } catch (error: any) {
       console.error("Error eliminando usuario:", error);
       toast.error("Error al eliminar usuario");
     }
   };
 
-  const fetchMfaFactors = async () => {
-    setLoadingMfa(true);
-    setMfaError(null);
+  const revocarDispositivo = async (dispositivoId: string) => {
     try {
-      const { data, error } = await supabase.auth.mfa.listFactors();
+      const { error } = await supabase
+        .from("dispositivos")
+        .update({ activo: false })
+        .eq("id", dispositivoId);
+
       if (error) throw error;
-      setMfaFactors(data?.all || []);
+
+      toast.success("Dispositivo revocado");
+      cargarUsuarios();
     } catch (error: any) {
-      console.error("Error listando factores MFA:", error);
-      setMfaError(
-        "No se pudo cargar el estado de 2FA. Verifica que MFA esté habilitado en Supabase.",
-      );
-    } finally {
-      setLoadingMfa(false);
+      console.error("Error revocando dispositivo:", error);
+      toast.error("Error al revocar dispositivo");
     }
   };
 
-  const startTotpEnrollment = async () => {
-    setEnrollingMfa(true);
-    setMfaError(null);
-    try {
-      const { data, error } = await supabase.auth.mfa.enroll({
-        factorType: "totp",
-      });
-      if (error) throw error;
-
-      const { data: challenge, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId: data.id });
-      if (challengeError) throw challengeError;
-
-      setEnrollData({
-        factorId: data.id,
-        uri: data.totp?.uri,
-        qr: data.totp?.qr_code,
-      });
-      setChallengeId(challenge.id);
-      toast.success("Escanea el QR y valida el código para activar 2FA");
-    } catch (error: any) {
-      console.error("Error iniciando enrolamiento 2FA:", error);
-      setMfaError(error.message || "No se pudo iniciar el enrolamiento");
-    } finally {
-      setEnrollingMfa(false);
-    }
-  };
-
-  const verifyTotpEnrollment = async () => {
-    if (!enrollData?.factorId || !challengeId || verificationCode.length < 6) {
-      setMfaError("Ingresa el código de 6 dígitos");
-      return;
-    }
-    setLoadingMfa(true);
-    setMfaError(null);
-    try {
-      const { error } = await supabase.auth.mfa.verify({
-        factorId: enrollData.factorId,
-        code: verificationCode,
-        challengeId,
-      });
-      if (error) throw error;
-      toast.success("2FA activada");
-      setEnrollData(null);
-      setChallengeId(null);
-      setVerificationCode("");
-      fetchMfaFactors();
-    } catch (error: any) {
-      console.error("Error verificando 2FA:", error);
-      setMfaError(error.message || "Código incorrecto");
-    } finally {
-      setLoadingMfa(false);
-    }
-  };
-
-  const disableTotp = async () => {
-    const totpFactor = mfaFactors.find((f) => f.factor_type === "totp");
-    if (!totpFactor) {
-      toast.error("No hay 2FA TOTP activo");
-      return;
-    }
-    setLoadingMfa(true);
-    setMfaError(null);
-    try {
-      const { error } = await supabase.auth.mfa.unenroll({
-        factorId: totpFactor.id,
-      });
-      if (error) throw error;
-      toast.success("2FA desactivada");
-      fetchMfaFactors();
-    } catch (error: any) {
-      console.error("Error desactivando 2FA:", error);
-      setMfaError(error.message || "No se pudo desactivar 2FA");
-    } finally {
-      setLoadingMfa(false);
-    }
-  };
-
-  // Filtrar usuarios
   const usuariosFiltrados = usuarios.filter((u) => {
-    const matchSearch =
-      u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const normalizedRol = u.rol?.toLowerCase();
-    const matchRol =
-      filterRol === "todos" ||
-      (filterRol === "Admin" && normalizedRol === "admin") ||
-      (filterRol === "Presidente" && normalizedRol === "presidente") ||
-      (filterRol === "Supervisor" && normalizedRol === "supervisor") ||
-      (filterRol === "Catador" && normalizedRol === "catador");
-    return matchSearch && matchRol;
+    const matchNombre = u.nombre
+      .toLowerCase()
+      .includes(filters.nombre.toLowerCase());
+    const matchEmail = u.email
+      .toLowerCase()
+      .includes(filters.email.toLowerCase());
+    const matchPais = (u.pais || "")
+      .toLowerCase()
+      .includes(filters.pais.toLowerCase());
+    const matchMesa = filters.mesa
+      ? String(u.mesa || "").includes(filters.mesa)
+      : true;
+    const matchCodigoCatador = filters.codigocatador
+      ? String(u.codigocatador || "").includes(filters.codigocatador)
+      : true;
+    const matchCodigo = (u.codigo || "")
+      .toLowerCase()
+      .includes(filters.codigo.toLowerCase());
+    const matchTanda = filters.tandaencurso
+      ? String(u.tandaencurso || "").includes(filters.tandaencurso)
+      : true;
+    const matchEstado =
+      filters.estado === ""
+        ? true
+        : filters.estado === "activo"
+          ? u.activo
+          : !u.activo;
+    const matchRol = filterRol === "todos" || u.rol === filterRol;
+    return (
+      matchNombre &&
+      matchEmail &&
+      matchPais &&
+      matchMesa &&
+      matchCodigoCatador &&
+      matchCodigo &&
+      matchTanda &&
+      matchEstado &&
+      matchRol
+    );
   });
 
-  // Normalizar rol para mostrar
-  const normalizeRol = (rol: string) => {
-    if (rol?.toLowerCase() === "admin") return "Admin";
-    if (rol?.toLowerCase() === "presidente") return "Presidente";
-    if (rol?.toLowerCase() === "supervisor") return "Supervisor";
-    if (rol?.toLowerCase() === "catador") return "Catador";
-    return rol;
-  };
-
-  // Estadísticas
-  const stats = {
-    total: usuarios.length,
-    admins: usuarios.filter((u) => u.rol?.toLowerCase() === "admin").length,
-    catadores: usuarios.filter((u) => u.rol?.toLowerCase() === "catador")
-      .length,
-  };
-
-  const getRolBadge = (rol: string) => {
-    const roleLower = rol?.toLowerCase();
-    const displayRol = normalizeRol(rol);
-    let classes = "bg-blue-100 text-blue-700";
-    let Icon = User;
-    if (roleLower === "admin") {
-      classes = "bg-purple-100 text-purple-700";
-      Icon = Shield;
-    } else if (roleLower === "presidente") {
-      classes = "bg-orange-100 text-orange-700";
-      Icon = Shield;
-    } else if (roleLower === "supervisor") {
-      classes = "bg-teal-100 text-teal-700";
-      Icon = Shield;
+  const handleSort = (
+    field:
+      | "nombre"
+      | "rol"
+      | "pais"
+      | "mesa"
+      | "codigocatador"
+      | "codigo"
+      | "tandaencurso"
+      | "created_at"
+      | "last_login"
+      | "activo",
+  ) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      return;
     }
+    setSortField(field);
+    setSortDirection("asc");
+  };
+
+  const renderSortIcon = (field: typeof sortField) => {
+    const isActive = sortField === field;
     return (
-      <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${classes}`}
-      >
-        <Icon className="w-3 h-3" />
-        {displayRol}
+      <span className="ml-2 inline-flex flex-col leading-none">
+        <ChevronUp
+          size={12}
+          className={isActive && sortDirection === "asc" ? "text-white" : "text-white/40"}
+        />
+        <ChevronDown
+          size={12}
+          className={isActive && sortDirection === "desc" ? "text-white" : "text-white/40"}
+        />
       </span>
     );
   };
 
-  const totpEnabled = mfaFactors.some((f) => f.factor_type === "totp");
-  const recentActivity = [...usuarios]
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )
-    .slice(0, 6);
+  const usuariosOrdenados = [...usuariosFiltrados].sort((a, b) => {
+    const direction = sortDirection === "asc" ? 1 : -1;
+    const getValue = (u: UsuarioConDispositivos) => {
+      switch (sortField) {
+        case "rol":
+          return u.rol || "";
+        case "pais":
+          return u.pais || "";
+        case "mesa":
+          return u.mesa ?? -1;
+        case "codigocatador":
+          return u.codigocatador ?? -1;
+        case "codigo":
+          return u.codigo || "";
+        case "tandaencurso":
+          return u.tandaencurso ?? -1;
+        case "created_at":
+          return u.created_at ? new Date(u.created_at).getTime() : 0;
+        case "last_login":
+          return u.last_login_at ? new Date(u.last_login_at).getTime() : 0;
+        case "activo":
+          return u.activo ? 1 : 0;
+        case "nombre":
+        default:
+          return u.nombre || "";
+      }
+    };
+
+    const aValue = getValue(a);
+    const bValue = getValue(b);
+    if (typeof aValue === "number" && typeof bValue === "number") {
+      return (aValue - bValue) * direction;
+    }
+    return String(aValue).localeCompare(String(bValue)) * direction;
+  });
+
+  const exportToExcel = () => {
+    const rows = usuariosOrdenados.map((u) => ({
+      Nombre: u.nombre,
+      Email: u.email,
+      Rol: u.rol,
+      Pais: u.pais || "",
+      Mesa: u.mesa ?? "",
+      Puesto: u.puesto ?? "",
+      Tablet: u.tablet || "",
+      CodigoCatador: u.codigocatador ?? "",
+      Codigo: u.codigo || "",
+      TandaEnCurso: u.tandaencurso ?? "",
+      Registro: u.created_at || "",
+      UltimoLogin: u.last_login_at || "",
+      Estado: u.activo ? "Activo" : "Inactivo",
+      UserId: u.user_id || "",
+      Id: u.id,
+      Dispositivos: u.dispositivos
+        .map((d) => d.nombre_asignado || d.tablet_number || d.device_fingerprint)
+        .join(" | "),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Usuarios");
+    XLSX.writeFile(workbook, "usuarios.xlsx");
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
-    <div className="p-4 max-w-7xl mx-auto">
+    <div className="space-y-4 p-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="w-7 h-7 text-purple-600" />
-            Gestión de Usuarios
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Administra los usuarios del sistema
-          </p>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={fetchUsuarios}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            Actualizar
-          </button>
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Users className="w-8 h-8 text-primary-600" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Gestión de Usuarios
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Administra usuarios, roles y dispositivos vinculados
+              </p>
+            </div>
+          </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
           >
-            <Plus className="w-4 h-4" />
-            Nuevo Usuario
+            <Plus className="w-5 h-5" />
+            Crear Usuario
           </button>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <Users className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-sm text-gray-500">Total</p>
-            </div>
-          </div>
+        {/* Acciones */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+          >
+            <Printer className="w-4 h-4" />
+            Imprimir
+          </button>
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-800 rounded-lg hover:bg-purple-200 transition"
+            title="Imprimir a PDF"
+          >
+            <FileDown className="w-4 h-4" />
+            Imprimir PDF
+          </button>
+          <button
+            onClick={exportToExcel}
+            className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Excel
+          </button>
+          <button
+            onClick={cargarUsuarios}
+            disabled={loading}
+            className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            title="Refrescar"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+          </button>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Shield className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-purple-600">
-                {stats.admins}
-              </p>
-              <p className="text-sm text-gray-500">Admins</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <User className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-600">
-                {stats.catadores}
-              </p>
-              <p className="text-sm text-gray-500">Catadores</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre o email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
-
+        {/* Filtros */}
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <input
+            type="text"
+            placeholder="Buscar nombre"
+            value={filters.nombre}
+            onChange={(e) => setFilters({ ...filters, nombre: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+          <input
+            type="text"
+            placeholder="Buscar email"
+            value={filters.email}
+            onChange={(e) => setFilters({ ...filters, email: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
           <select
             value={filterRol}
             onChange={(e) => setFilterRol(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
           >
-            <option value="todos">Todos los roles</option>
-            <option value="Admin">Admin</option>
+            <option value="todos">Rol (todos)</option>
+            <option value="SuperAdmin">SuperAdmin</option>
+            <option value="Administrador">Administrador</option>
             <option value="Presidente">Presidente</option>
-            <option value="Supervisor">Supervisor</option>
             <option value="Catador">Catador</option>
           </select>
+          <input
+            type="text"
+            placeholder="País"
+            value={filters.pais}
+            onChange={(e) => setFilters({ ...filters, pais: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+          <input
+            type="text"
+            placeholder="Mesa"
+            value={filters.mesa}
+            onChange={(e) => setFilters({ ...filters, mesa: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+          <select
+            value={filters.estado}
+            onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="">Estado (todos)</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Código"
+            value={filters.codigocatador}
+            onChange={(e) =>
+              setFilters({ ...filters, codigocatador: e.target.value })
+            }
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+          
         </div>
       </div>
 
-      {/* Seguridad (2FA) y actividad */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Lock className="w-5 h-5 text-purple-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Seguridad y 2FA
-              </h3>
-            </div>
-            <span
-              className={`px-2 py-1 text-xs rounded-full ${totpEnabled ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
-            >
-              {totpEnabled ? "2FA activa" : "2FA no activa"}
-            </span>
-          </div>
-
-          <p className="text-sm text-gray-500 mb-3">
-            Protege el acceso de admins con TOTP (Google Authenticator,
-            1Password, etc.).
-          </p>
-
-          <div className="space-y-3">
-            <div className="border border-gray-100 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-sm text-gray-700 mb-2">
-                <Shield className="w-4 h-4 text-purple-600" />
-                <span>Factores configurados</span>
-              </div>
-              {mfaFactors.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  No hay factores 2FA registrados.
-                </p>
-              ) : (
-                <ul className="space-y-1 text-sm text-gray-700">
-                  {mfaFactors.map((f) => (
-                    <li key={f.id} className="flex items-center gap-2">
-                      <KeyRound className="w-4 h-4 text-purple-600" />
-                      <span className="font-medium">
-                        {f.factor_type?.toUpperCase() || "TOTP"}
-                      </span>
-                      {f.created_at && (
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                          <Clock3 className="w-3 h-3" />
-                          {new Date(f.created_at).toLocaleString("es-ES")}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {mfaError && (
-              <div className="bg-red-50 text-red-700 text-sm rounded-lg p-2 border border-red-100">
-                {mfaError}
-              </div>
-            )}
-
-            {enrollData && (
-              <div className="border border-dashed border-purple-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
-                  <QrCode className="w-4 h-4 text-purple-600" />
-                  Escanea el código y valida
-                </div>
-                <div className="flex gap-3 items-start flex-wrap">
-                  {enrollData.uri ? (
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(enrollData.uri)}`}
-                      alt="QR 2FA"
-                      className="w-40 h-40 border border-gray-100 rounded"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div className="w-40 h-40 bg-gray-50 border border-gray-100 rounded flex items-center justify-center text-xs text-gray-500">
-                      QR no disponible
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-[220px] space-y-2">
-                    <p className="text-xs text-gray-500">
-                      Si no puedes escanear, usa el secreto:
-                    </p>
-                    <div className="font-mono text-sm bg-gray-50 border border-gray-100 rounded px-3 py-2 break-all">
-                      {enrollData.uri || "otpauth://..."}
-                    </div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Código de 6 dígitos
-                    </label>
-                    <input
-                      type="text"
-                      value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                      maxLength={6}
-                      placeholder="123456"
-                    />
-                    <button
-                      onClick={verifyTotpEnrollment}
-                      disabled={loadingMfa}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60"
-                    >
-                      Validar y activar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              {!totpEnabled ? (
-                <button
-                  onClick={startTotpEnrollment}
-                  disabled={enrollingMfa}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60"
-                >
-                  {enrollingMfa ? "Generando QR..." : "Habilitar 2FA TOTP"}
-                </button>
-              ) : (
-                <button
-                  onClick={disableTotp}
-                  disabled={loadingMfa}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-60"
-                >
-                  Desactivar 2FA
-                </button>
-              )}
-              <button
-                onClick={fetchMfaFactors}
-                className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Actualizar estado
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock3 className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Historial reciente
-            </h3>
-          </div>
-          <p className="text-sm text-gray-500 mb-3">
-            Altas recientes (ordenadas por fecha de creación).
-          </p>
-          {recentActivity.length === 0 ? (
-            <p className="text-sm text-gray-500">No hay actividad reciente.</p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {recentActivity.map((u) => (
-                <li key={u.id} className="py-2 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-700">
-                    {u.nombre?.charAt(0).toUpperCase() || "?"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {u.nombre || "Sin nombre"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">{u.email}</p>
-                  </div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(u.created_at).toLocaleDateString("es-ES")}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Auditoría de acciones
-              </h3>
-            </div>
-            <button
-              onClick={fetchAuditLogs}
-              className="text-sm text-indigo-600 hover:underline"
-            >
-              Refrescar
-            </button>
-          </div>
-          {auditError && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg p-2 mb-2">
-              {auditError}
-            </div>
-          )}
-          {loadingAudit ? (
-            <p className="text-sm text-gray-500">Cargando auditoría...</p>
-          ) : auditLogs.length === 0 ? (
-            <p className="text-sm text-gray-500">Sin registros de acciones.</p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {auditLogs.map((log) => (
-                <li
-                  key={log.id ?? `${log.action}-${log.created_at}`}
-                  className="py-2 flex items-start gap-3"
-                >
-                  <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-semibold">
-                    {log.action?.slice(0, 2).toUpperCase() || "AC"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {log.action}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {log.details}
-                    </p>
-                    <p className="text-[11px] text-gray-500 truncate">
-                      {log.actor_email || "—"}
-                    </p>
-                  </div>
-                  <div className="text-[11px] text-gray-500 whitespace-nowrap">
-                    {log.created_at
-                      ? new Date(log.created_at).toLocaleString("es-ES")
-                      : ""}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      {/* Lista de usuarios */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Tabla de Usuarios */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">
-            <RefreshCw className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-2" />
-            <p className="text-gray-500">Cargando usuarios...</p>
+          <div className="p-12 text-center">
+            <RefreshCw className="w-12 h-12 animate-spin mx-auto text-primary-600 mb-4" />
+            <p className="text-gray-600">Cargando usuarios...</p>
           </div>
         ) : usuariosFiltrados.length === 0 ? (
-          <div className="p-8 text-center">
-            <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-500">No se encontraron usuarios</p>
+          <div className="p-12 text-center">
+            <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500">No hay usuarios que coincidan</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-[#1C2716] border-b border-gray-200 text-white">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Usuario
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("nombre")}
+                  >
+                    <span className="inline-flex items-center">Usuario{renderSortIcon("nombre")}</span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Email
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("rol")}
+                  >
+                    <span className="inline-flex items-center">Rol{renderSortIcon("rol")}</span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Rol
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("pais")}
+                  >
+                    <span className="inline-flex items-center">País{renderSortIcon("pais")}</span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Mesa/Puesto
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("mesa")}
+                  >
+                    <span className="inline-flex items-center">Mesa/Puesto/Tablet{renderSortIcon("mesa")}</span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Creado
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("codigocatador")}
+                  >
+                    <span className="inline-flex items-center">Código{renderSortIcon("codigocatador")}</span>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("last_login")}
+                  >
+                    <span className="inline-flex items-center">Último login{renderSortIcon("last_login")}</span>
+                  </th>
+                  
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">
+                    Dispositivos
+                  </th>
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("activo")}
+                    title="Controla el acceso al sistema"
+                  >
+                    <span className="inline-flex items-center">Estado (acceso){renderSortIcon("activo")}</span>
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {usuariosFiltrados.map((usuario) => (
-                  <tr key={usuario.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
+              <tbody className="divide-y divide-gray-200">
+                {usuariosOrdenados.map((usuario) => (
+                  <tr
+                    key={usuario.id}
+                    className={`hover:bg-gray-50 transition ${
+                      usuario.rol === "SuperAdmin"
+                        ? "bg-purple-50/50"
+                        : usuario.rol === "Administrador"
+                          ? "bg-primary-50/50"
+                          : usuario.rol === "Presidente"
+                            ? "bg-blue-50/50"
+                            : usuario.rol === "Catador"
+                              ? "bg-emerald-50/40"
+                              : ""
+                    }`}
+                  >
+                    <td className="px-4 py-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-100">
-                          <span className="text-lg font-semibold text-purple-600">
-                            {usuario.nombre?.charAt(0).toUpperCase() || "?"}
-                          </span>
+                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                          <User className="w-5 h-5 text-primary-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
-                            {usuario.nombre || "Sin nombre"}
-                          </p>
-                          {usuario.codigocatador && (
-                            <p className="text-xs text-gray-500">
-                              Código: {usuario.codigocatador}
-                            </p>
-                          )}
+                          <p className="font-medium text-sm text-gray-900">{usuario.nombre}</p>
+                          <p className="text-xs text-gray-500">{usuario.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">{usuario.email}</span>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-gray-400" />
+                        <span className={`text-sm font-medium ${usuario.rol === 'SuperAdmin' ? 'text-purple-600' : usuario.rol === 'Administrador' ? 'text-primary-600' : 'text-gray-900'}`}>
+                          {usuario.rol}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3">{getRolBadge(usuario.rol)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {usuario.mesa && usuario.puesto
-                        ? `Mesa ${usuario.mesa} / Puesto ${usuario.puesto}`
-                        : "-"}
+                    <td className="px-4 py-2">
+                      <span className="text-xs text-gray-600">{usuario.pais || '—'}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(usuario.created_at).toLocaleDateString(
-                          "es-ES",
-                        )}
+                    <td className="px-4 py-2">
+                      <div className="text-xs text-gray-600 space-y-1">
+                        {usuario.mesa && <div>Mesa: {usuario.mesa}</div>}
+                        {usuario.puesto && <div>Puesto: {usuario.puesto}</div>}
+                        {usuario.tablet && <div>Tablet: {usuario.tablet}</div>}
+                        {!usuario.mesa && !usuario.puesto && !usuario.tablet && '—'}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setEditingUser(usuario)}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(usuario)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <td className="px-4 py-2">
+                      <span className="text-xs text-gray-600">{usuario.codigocatador || '—'}</span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="text-xs text-gray-600">
+                        {usuario.last_login_at
+                          ? new Date(usuario.last_login_at).toLocaleString()
+                          : "—"}
+                      </span>
+                    </td>
+                    
+                    <td className="px-4 py-2">
+                      {usuario.dispositivos.length > 0 ? (
+                        <div className="space-y-1">
+                          {usuario.dispositivos.map((disp) => (
+                            <div
+                              key={disp.id}
+                              className="flex items-center gap-2 text-xs"
+                            >
+                              <Smartphone className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-600">
+                                {disp.nombre_asignado || `Dispositivo ${disp.tablet_number || "?"}`}
+                              </span>
+                              {disp.activo ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-red-500" />
+                              )}
+                              {disp.activo && (
+                                <button
+                                  onClick={() => revocarDispositivo(disp.id)}
+                                  className="text-xs text-red-600 hover:text-red-700"
+                                >
+                                  Revocar
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">Sin dispositivos</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2">
+                      {usuario.activo ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" title="Usuario puede acceder al sistema">
+                          Activo
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800" title="Usuario sin acceso (deshabilitado)">
+                          Inactivo
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-right space-x-2">
+                      <button
+                        onClick={() => setEditingUser(usuario)}
+                        className="text-primary-600 hover:text-primary-700"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => eliminarUsuario(usuario)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -863,52 +756,34 @@ export default function UsuariosManager() {
 
       {/* Modal Crear Usuario */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-purple-600" />
-                  Nuevo Usuario
-                </h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Nuevo Usuario</h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre completo *
-                </label>
-                <input
-                  type="text"
-                  value={nuevoUsuario.nombre}
-                  onChange={(e) =>
-                    setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  placeholder="Juan García"
-                />
-              </div>
-
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email *
                 </label>
-                <input
-                  type="email"
-                  value={nuevoUsuario.email}
-                  onChange={(e) =>
-                    setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  placeholder="usuario@email.com"
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    value={nuevoUsuario.email}
+                    onChange={(e) =>
+                      setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })
+                    }
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
               </div>
 
               <div>
@@ -920,26 +795,36 @@ export default function UsuariosManager() {
                     type={showPassword ? "text" : "password"}
                     value={nuevoUsuario.password}
                     onChange={(e) =>
-                      setNuevoUsuario({
-                        ...nuevoUsuario,
-                        password: e.target.value,
-                      })
+                      setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })
                     }
-                    className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
-                    placeholder="Mínimo 6 caracteres"
+                    className="w-full pr-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   >
                     {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
+                      <EyeOff className="w-5 h-5" />
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-5 h-5" />
                     )}
                   </button>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre *
+                </label>
+                <input
+                  type="text"
+                  value={nuevoUsuario.nombre}
+                  onChange={(e) =>
+                    setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
               </div>
 
               <div>
@@ -951,39 +836,122 @@ export default function UsuariosManager() {
                   onChange={(e) =>
                     setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
-                  {roles.map((rol) => (
-                    <option key={rol} value={rol}>
-                      {rol}
-                    </option>
-                  ))}
+                  <option value="Catador">Catador</option>
+                  <option value="Presidente">Presidente</option>
+                  <option value="Administrador">Administrador</option>
+                  <option value="SuperAdmin">SuperAdmin</option>
                 </select>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-yellow-700">
-                    El usuario recibirá un email de confirmación. Debe confirmar
-                    su cuenta antes de poder iniciar sesión.
-                  </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  País
+                </label>
+                <input
+                  type="text"
+                  value={nuevoUsuario.pais || ""}
+                  onChange={(e) =>
+                    setNuevoUsuario({ ...nuevoUsuario, pais: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mesa
+                  </label>
+                  <input
+                    type="number"
+                    value={nuevoUsuario.mesa || ""}
+                    onChange={(e) =>
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        mesa: parseInt(e.target.value) || undefined,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Puesto
+                  </label>
+                  <input
+                    type="number"
+                    value={nuevoUsuario.puesto || ""}
+                    onChange={(e) =>
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        puesto: parseInt(e.target.value) || undefined,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tablet
+                  </label>
+                  <input
+                    type="text"
+                    value={nuevoUsuario.tablet || ""}
+                    onChange={(e) =>
+                      setNuevoUsuario({ ...nuevoUsuario, tablet: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Código
+                  </label>
+                  <input
+                    type="number"
+                    value={nuevoUsuario.codigocatador || ""}
+                    onChange={(e) =>
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        codigocatador: parseInt(e.target.value) || undefined,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Código
+                  </label>
+                  <input
+                    type="text"
+                    value={nuevoUsuario.codigo || ""}
+                    onChange={(e) =>
+                      setNuevoUsuario({ ...nuevoUsuario, codigo: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100 flex gap-3">
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleCreateUser}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
+                onClick={crearUsuario}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
               >
-                <Save className="w-4 h-4" />
+                <Save className="w-4 h-4 inline mr-2" />
                 Crear Usuario
               </button>
             </div>
@@ -993,70 +961,67 @@ export default function UsuariosManager() {
 
       {/* Modal Editar Usuario */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <Edit2 className="w-5 h-5 text-blue-600" />
-                  Editar Usuario
-                </h2>
-                <button
-                  onClick={() => setEditingUser(null)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Editar Usuario</h3>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre completo
+                  Nombre
                 </label>
                 <input
                   type="text"
-                  value={editingUser.nombre || ""}
+                  value={editingUser.nombre}
                   onChange={(e) =>
                     setEditingUser({ ...editingUser, nombre: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email (no editable)
-                </label>
-                <input
-                  type="email"
-                  value={editingUser.email}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rol
-                </label>
-                <select
-                  value={editingUser.rol}
-                  onChange={(e) =>
-                    setEditingUser({ ...editingUser, rol: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  {roles.map((rol) => (
-                    <option key={rol} value={rol}>
-                      {rol}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rol
+                  </label>
+                  <select
+                    value={editingUser.rol}
+                    onChange={(e) =>
+                      setEditingUser({ ...editingUser, rol: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="Catador">Catador</option>
+                    <option value="Presidente">Presidente</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="SuperAdmin">SuperAdmin</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    País
+                  </label>
+                  <input
+                    type="text"
+                    value={editingUser.pais || ""}
+                    onChange={(e) =>
+                      setEditingUser({ ...editingUser, pais: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Mesa
@@ -1067,11 +1032,10 @@ export default function UsuariosManager() {
                     onChange={(e) =>
                       setEditingUser({
                         ...editingUser,
-                        mesa: parseInt(e.target.value) || undefined,
+                        mesa: parseInt(e.target.value) || null,
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ej: 1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -1084,47 +1048,72 @@ export default function UsuariosManager() {
                     onChange={(e) =>
                       setEditingUser({
                         ...editingUser,
-                        puesto: parseInt(e.target.value) || undefined,
+                        puesto: parseInt(e.target.value) || null,
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ej: 1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tablet
+                  </label>
+                  <input
+                    type="text"
+                    value={editingUser.tablet || ""}
+                    onChange={(e) =>
+                      setEditingUser({ ...editingUser, tablet: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código Catador
+                  Código
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={editingUser.codigocatador || ""}
                   onChange={(e) =>
                     setEditingUser({
                       ...editingUser,
-                      codigocatador: e.target.value,
+                      codigocatador: parseInt(e.target.value) || null,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ej: CAT001"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editingUser.activo}
+                    onChange={(e) =>
+                      setEditingUser({ ...editingUser, activo: e.target.checked })
+                    }
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-700">Usuario activo (puede acceder al sistema)</span>
+                </label>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100 flex gap-3">
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setEditingUser(null)}
-                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleUpdateUser}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                onClick={actualizarUsuario}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
               >
-                <Save className="w-4 h-4" />
-                Guardar Cambios
+                <Save className="w-4 h-4 inline mr-2" />
+                Guardar
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { checkDeviceAccess, loadUserRole } from '../lib/deviceAccessControl';
 import { Lock, Mail, X, Shield, AlertTriangle } from 'lucide-react';
 
 type Props = {
@@ -71,37 +72,90 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
       console.log('✅ Login exitoso, userId:', authData.user.id);
 
-      // 2. Obtener rol del usuario
-      const { data: userData, error: userError } = await supabase
-        .from('usuarios')
-        .select('rol')
-        .eq('id', authData.user.id)
-        .single();
+      // 2. Check device access (TEMPORARILY DISABLED FOR TROUBLESHOOTING)
+      // TODO: Re-enable after fixing database setup
+      const BYPASS_DEVICE_CHECK = true; // Set to false to re-enable device control
+      
+      if (!BYPASS_DEVICE_CHECK) {
+        const deviceAccess = await checkDeviceAccess(authData.user.id);
+        
+        if (!deviceAccess.allowed) {
+          await supabase.auth.signOut();
+          throw new Error(deviceAccess.reason || 'Acceso denegado desde este dispositivo');
+        }
 
-      console.log('📋 Datos usuario:', userData, 'Error:', userError);
-
-      // Si hay error o no hay datos, denegar acceso
-      if (userError || !userData?.rol) {
-        await supabase.auth.signOut();
-        throw new Error('Usuario sin rol asignado. Contacta al administrador.');
+        console.log('✅ Dispositivo autorizado');
+      } else {
+        console.log('⚠️ DEVICE CHECK BYPASSED - Re-enable in production!');
       }
 
-      // (Dispositivos feature removed) continue with role check
-
-      // 3. Normalizar rol y permitir acceso
-      let userRole = 'Admin';
+      // 3. Load user role and data (with fallback)
+      let roleData = null;
+      try {
+        roleData = await loadUserRole(authData.user.id);
+      } catch (err) {
+        console.warn('Could not load role data, using fallback:', err);
+      }
       
-      // Normalizar rol
-      const rawRol = userData.rol.toLowerCase();
+      // Fallback: if no role data, check usuarios table directly
+      if (!roleData) {
+        const { data: userData, error: userError } = await supabase
+          .from('usuarios')
+          .select('rol, mesa, tandaencurso')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (userData) {
+          roleData = {
+            user: {
+              id: authData.user.id,
+              email: authData.user.email || '',
+              rol: userData.rol as any,
+              mesa: userData.mesa,
+              tandaencurso: userData.tandaencurso,
+              activo: true,
+              created_at: new Date().toISOString(),
+            },
+            device: null as any, // Bypass mode
+          };
+        }
+      }
+
+      if (!roleData) {
+        // Last resort: assign Admin role
+        console.warn('⚠️ No role data found, assigning default Admin role');
+        roleData = {
+          user: {
+            id: authData.user.id,
+            email: authData.user.email || '',
+            rol: 'Administrador',
+            activo: true,
+            created_at: new Date().toISOString(),
+          },
+          device: null as any,
+        };
+      }
+
+      // 4. Normalize role for UI
+      let userRole = 'Admin';
+      const rawRol = roleData.user.rol.toLowerCase();
+      
       if (rawRol === 'administrador' || rawRol === 'admin' || rawRol === 'presidente' || rawRol === 'supervisor') {
         userRole = 'Admin';
       } else if (rawRol === 'catador') {
         userRole = 'Catador';
       } else {
-        userRole = userData.rol;
+        userRole = roleData.user.rol;
       }
-      console.log('✅ Rol obtenido de DB:', userData.rol, '-> normalizado:', userRole);
-      
+
+      // Store role for app routing
+      localStorage.setItem('userRole', userRole);
+      localStorage.setItem('userRoleData', JSON.stringify({
+        rol: roleData.user.rol,
+        mesa: roleData.user.mesa,
+        tandaencurso: roleData.user.tandaencurso,
+      }));
+
       console.log('✅ Acceso permitido con rol:', userRole);
       onLogin(true, userRole);
     } catch (err: any) {

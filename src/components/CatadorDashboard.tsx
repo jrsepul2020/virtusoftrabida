@@ -225,6 +225,13 @@ export default function CatadorDashboard({ onLogout }: CatadorDashboardProps) {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
+        <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+          <span>Inicio</span>
+          <span className="text-gray-300">/</span>
+          <span>Catador</span>
+          <span className="text-gray-300">/</span>
+          <span className="text-gray-700 font-medium">Mesa {catador.mesa}</span>
+        </div>
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">

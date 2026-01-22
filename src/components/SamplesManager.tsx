@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase, type Sample } from '../lib/supabase';
-import { Search, Trash2, X, Hand, Printer, FileSpreadsheet, Database, Camera } from 'lucide-react';
+import { Search, Trash2, X, Hand, Printer, FileSpreadsheet, Database, Camera, FileText } from 'lucide-react';
 import SampleEditModal from './SampleEditModal';
 import BottlePhotosGallery from './BottlePhotosGallery';
 import * as XLSX from 'xlsx';
@@ -354,6 +354,14 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
               </button>
             )}
             <button
+              onClick={() => window.print()}
+              className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
+              title="Imprimir como PDF"
+            >
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base hidden sm:inline">PDF</span>
+            </button>
+            <button
               onClick={handleExportToExcel}
               className="flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium whitespace-nowrap"
             >
@@ -390,7 +398,7 @@ export default function SamplesManager({ onNavigateToPrint }: SamplesManagerProp
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800 border-b border-gray-200">
+            <thead className="bg-[#1C2716] border-b border-gray-200">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium text-white uppercase tracking-wider w-24">
                   Código Texto

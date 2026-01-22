@@ -14,6 +14,8 @@ import {
   Save,
   PlusCircle,
   Mail,
+  Printer,
+  FileText,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
@@ -495,14 +497,36 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
     );
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field)
-      return <ChevronUp className="w-4 h-4 text-gray-300" />;
-    return sortDirection === "asc" ? (
-      <ChevronUp className="w-4 h-4 text-amber-600" />
-    ) : (
-      <ChevronDown className="w-4 h-4 text-amber-600" />
+  const renderSortIcon = (field: SortField) => {
+    const isActive = sortField === field;
+    return (
+      <div className="flex flex-col ml-1">
+        <ChevronUp 
+          className={`w-3 h-3 -mb-1 ${
+            isActive && sortDirection === 'asc' 
+              ? 'text-white' 
+              : 'text-white/40'
+          }`} 
+        />
+        <ChevronDown 
+          className={`w-3 h-3 ${
+            isActive && sortDirection === 'desc' 
+              ? 'text-white' 
+              : 'text-white/40'
+          }`} 
+        />
+      </div>
     );
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handlePrintPDF = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
   };
 
   const stats = {
@@ -640,6 +664,22 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
               Actualizar
             </button>
             <button
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              title="Imprimir listado"
+            >
+              <Printer className="w-4 h-4" />
+              Imprimir
+            </button>
+            <button
+              onClick={handlePrintPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              title="Imprimir como PDF"
+            >
+              <FileText className="w-4 h-4" />
+              PDF
+            </button>
+            <button
               onClick={exportToExcel}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
@@ -662,9 +702,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-[#1C2716]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-12">
                   <input
                     type="checkbox"
                     checked={
@@ -677,56 +717,56 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                   />
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                   onClick={() => handleSort("created_at")}
                 >
                   <div className="flex items-center gap-1">
-                    Fecha <SortIcon field="created_at" />
+                    Fecha {renderSortIcon("created_at")}
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                   onClick={() => handleSort("pedido")}
                 >
                   <div className="flex items-center gap-1">
-                    Pedido <SortIcon field="pedido" />
+                    Pedido {renderSortIcon("pedido")}
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                   onClick={() => handleSort("status")}
                 >
                   <div className="flex items-center gap-1">
-                    Estado <SortIcon field="status" />
+                    Estado {renderSortIcon("status")}
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 max-w-[150px]"
+                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821] max-w-[150px]"
                   onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center gap-1">
-                    Nombre <SortIcon field="name" />
+                    Nombre {renderSortIcon("name")}
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Teléfono
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Muestras
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Precio
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Pago
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   País
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>

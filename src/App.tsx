@@ -1,6 +1,7 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { supabase } from './lib/supabase';
+import { validateDeviceConsistency } from './lib/deviceAccessControl';
 import LoginForm from './components/LoginForm';
 import MainLayout from './components/MainLayout';
 import HeroLanding from './components/HeroLanding';
@@ -96,9 +97,18 @@ function App() {
         }
 
         if (session?.user) {
+          // Validate device consistency
+          const deviceValid = await validateDeviceConsistency();
+          if (!deviceValid) {
+            console.warn('Device validation failed');
+            clearAuthState();
+            if (isMounted) setLoading(false);
+            return;
+          }
+
           const { data: userData, error: userError } = await supabase
             .from('usuarios')
-            .select('rol')
+            .select('rol, mesa, tandaencurso')
             .eq('id', session.user.id)
             .single();
 
@@ -110,6 +120,11 @@ function App() {
             setAdminLoggedIn(true);
             localStorage.setItem('adminLoggedIn', 'true');
             localStorage.setItem('userRole', userData.rol);
+            localStorage.setItem('userRoleData', JSON.stringify({
+              rol: userData.rol,
+              mesa: userData.mesa,
+              tandaencurso: userData.tandaencurso,
+            }));
 
             if (userData.rol === 'Catador') {
               setView('catador');

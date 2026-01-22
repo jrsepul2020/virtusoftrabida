@@ -28,6 +28,7 @@ import {
   ChevronRight,
   ChevronLeft,
   User,
+  Smartphone,
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import { supabase } from "../lib/supabase";
@@ -43,7 +44,7 @@ import EmailTest from "./EmailTest";
 import CatadoresManager from "./CatadoresManager";
 import GestionTandas from "./GestionTandas";
 import ListadoEmpresas from "./ListadoEmpresas";
-// Dispositivos management removed from UI (component deleted)
+import DispositivosManager from "./DispositivosManager";
 import SettingsManager from "./SettingsManager";
 import MailrelayManager from "./MailrelayManager";
 import ManageSamples from "./ManageSamples";
@@ -71,6 +72,7 @@ type Tab =
   | "mesas"
   | "puntuaciones"
   | "catadores"
+  | "dispositivos"
   | "paypal"
   | "print"
   | "form"
@@ -122,6 +124,32 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     return saved === "true";
   });
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const breadcrumbLabels: Record<Tab, string> = {
+    statistics: "Panel",
+    inscripciones: "Inscripciones",
+    companies: "Empresas",
+    muestras: "Muestras",
+    tandas: "Tandas",
+    mesas: "Mesas",
+    puntuaciones: "Puntuaciones",
+    catadores: "Catadores",
+    dispositivos: "Dispositivos",
+    paypal: "PayPal",
+    print: "Impresión",
+    form: "Nueva inscripción",
+    emailTest: "Emails",
+    configuracion: "Configuración",
+    usuarios: "Usuarios",
+    pantallas: "Pantallas",
+    fotosBotellas: "Fotos botellas",
+    resultados: "Resultados",
+    backup: "Backups",
+    comunicaciones: "Comunicaciones",
+    mailrelay: "Mailrelay",
+    templates: "Templates",
+    profile: "Perfil",
+  };
 
   // Persist sidebar state
   useEffect(() => {
@@ -221,7 +249,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         { id: "puntuaciones", label: "Puntuaciones", icon: BarChart3 },
         { id: "catadores", label: "Catadores", icon: Users },
         { id: "mesas", label: "Mesas", icon: Grid3X3 },
-        // Dispositivos removed from UI
+        { id: "dispositivos", label: "Dispositivos", icon: Smartphone },
       ],
     },
     {
@@ -599,6 +627,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-4">
+            <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+              <span>Inicio</span>
+              <span className="text-gray-300">/</span>
+              <span className="text-gray-700 font-medium">{breadcrumbLabels[activeTab]}</span>
+            </div>
             {activeTab === "statistics" && (
               <StatisticsManager
                 onNavigateToSamples={handleNavigateToSamplesByCategory}
@@ -624,7 +657,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === "puntuaciones" && <PuntuacionesManager />}
             {activeTab === "mesas" && <MesasManager />}
             {activeTab === "catadores" && <CatadoresManager />}
-            {/* Dispositivos manager removed from admin UI */}
+            {activeTab === "dispositivos" && <DispositivosManager />}
             {activeTab === "comunicaciones" && <ComunicacionesManager />}
             {activeTab === "mailrelay" && <MailrelayManager />}
             {activeTab === "paypal" && <PayPalDashboard />}

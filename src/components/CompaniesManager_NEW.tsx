@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, FileSpreadsheet, Settings } from 'lucide-react';
+import { Search, Eye, Mail, X, Edit2, Save, Trash2, ChevronUp, ChevronDown, FileSpreadsheet, Settings, Printer, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { type CompanyWithSamples, type Company } from '../lib/supabase';
 import { useCompanies } from '../lib/useSupabaseQuery';
@@ -367,6 +367,24 @@ export default function CompaniesManager() {
         </button>
 
         <button
+          onClick={() => window.print()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          title="Imprimir listado"
+        >
+          <Printer className="w-5 h-5" />
+          Imprimir
+        </button>
+
+        <button
+          onClick={() => window.print()}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+          title="Imprimir como PDF"
+        >
+          <FileText className="w-5 h-5" />
+          PDF
+        </button>
+
+        <button
           onClick={exportToExcel}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
         >
@@ -424,12 +442,12 @@ export default function CompaniesManager() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-primary-600 text-white">
+              <thead className="bg-[#1C2716] text-white">
                 <tr>
                   {isColumnVisible('pedido') && (
                     <th
                       onClick={() => handleSort('pedido')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                     >
                       <div className="flex items-center gap-1">
                         Pedido
@@ -440,7 +458,7 @@ export default function CompaniesManager() {
                   {isColumnVisible('name') && (
                     <th
                       onClick={() => handleSort('name')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                     >
                       <div className="flex items-center gap-1">
                         Nombre
@@ -451,7 +469,7 @@ export default function CompaniesManager() {
                   {isColumnVisible('totalinscripciones') && (
                     <th
                       onClick={() => handleSort('totalinscripciones')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                     >
                       <div className="flex items-center gap-1">
                         Nº Muestras
@@ -472,7 +490,7 @@ export default function CompaniesManager() {
                   {isColumnVisible('email') && (
                     <th
                       onClick={() => handleSort('email')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                     >
                       <div className="flex items-center gap-1">
                         Email
@@ -488,7 +506,7 @@ export default function CompaniesManager() {
                   {isColumnVisible('created_at') && (
                     <th
                       onClick={() => handleSort('created_at')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                     >
                       <div className="flex items-center gap-1">
                         Fecha
@@ -499,7 +517,7 @@ export default function CompaniesManager() {
                   {isColumnVisible('pais') && (
                     <th
                       onClick={() => handleSort('pais')}
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-primary-700"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
                     >
                       <div className="flex items-center gap-1">
                         País
