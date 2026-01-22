@@ -16,6 +16,7 @@ import {
   Mail,
   Printer,
   FileText,
+  Building2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
@@ -699,91 +700,91 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
       </div>
 
       {/* Cards móviles/tablet */}
-      <div className="lg:hidden bg-white rounded-lg shadow overflow-hidden">
+      <div className="lg:hidden p-3">
         {loading ? (
-          <div className="p-8 text-center">
-            <RefreshCw className="w-10 h-10 animate-spin mx-auto text-primary-600 mb-3" />
-            <p className="text-gray-600">Cargando inscripciones...</p>
-          </div>
+          <div className="p-6 text-center text-gray-600">Cargando inscripciones...</div>
         ) : filteredInscripciones.length === 0 ? (
-          <div className="p-8 text-center">
-            <Users className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">No hay inscripciones</p>
-          </div>
+          <div className="p-6 text-center text-gray-500">No hay inscripciones</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {filteredInscripciones.map((insc) => (
               <div
                 key={insc.id}
-                className={`rounded-lg border border-gray-100 p-4 bg-white ${
+                className={`rounded-lg shadow-sm p-4 bg-white ${
                   insc.revisada ? "bg-green-50/40" : "bg-red-50/40"
                 }`}
+                role="article"
+                aria-label={`Inscripción ${insc.name || "sin nombre"}`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <label className="flex items-center gap-2">
+                {/* Cabecera con checkbox y pedido */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <label className="flex items-center gap-2 min-w-0">
                     <input
                       type="checkbox"
                       checked={selectedInscripciones.includes(insc.id)}
                       onChange={() => toggleSelectInscripcion(insc.id)}
-                      className="w-4 h-4"
+                      className="w-4 h-4 flex-shrink-0"
                     />
                     <span className="text-sm font-semibold text-gray-900 truncate">
-                      {insc.name || "-"}
+                      {insc.name || "Sin nombre"}
                     </span>
                   </label>
-                  <div className="text-xs font-medium text-amber-700">
-                    {insc.pedido || "-"}
+                  <div className="text-xs font-medium text-amber-700 flex-shrink-0">
+                    #{insc.pedido || "—"}
                   </div>
                 </div>
 
-                <div className="mt-3 space-y-2 text-xs">
-                  <div className="flex justify-between">
+                {/* Detalles */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Fecha</span>
                     <span className="text-gray-800">
                       {new Date(insc.created_at).toLocaleDateString("es-ES")}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-500">Estado</span>
-                    <div>
-                      {editingStatusId === insc.id ? (
-                        <select
-                          value={insc.status}
-                          onChange={(e) => handleStatusChange(insc.id, e.target.value)}
-                          onBlur={() => setEditingStatusId(null)}
-                          autoFocus
-                          className="text-xs rounded-full px-2 py-1 border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                        >
-                          <option value="pending">Pendiente</option>
-                          <option value="pagado">Pagado</option>
-                          <option value="approved">Aprobado</option>
-                          <option value="rejected">Rechazado</option>
-                        </select>
-                      ) : (
-                        <button
-                          onClick={() => setEditingStatusId(insc.id)}
-                          className="cursor-pointer hover:opacity-80 transition-opacity"
-                        >
-                          {getStatusBadge(insc.status)}
-                        </button>
-                      )}
-                    </div>
+                    {editingStatusId === insc.id ? (
+                      <select
+                        value={insc.status}
+                        onChange={(e) => handleStatusChange(insc.id, e.target.value)}
+                        onBlur={() => setEditingStatusId(null)}
+                        autoFocus
+                        className="text-xs rounded-full px-2 py-1 border border-gray-300 focus:ring-2 focus:ring-amber-500"
+                      >
+                        <option value="pending">Pendiente</option>
+                        <option value="pagado">Pagado</option>
+                        <option value="approved">Aprobado</option>
+                        <option value="rejected">Rechazado</option>
+                      </select>
+                    ) : (
+                      <button
+                        onClick={() => setEditingStatusId(insc.id)}
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        {getStatusBadge(insc.status)}
+                      </button>
+                    )}
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Email</span>
-                    <span className="text-gray-800 truncate">{insc.email || "-"}</span>
+                    <span className="text-gray-800 truncate max-w-[150px]">{insc.email || "—"}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Teléfono</span>
-                    <span className="text-gray-800">{insc.phone || insc.movil || "-"}</span>
+                    <span className="text-gray-800">{insc.phone || insc.movil || "—"}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">País</span>
+                    <span className="text-gray-800">{insc.pais || "—"}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Muestras</span>
-                    <span className="text-gray-800">{insc.muestras_count || 0}</span>
+                    <span className="text-gray-800 font-medium">{insc.muestras_count || 0}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Precio</span>
-                    <span className="text-gray-800">
+                    <span className="text-gray-800 font-medium">
                       {(() => {
                         const numMuestras = insc.muestras_count || 0;
                         const gratis = Math.floor(numMuestras / 5);
@@ -793,46 +794,40 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                       })()}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Pago</span>
                     <span className="text-gray-800">
-                      {insc.metodo_pago
-                        ? insc.metodo_pago === "paypal"
-                          ? "PayPal"
-                          : "Transferencia"
-                        : "-"}
+                      {insc.metodo_pago ? (insc.metodo_pago === "paypal" ? "PayPal" : "Transferencia") : "—"}
                     </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">País</span>
-                    <span className="text-gray-800">{insc.pais || "-"}</span>
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openModal(insc, "view")}
-                      className="px-2 py-1 text-xs rounded bg-blue-600 text-white"
-                      title="Ver detalle"
-                    >
-                      Ver
-                    </button>
-                    <button
-                      onClick={() => handleResendEmail(insc)}
-                      className="px-2 py-1 text-xs rounded bg-green-600 text-white"
-                      title="Reenviar email"
-                    >
-                      Reenviar
-                    </button>
-                    <button
-                      onClick={() => openModal(insc, "edit")}
-                      className="px-2 py-1 text-xs rounded bg-amber-600 text-white"
-                      title="Editar"
-                    >
-                      Editar
-                    </button>
-                  </div>
+                {/* Acciones */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => openModal(insc, "view")}
+                    className="px-3 py-1.5 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1"
+                    title="Ver detalle"
+                  >
+                    <Eye className="w-3 h-3" />
+                    Ver
+                  </button>
+                  <button
+                    onClick={() => handleResendEmail(insc)}
+                    className="px-3 py-1.5 text-xs rounded bg-green-600 text-white hover:bg-green-700 flex items-center gap-1"
+                    title="Reenviar email"
+                  >
+                    <Mail className="w-3 h-3" />
+                    Reenviar
+                  </button>
+                  <button
+                    onClick={() => openModal(insc, "edit")}
+                    className="px-3 py-1.5 text-xs rounded bg-amber-600 text-white hover:bg-amber-700 flex items-center gap-1"
+                    title="Editar"
+                  >
+                    <Edit className="w-3 h-3" />
+                    Editar
+                  </button>
                 </div>
               </div>
             ))}
@@ -848,8 +843,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
             <p className="text-gray-600">Cargando inscripciones...</p>
           </div>
         ) : filteredInscripciones.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No se encontraron inscripciones con los filtros seleccionados
+          <div className="p-12 text-center">
+            <Building2 className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500">No hay inscripciones que coincidan</p>
           </div>
         ) : (
           <table className="min-w-full divide-y divide-gray-200">
