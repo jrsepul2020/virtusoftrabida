@@ -34,30 +34,39 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
       >
       </div>
 
-      <div className="relative z-10 h-screen flex flex-col items-center justify-start text-center px-4 pt-40 md:pt-72 lg:pt-80">
+      <div className="relative z-10 h-screen flex flex-col items-center justify-start text-center px-4 sm:px-6 pt-24 sm:pt-32 md:pt-40 lg:pt-60 xl:pt-72">
         {/* Título principal - responsive con Cormorant */}
-        <div className={`mb-2 mt-2 md:mt-0 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-5xl font-black tracking-tight leading-tight" style={{ fontFamily: "'Cormorant', serif" }}>
+        <div className={`mb-3 md:mb-2 transition-all duration-1200 transform ${
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        } max-w-7xl w-full`}>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight px-2" 
+              style={{ fontFamily: "'Cormorant', serif" }}>
               <span className="text-white drop-shadow-3xl">
                 {t('hero.title')}
               </span>
-            </h1>
+          </h1>
         </div>
 
-          {/* Eliminado 'LA RABIDA 2026' (subtitle1). Ahora mostramos y destacamos 'IBEROAMERICANO 2026' */}
-          <div className={`mb-4 mt-0 md:-mt-2 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} max-w-7xl`}>
-             <h2 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-5xl font-extrabold tracking-tight leading-tight mt-1 uppercase" style={{ fontFamily: "'Lato', serif" }}>
+        {/* Eliminado 'LA RABIDA 2026' (subtitle1). Ahora mostramos y destacamos 'IBEROAMERICANO 2026' */}
+        <div className={`mb-6 md:mb-4 transition-all duration-1200 transform ${
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        } max-w-7xl w-full`}>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight leading-tight uppercase px-2" 
+              style={{ fontFamily: "'Lato', serif" }}>
               <span className="text-white drop-shadow-3xl">
                 {t('hero.subtitle2')}
               </span>
-            </h2>
-          </div>
+            </span>
+          </h2>
+        </div>
 
         {/* Botón de inscripción debajo del título principal - ROJO DESTACADO */}
-        <div className={`mb-4 transition-all duration-1200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
+        <div className={`mb-6 md:mb-4 transition-all duration-1200 transform ${
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        }`}>
           <button
             onClick={onInscribirse}
-            className="group relative px-7 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-bold text-white rounded-xl overflow-hidden transition-all duration-500 transform hover:scale-105 shadow-2xl animate-float"
+            className="group relative px-8 sm:px-10 md:px-12 py-3.5 sm:py-4 text-base sm:text-lg md:text-xl font-bold text-white rounded-xl overflow-hidden transition-all duration-500 transform hover:scale-105 shadow-2xl animate-float"
           >
             {/* Fondo rojo destacado del botón con mayor contraste */}
             <div className="absolute inset-0 bg-gradient-to-r from-red-700 to-red-800"></div>
@@ -72,8 +81,10 @@ export default function HeroLanding({ onInscribirse }: HeroLandingProps) {
         </div>
 
         {/* Subtítulo con animación - responsive */}
-        <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-          <h2 className="text-xs sm:text-lg md:text-xl lg:text-xl font-semibold leading-tight px-4">
+        <div className={`transition-all duration-1000 transform ${
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+        } max-w-4xl w-full px-4`}>
+          <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold leading-tight">
             <span className="text-white drop-shadow-lg">{t('hero.tagline.line1')}</span>
           </h2>
         </div>

@@ -88,11 +88,11 @@ export default function Header({
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center space-x-4">
-            <div className={`flex gap-2 ${isHomePage ? 'border border-transparent' : 'border border-gray-200'} rounded-md p-1`}>
+          <div className="hidden md:flex items-center space-x-3">
+            <div className={`flex gap-1 ${isHomePage ? 'border border-transparent' : 'border border-gray-200'} rounded-md p-1`}>
               <button
                 onClick={() => setLang('es')}
-                className={`px-2 py-1 text-sm font-semibold rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                   lang === 'es'
                     ? isHomePage ? 'bg-white text-gray-900' : 'bg-gray-200 text-black'
                     : isHomePage ? 'text-white hover:bg-white/20' : 'text-black hover:bg-gray-100'
@@ -104,7 +104,7 @@ export default function Header({
               </button>
               <button
                 onClick={() => setLang('en')}
-                className={`px-2 py-1 text-sm font-semibold rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                   lang === 'en'
                     ? isHomePage ? 'bg-white text-gray-900' : 'bg-gray-200 text-black'
                     : isHomePage ? 'text-white hover:bg-white/20' : 'text-black hover:bg-gray-100'
@@ -116,7 +116,7 @@ export default function Header({
               </button>
               <button
                 onClick={() => setLang('pt')}
-                className={`px-2 py-1 text-sm font-semibold rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                   lang === 'pt'
                     ? isHomePage ? 'bg-white text-gray-900' : 'bg-gray-200 text-black'
                     : isHomePage ? 'text-white hover:bg-white/20' : 'text-black hover:bg-gray-100'
@@ -132,9 +132,9 @@ export default function Header({
                 onClick={handleLoginClick}
                 className={`${
                   isHomePage
-                    ? 'text-white/80 hover:text-white'
-                    : 'text-gray-600 hover:text-gray-900'
-                } text-xs font-semibold flex items-center gap-1 px-2 py-1 rounded-md transition-colors`}
+                    ? 'text-white hover:bg-white/10 border border-white/30'
+                    : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                } text-sm font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors`}
                 aria-label="Acceso"
                 title={import.meta.env.DEV ? 'Acceso local' : 'Acceso'}
               >
@@ -189,10 +189,11 @@ export default function Header({
                 </button>
               ))}
 
-              <div className="flex gap-2 px-3 py-2 border-t border-gray-200 items-center">
-                <button
-                  onClick={() => setLang('es')}
-                  className={`flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+              <div className="px-3 py-3 border-t border-gray-200">
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setLang('es')}
+                    className={`px-2 py-2 text-sm font-semibold rounded-md transition-colors ${
                     lang === 'es' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
                   }`}
                   aria-label="Español"
@@ -200,35 +201,36 @@ export default function Header({
                 >
                   <span aria-hidden="true" className="text-lg">🇪🇸</span>
                 </button>
-                <button
-                  onClick={() => setLang('en')}
-                  className={`flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
-                    lang === 'en' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
-                  }`}
-                  aria-label="English"
-                  title="English"
-                >
-                  <span aria-hidden="true" className="text-lg">🇬🇧</span>
-                </button>
-                <button
-                  onClick={() => setLang('pt')}
-                  className={`flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
-                    lang === 'pt' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
-                  }`}
-                  aria-label="Português"
-                  title="Português"
-                >
-                  <span aria-hidden="true" className="text-lg">🇵🇹</span>
-                </button>
+                  <button
+                    onClick={() => setLang('en')}
+                    className={`px-2 py-2 text-sm font-semibold rounded-md transition-colors ${
+                      lang === 'en' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
+                    }`}
+                    aria-label="English"
+                    title="English"
+                  >
+                    <span aria-hidden="true" className="text-lg">🇬🇧</span>
+                  </button>
+                  <button
+                    onClick={() => setLang('pt')}
+                    className={`px-2 py-2 text-sm font-semibold rounded-md transition-colors ${
+                      lang === 'pt' ? 'bg-gray-200 text-black' : 'text-black hover:bg-gray-100'
+                    }`}
+                    aria-label="Português"
+                    title="Português"
+                  >
+                    <span aria-hidden="true" className="text-lg">🇵🇹</span>
+                  </button>
+                </div>
                 {!isAdminLoggedIn && (
                   <button
                     onClick={handleLoginClick}
-                    className="px-3 py-2 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900"
+                    className="w-full mt-2 px-3 py-2.5 text-sm font-semibold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                     aria-label="Acceso"
                     title={import.meta.env.DEV ? 'Acceso local' : 'Acceso'}
                   >
-                    <LogIn size={14} className="inline mr-1" />
-                    Acceso
+                    <LogIn size={16} />
+                    <span>Acceso</span>
                   </button>
                 )}
               </div>
