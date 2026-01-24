@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Smartphone, Save, AlertCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import toast from "react-hot-toast";
@@ -16,6 +16,28 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
   const [tabletNumber, setTabletNumber] = useState("1");
   const [isSaving, setIsSaving] = useState(false);
 
+  const getDeviceToken = () => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; device_token=`);
+    if (parts.length === 2) return parts.pop()?.split(";").shift();
+    return null;
+  };
+
+  // Inicializar o generar token automáticamente al autorizar
+  useEffect(() => {
+    if (isAuthorized) {
+      const existingToken = getDeviceToken();
+      if (existingToken) {
+        setToken(existingToken);
+      } else {
+        const newToken = crypto.randomUUID();
+        setToken(newToken);
+        // Guardar cookie inmediatamente para asegurar persistencia
+        document.cookie = `device_token=${newToken}; path=/; SameSite=Strict; Secure`;
+      }
+    }
+  }, [isAuthorized]);
+
   const checkAccessCode = (e: React.FormEvent) => {
     e.preventDefault();
     if (accessCode === ACCESS_CODE) {
@@ -26,8 +48,8 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
   };
 
   const guardarToken = async () => {
-    if (!token.trim()) {
-      toast.error("Por favor, introduce un token válido");
+    if (!token) {
+      toast.error("Error: No hay token de dispositivo");
       return;
     }
 
@@ -37,15 +59,14 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
       // 1. Calcular mesa y nombre
       const num = parseInt(tabletNumber);
       const mesa = Math.ceil(num / 5);
-      const deviceName = `Mesa ${mesa} - Tablet ${num}`;
 
       // 2. Sincronizar con la base de datos (Upsert)
       const { error: dbError } = await supabase
         .from("authorized_devices")
         .upsert(
           {
-            device_token: token.trim(),
-            name: deviceName,
+            device_token: token,
+            name: `Mesa ${mesa} - Tablet ${num}`,
             enabled: false,
           },
           { onConflict: "device_token" },
@@ -53,15 +74,14 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
 
       if (dbError) throw dbError;
 
-      // 3. Guardar cookie con configuración estricta
-      const cookieValue = `device_token=${token.trim()}; path=/; SameSite=Strict; Secure`;
-      document.cookie = cookieValue;
+      // 3. Asegurar que la cookie está guardada (por si se generó nueva)
+      document.cookie = `device_token=${token}; path=/; SameSite=Strict; Secure`;
 
       toast.success(
         "Tablet configurada correctamente. Pendiente de autorización.",
       );
 
-      // 4. Redirigir tras breve espera (1s según requerimiento)
+      // 4. Redirigir tras 1 segundo
       setTimeout(() => {
         onDone();
       }, 1000);
@@ -132,7 +152,7 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
                 Configurar Tablet
               </h1>
               <p className="text-gray-500 mt-2 text-sm">
-                Asigna el número de tablet y vincula el token
+                Selecciona la posición de esta tablet
               </p>
             </div>
 
@@ -154,20 +174,6 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
                     ))}
                   </select>
                 </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Token del Dispositivo
-                  </label>
-                  <input
-                    type="text"
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-50 focus:border-blue-600 transition-all font-mono text-sm"
-                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    autoComplete="off"
-                  />
-                </div>
               </div>
 
               <div className="bg-amber-50 rounded-lg p-4 flex gap-3">
@@ -178,7 +184,7 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
                     Mesa {Math.ceil(parseInt(tabletNumber) / 5)} - Tablet{" "}
                     {tabletNumber}
                   </strong>
-                  . Deberá ser autorizado por un administrador.
+                  . Deberá ser autorizado por un administrador en el panel.
                 </p>
               </div>
 
@@ -188,7 +194,7 @@ export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
                 className="w-full py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Save className="w-5 h-5" />
-                {isSaving ? "Guardando..." : "Guardar token en esta tablet"}
+                {isSaving ? "Guardando..." : "Guardar configuración"}
               </button>
             </div>
 
