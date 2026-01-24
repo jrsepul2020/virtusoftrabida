@@ -7,7 +7,7 @@ interface ConfigurarTabletProps {
   onDone: () => void;
 }
 
-const ACCESS_CODE = "J0S3-2025";
+const ACCESS_CODE = "82690";
 
 export default function ConfigurarTablet({ onDone }: ConfigurarTabletProps) {
   const [accessCode, setAccessCode] = useState("");
