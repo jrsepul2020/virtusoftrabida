@@ -8,15 +8,13 @@ import {
   X,
   ChevronUp,
   ChevronDown,
-  Check,
-  Clock,
-  AlertCircle,
   Save,
   PlusCircle,
   Mail,
   Printer,
   FileText,
   Building2,
+  Phone,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import toast from "react-hot-toast";
@@ -92,6 +90,11 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
     [],
   );
   const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
+  const [statusSearchTerm, setStatusSearchTerm] = useState("");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
 
   const fetchInscripciones = async () => {
     setLoading(true);
@@ -397,6 +400,15 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
       return 0;
     });
 
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredInscripciones.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInscripciones = filteredInscripciones.slice(
+    startIndex,
+    endIndex,
+  );
+
   const exportToExcel = () => {
     const dataToExport = filteredInscripciones.map((insc) => ({
       Fecha: new Date(insc.created_at).toLocaleDateString("es-ES"),
@@ -455,44 +467,118 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
     }
   };
 
+  const statusOptions = [
+    {
+      value: "pending",
+      label: "Pendiente",
+      color: "bg-yellow-500",
+      dotColor: "#eab308",
+    },
+    {
+      value: "pagado",
+      label: "Pagado",
+      color: "bg-green-500",
+      dotColor: "#22c55e",
+    },
+    {
+      value: "approved",
+      label: "Aprobado",
+      color: "bg-blue-500",
+      dotColor: "#3b82f6",
+    },
+    {
+      value: "rejected",
+      label: "Rechazado",
+      color: "bg-red-500",
+      dotColor: "#ef4444",
+    },
+    {
+      value: "contacted",
+      label: "Contactado",
+      color: "bg-purple-500",
+      dotColor: "#a855f7",
+    },
+    {
+      value: "working",
+      label: "En proceso",
+      color: "bg-orange-500",
+      dotColor: "#f97316",
+    },
+    {
+      value: "qualified",
+      label: "Calificado",
+      color: "bg-teal-500",
+      dotColor: "#14b8a6",
+    },
+    {
+      value: "customer",
+      label: "Cliente",
+      color: "bg-cyan-500",
+      dotColor: "#06b6d4",
+    },
+  ];
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<
       string,
-      { color: string; icon: React.ReactNode; label: string }
+      { color: string; dotColor: string; label: string }
     > = {
       pending: {
         color: "bg-yellow-100 text-yellow-800",
-        icon: <Clock className="w-3 h-3" />,
+        dotColor: "#eab308",
         label: "Pendiente",
       },
       pagado: {
         color: "bg-green-100 text-green-800",
-        icon: <Check className="w-3 h-3" />,
+        dotColor: "#22c55e",
         label: "Pagado",
       },
       approved: {
         color: "bg-blue-100 text-blue-800",
-        icon: <Check className="w-3 h-3" />,
+        dotColor: "#3b82f6",
         label: "Aprobado",
       },
       rejected: {
         color: "bg-red-100 text-red-800",
-        icon: <AlertCircle className="w-3 h-3" />,
+        dotColor: "#ef4444",
         label: "Rechazado",
+      },
+      contacted: {
+        color: "bg-purple-100 text-purple-800",
+        dotColor: "#a855f7",
+        label: "Contactado",
+      },
+      working: {
+        color: "bg-orange-100 text-orange-800",
+        dotColor: "#f97316",
+        label: "En proceso",
+      },
+      qualified: {
+        color: "bg-teal-100 text-teal-800",
+        dotColor: "#14b8a6",
+        label: "Calificado",
+      },
+      customer: {
+        color: "bg-cyan-100 text-cyan-800",
+        dotColor: "#06b6d4",
+        label: "Cliente",
       },
     };
 
     const config = statusConfig[status] || {
       color: "bg-gray-100 text-gray-800",
-      icon: null,
+      dotColor: "#6b7280",
       label: status,
     };
 
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+        className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-medium ${config.color}`}
       >
-        {config.icon}
+        <span
+          className="w-2 h-2 rounded-full"
+          style={{ backgroundColor: config.dotColor }}
+        />
         {config.label}
       </span>
     );
@@ -502,19 +588,19 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
     const isActive = sortField === field;
     return (
       <div className="flex flex-col ml-1">
-        <ChevronUp 
+        <ChevronUp
           className={`w-3 h-3 -mb-1 ${
-            isActive && sortDirection === 'asc' 
-              ? 'text-white' 
-              : 'text-white/40'
-          }`} 
+            isActive && sortDirection === "asc"
+              ? "text-gray-800"
+              : "text-gray-400"
+          }`}
         />
-        <ChevronDown 
+        <ChevronDown
           className={`w-3 h-3 ${
-            isActive && sortDirection === 'desc' 
-              ? 'text-white' 
-              : 'text-white/40'
-          }`} 
+            isActive && sortDirection === "desc"
+              ? "text-gray-800"
+              : "text-gray-400"
+          }`}
         />
       </div>
     );
@@ -525,7 +611,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
   };
 
   const handlePrintPDF = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       window.print();
     }
   };
@@ -579,7 +665,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
             }}
             className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 transition-colors whitespace-nowrap"
           >
-            <span className="text-red-600">⏳ Pend.:</span>
+            <span className="text-red-600">Pend.:</span>
             <span className="font-bold text-red-700">{stats.pendientes}</span>
           </button>
           <button
@@ -589,7 +675,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
             }}
             className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 transition-colors whitespace-nowrap"
           >
-            <span className="text-green-600">✅ Revis.:</span>
+            <span className="text-green-600">Revis.:</span>
             <span className="font-bold text-green-700">{stats.revisadas}</span>
           </button>
           <button
@@ -599,11 +685,11 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
             }}
             className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors whitespace-nowrap"
           >
-            <span className="text-blue-600">💳 Pagadas:</span>
+            <span className="text-blue-600">Pagadas:</span>
             <span className="font-bold text-blue-700">{stats.pagadas}</span>
           </button>
           <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-amber-50 whitespace-nowrap">
-            <span className="text-amber-600">🍷 Muestras:</span>
+            <span className="text-amber-600">Muestras:</span>
             <span className="font-bold text-amber-700">
               {stats.totalMuestras}
             </span>
@@ -614,34 +700,20 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
       {/* Filtros y acciones */}
       <div className="bg-white rounded-lg shadow p-3 sm:p-4 w-full">
         <div className="space-y-3">
-          {/* Búsqueda - ancho completo responsive */}
-          <div className="w-full">
+          {/* Primera fila: Búsqueda, Filtros y Nueva Inscripción */}
+          <div className="flex flex-wrap gap-2 items-center">
             <input
               type="text"
-              placeholder="Buscar por nombre, email, pedido..."
+              placeholder="Buscar por nombre, pedido..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
+              className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
             />
-          </div>
 
-          {/* Botón nueva inscripción */}
-          {onNewInscripcion && (
-            <button
-              onClick={onNewInscripcion}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
-            >
-              <PlusCircle className="w-4 h-4" />
-              Nueva Inscripción
-            </button>
-          )}
-
-          {/* Filtros en fila con wrap */}
-          <div className="flex flex-wrap gap-2">
             <select
               value={filterRevisada}
               onChange={(e) => setFilterRevisada(e.target.value)}
-              className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="all">Todas</option>
               <option value="pendiente">Pendientes revisión</option>
@@ -651,14 +723,28 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="all">Todos los estados</option>
               <option value="pending">Pendiente</option>
               <option value="pagado">Pagado</option>
               <option value="approved">Aprobado</option>
               <option value="rejected">Rechazado</option>
+              <option value="contacted">Contactado</option>
+              <option value="working">En proceso</option>
+              <option value="qualified">Calificado</option>
+              <option value="customer">Cliente</option>
             </select>
+
+            {onNewInscripcion && (
+              <button
+                onClick={onNewInscripcion}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm whitespace-nowrap"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Nueva Inscripción
+              </button>
+            )}
           </div>
 
           {/* Acciones en fila con wrap */}
@@ -708,17 +794,19 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
       {/* Cards móviles/tablet */}
       <div className="lg:hidden p-3">
         {loading ? (
-          <div className="p-6 text-center text-gray-600">Cargando inscripciones...</div>
+          <div className="p-6 text-center text-gray-600">
+            Cargando inscripciones...
+          </div>
         ) : filteredInscripciones.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No hay inscripciones</div>
+          <div className="p-6 text-center text-gray-500">
+            No hay inscripciones
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {filteredInscripciones.map((insc) => (
               <div
                 key={insc.id}
-                className={`rounded-lg shadow-sm p-4 bg-white ${
-                  insc.revisada ? "bg-green-50/40" : "bg-red-50/40"
-                }`}
+                className="rounded-lg shadow-sm p-4 bg-white border border-gray-100"
                 role="article"
                 aria-label={`Inscripción ${insc.name || "sin nombre"}`}
               >
@@ -735,7 +823,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                       {insc.name || "Sin nombre"}
                     </span>
                   </label>
-                  <div className="text-xs font-medium text-amber-700 flex-shrink-0">
+                  <div className="text-sm font-bold text-red-600 flex-shrink-0">
                     #{insc.pedido || "—"}
                   </div>
                 </div>
@@ -753,7 +841,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                     {editingStatusId === insc.id ? (
                       <select
                         value={insc.status}
-                        onChange={(e) => handleStatusChange(insc.id, e.target.value)}
+                        onChange={(e) =>
+                          handleStatusChange(insc.id, e.target.value)
+                        }
                         onBlur={() => setEditingStatusId(null)}
                         autoFocus
                         className="text-xs rounded-full px-2 py-1 border border-gray-300 focus:ring-2 focus:ring-amber-500"
@@ -774,11 +864,15 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Email</span>
-                    <span className="text-gray-800 truncate max-w-[150px]">{insc.email || "—"}</span>
+                    <span className="text-gray-800 truncate max-w-[150px]">
+                      {insc.email || "—"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Teléfono</span>
-                    <span className="text-gray-800">{insc.phone || insc.movil || "—"}</span>
+                    <span className="text-gray-800">
+                      {insc.phone || insc.movil || "—"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">País</span>
@@ -786,7 +880,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Muestras</span>
-                    <span className="text-gray-800 font-medium">{insc.muestras_count || 0}</span>
+                    <span className="text-gray-800 font-medium">
+                      {insc.muestras_count || 0}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Precio</span>
@@ -803,7 +899,11 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Pago</span>
                     <span className="text-gray-800">
-                      {insc.metodo_pago ? (insc.metodo_pago === "paypal" ? "PayPal" : "Transferencia") : "—"}
+                      {insc.metodo_pago
+                        ? insc.metodo_pago === "paypal"
+                          ? "PayPal"
+                          : "Transferencia"
+                        : "—"}
                     </span>
                   </div>
                 </div>
@@ -855,9 +955,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
           </div>
         ) : (
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-[#1C2716]">
+            <thead className="bg-white border-b-2 border-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-12">
+                <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider w-12">
                   <input
                     type="checkbox"
                     checked={
@@ -870,7 +970,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                   />
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
+                  className="px-4 py-3 text-left text-xs font-bold text-black uppercase tracking-wider cursor-pointer hover:bg-gray-50"
                   onClick={() => handleSort("created_at")}
                 >
                   <div className="flex items-center gap-1">
@@ -878,58 +978,52 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
+                  className="px-4 py-3 text-left text-xs font-bold text-black uppercase tracking-wider cursor-pointer hover:bg-gray-50"
                   onClick={() => handleSort("pedido")}
                 >
                   <div className="flex items-center gap-1">
                     Pedido {renderSortIcon("pedido")}
                   </div>
                 </th>
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821]"
-                  onClick={() => handleSort("status")}
-                >
-                  <div className="flex items-center gap-1">
-                    Estado {renderSortIcon("status")}
-                  </div>
+                <th className="px-4 py-3 text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Muestras
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-[#2a3821] max-w-[150px]"
+                  className="px-4 py-3 text-left text-xs font-bold text-black uppercase tracking-wider cursor-pointer hover:bg-gray-50 min-w-[200px]"
                   onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center gap-1">
                     Nombre {renderSortIcon("name")}
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
                   Teléfono
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
-                  Muestras
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-black uppercase tracking-wider">
                   Precio
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-black uppercase tracking-wider">
                   Pago
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th
+                  className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort("status")}
+                >
+                  <div className="flex items-center gap-1">
+                    Estado {renderSortIcon("status")}
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
                   País
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-black uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredInscripciones.map((insc) => (
-                <tr
-                  key={insc.id}
-                  className={`hover:bg-gray-50 ${insc.revisada ? "bg-green-50" : "bg-red-50"}`}
-                >
+              {paginatedInscripciones.map((insc) => (
+                <tr key={insc.id} className="hover:bg-gray-50 bg-white">
                   <td className="px-4 py-3">
                     <input
                       type="checkbox"
@@ -938,69 +1032,36 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                       className="w-4 h-4"
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm font-bold text-black whitespace-nowrap">
                     {new Date(insc.created_at).toLocaleDateString("es-ES")}
                   </td>
-                  <td className="px-4 py-3 text-sm font-medium text-amber-700 whitespace-nowrap">
+                  <td className="px-4 py-3 text-base font-bold text-red-600 whitespace-nowrap">
                     {insc.pedido || "-"}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap relative">
-                    {editingStatusId === insc.id ? (
-                      <select
-                        value={insc.status}
-                        onChange={(e) =>
-                          handleStatusChange(insc.id, e.target.value)
-                        }
-                        onBlur={() => setEditingStatusId(null)}
-                        autoFocus
-                        className="text-xs rounded-full px-2 py-1 border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                      >
-                        <option value="pending">Pendiente</option>
-                        <option value="pagado">Pagado</option>
-                        <option value="approved">Aprobado</option>
-                        <option value="rejected">Rechazado</option>
-                      </select>
-                    ) : (
-                      <button
-                        onClick={() => setEditingStatusId(insc.id)}
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                      >
-                        {getStatusBadge(insc.status)}
-                      </button>
-                    )}
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-flex items-center justify-center w-6 h-6 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">
+                      {insc.muestras_count || 0}
+                    </span>
                   </td>
                   <td
-                    className="px-4 py-3 text-sm text-gray-900 max-w-[150px] truncate"
+                    className="px-4 py-3 text-sm font-bold text-black min-w-[200px]"
                     title={insc.name}
                   >
                     {insc.name}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <a
-                      href={`mailto:${insc.email}`}
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
-                      title={`Enviar email a ${insc.email}`}
-                    >
-                      {insc.email}
-                    </a>
                   </td>
                   <td className="px-4 py-3 text-sm whitespace-nowrap">
                     {insc.phone || insc.movil ? (
                       <a
                         href={`tel:${insc.phone || insc.movil}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
                         title={`Llamar a ${insc.phone || insc.movil}`}
                       >
-                        {insc.phone || insc.movil}
+                        <Phone className="w-4 h-4 flex-shrink-0" />
+                        <span>{insc.phone || insc.movil}</span>
                       </a>
                     ) : (
                       "-"
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className="inline-flex items-center justify-center w-6 h-6 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
-                      {insc.muestras_count || 0}
-                    </span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {(() => {
@@ -1030,11 +1091,71 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                         }`}
                       >
                         {insc.metodo_pago === "paypal"
-                          ? "💳 PayPal"
-                          : "🏦 Transferencia"}
+                          ? "PayPal"
+                          : "Transferencia"}
                       </span>
                     ) : (
                       <span className="text-gray-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap relative">
+                    {editingStatusId === insc.id ? (
+                      <div className="relative">
+                        <div className="absolute top-0 left-0 bg-white border border-gray-300 rounded-lg shadow-lg z-50 min-w-[200px]">
+                          <div className="p-2 border-b border-gray-200">
+                            <input
+                              type="text"
+                              placeholder="Buscar estado..."
+                              value={statusSearchTerm}
+                              onChange={(e) =>
+                                setStatusSearchTerm(e.target.value)
+                              }
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                              autoFocus
+                            />
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            {statusOptions
+                              .filter((opt) =>
+                                opt.label
+                                  .toLowerCase()
+                                  .includes(statusSearchTerm.toLowerCase()),
+                              )
+                              .map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  onClick={() => {
+                                    handleStatusChange(insc.id, opt.value);
+                                    setStatusSearchTerm("");
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors text-left"
+                                >
+                                  <span
+                                    className="w-2 h-2 rounded-full flex-shrink-0"
+                                    style={{ backgroundColor: opt.dotColor }}
+                                  />
+                                  <span>{opt.label}</span>
+                                </button>
+                              ))}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setEditingStatusId(null);
+                              setStatusSearchTerm("");
+                            }}
+                            className="absolute top-1 right-1 p-1 hover:bg-gray-100 rounded"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setEditingStatusId(insc.id)}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        {getStatusBadge(insc.status)}
+                      </button>
                     )}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
@@ -1069,6 +1190,75 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
               ))}
             </tbody>
           </table>
+        )}
+
+        {/* Pagination Controls */}
+        {filteredInscripciones.length > 0 && (
+          <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Mostrando <span className="font-medium">{startIndex + 1}</span> a{" "}
+              <span className="font-medium">
+                {Math.min(endIndex, filteredInscripciones.length)}
+              </span>{" "}
+              de{" "}
+              <span className="font-medium">
+                {filteredInscripciones.length}
+              </span>{" "}
+              resultados
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 text-sm border rounded-lg ${
+                            currentPage === page
+                              ? "bg-amber-600 text-white border-amber-600"
+                              : "border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="px-2 py-1 text-sm">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  },
+                )}
+              </div>
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
         )}
       </div>
 

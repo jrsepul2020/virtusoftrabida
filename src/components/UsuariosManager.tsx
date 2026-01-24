@@ -21,9 +21,12 @@ import {
   Printer,
   FileDown,
   FileSpreadsheet,
+  Barcode,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import JsBarcode from "jsbarcode";
 
 interface Usuario {
   id: string;
@@ -124,38 +127,46 @@ export default function UsuariosManager() {
 
       if (usuariosError) throw usuariosError;
 
-      const usuariosConDispositivos: UsuarioConDispositivos[] = await Promise.all(
-        (usuariosData || []).map(async (usuario) => {
-          const { data: dispositivosData } = await supabase
-            .from("dispositivos")
-            .select("*")
-            .eq("user_id", usuario.user_id)
-            .order("last_seen_at", { ascending: false });
+      const usuariosConDispositivos: UsuarioConDispositivos[] =
+        await Promise.all(
+          (usuariosData || []).map(async (usuario) => {
+            const { data: dispositivosData } = await supabase
+              .from("dispositivos")
+              .select("*")
+              .eq("user_id", usuario.user_id)
+              .order("last_seen_at", { ascending: false });
 
-          let auth_exists = false;
-          let last_login_at: string | null = null;
-          if (usuario.user_id) {
-            const { data: authData, error: authError } =
-              await supabase.auth.admin.getUserById(usuario.user_id);
-            if (!authError) {
-              auth_exists = !!authData.user;
-              last_login_at = authData.user?.last_sign_in_at || null;
+            const auth_exists = false;
+            const last_login_at: string | null = null;
+
+            // NOTE: supabase.auth.admin is not available in the client.
+            // To get this data, we would need a server-side API or Edge Function.
+            // For now, we disable this check to prevent runtime errors.
+            /*
+            if (usuario.user_id) {
+              const { data: authData, error: authError } =
+                await supabase.auth.admin.getUserById(usuario.user_id);
+              if (!authError) {
+                auth_exists = !!authData.user;
+                last_login_at = authData.user?.last_sign_in_at || null;
+              }
             }
-          }
+            */
 
-          return {
-            ...usuario,
-            dispositivos: dispositivosData || [],
-            auth_exists,
-            last_login_at,
-          };
-        })
-      );
+            return {
+              ...usuario,
+              dispositivos: dispositivosData || [],
+              auth_exists,
+              last_login_at,
+            };
+          }),
+        );
 
       setUsuarios(usuariosConDispositivos);
     } catch (error: any) {
       console.error("Error cargando usuarios:", error);
-      toast.error("Error al cargar usuarios");
+      console.error("Detalle del error:", error.message || error);
+      toast.error(`Error al cargar usuarios: ${error.message || ""}`);
     } finally {
       setLoading(false);
     }
@@ -163,25 +174,31 @@ export default function UsuariosManager() {
 
   const crearUsuario = async () => {
     try {
-      if (!nuevoUsuario.email || !nuevoUsuario.password || !nuevoUsuario.nombre) {
+      if (
+        !nuevoUsuario.email ||
+        !nuevoUsuario.password ||
+        !nuevoUsuario.nombre
+      ) {
         toast.error("Completa todos los campos obligatorios");
         return;
       }
 
       // Obtener token de sesión actual para autenticar el request
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session) {
         toast.error("No hay sesión activa. Por favor, inicia sesión.");
         return;
       }
 
       // Llamar al endpoint serverless que usa service role key
-      const response = await fetch('/api/create-user', {
-        method: 'POST',
+      const response = await fetch("/api/create-user", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           email: nuevoUsuario.email,
@@ -200,7 +217,7 @@ export default function UsuariosManager() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Error al crear usuario');
+        throw new Error(result.error || "Error al crear usuario");
       }
 
       toast.success("Usuario creado correctamente");
@@ -233,6 +250,7 @@ export default function UsuariosManager() {
           tablet: editingUser.tablet,
           pais: editingUser.pais,
           codigocatador: editingUser.codigocatador,
+          codigo: editingUser.codigo,
           activo: editingUser.activo,
         })
         .eq("id", editingUser.id);
@@ -251,7 +269,7 @@ export default function UsuariosManager() {
   const eliminarUsuario = async (usuario: Usuario) => {
     if (
       !confirm(
-        `¿Eliminar usuario ${usuario.nombre}? Esto eliminará también su acceso y dispositivos.`
+        `¿Eliminar usuario ${usuario.nombre}? Esto eliminará también su acceso y dispositivos.`,
       )
     ) {
       return;
@@ -295,10 +313,10 @@ export default function UsuariosManager() {
   };
 
   const usuariosFiltrados = usuarios.filter((u) => {
-    const matchNombre = u.nombre
+    const matchNombre = (u.nombre || "")
       .toLowerCase()
       .includes(filters.nombre.toLowerCase());
-    const matchEmail = u.email
+    const matchEmail = (u.email || "")
       .toLowerCase()
       .includes(filters.email.toLowerCase());
     const matchPais = (u.pais || "")
@@ -363,11 +381,17 @@ export default function UsuariosManager() {
       <span className="ml-2 inline-flex flex-col leading-none">
         <ChevronUp
           size={12}
-          className={isActive && sortDirection === "asc" ? "text-white" : "text-white/40"}
+          className={
+            isActive && sortDirection === "asc" ? "text-white" : "text-white/40"
+          }
         />
         <ChevronDown
           size={12}
-          className={isActive && sortDirection === "desc" ? "text-white" : "text-white/40"}
+          className={
+            isActive && sortDirection === "desc"
+              ? "text-white"
+              : "text-white/40"
+          }
         />
       </span>
     );
@@ -427,7 +451,9 @@ export default function UsuariosManager() {
       UserId: u.user_id || "",
       Id: u.id,
       Dispositivos: u.dispositivos
-        .map((d) => d.nombre_asignado || d.tablet_number || d.device_fingerprint)
+        .map(
+          (d) => d.nombre_asignado || d.tablet_number || d.device_fingerprint,
+        )
         .join(" | "),
     }));
 
@@ -439,6 +465,145 @@ export default function UsuariosManager() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const exportarPDFBarcodes = () => {
+    try {
+      const usuariosConCodigo = usuariosFiltrados.filter(
+        (u) => u.codigo && u.codigo.trim() !== "",
+      );
+
+      if (usuariosConCodigo.length === 0) {
+        toast.error("No hay usuarios con código de barras para exportar");
+        return;
+      }
+
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 10;
+      const cols = 2;
+      const colWidth = (pageWidth - margin * 2) / cols;
+      const itemHeight = 50;
+      let x = margin;
+      let y = margin;
+
+      usuariosConCodigo.forEach((usuario, index) => {
+        // Pagination: 5 rows per page (10 items)
+        if (index > 0 && index % (cols * 5) === 0) {
+          doc.addPage();
+          x = margin;
+          y = margin;
+        }
+
+        const canvas = document.createElement("canvas");
+        JsBarcode(canvas, usuario.codigo || "", {
+          format: "CODE128",
+          width: 2,
+          height: 40,
+          displayValue: true,
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+
+        // Dibujar borde suave
+        doc.setDrawColor(220);
+        doc.rect(x, y, colWidth - 5, itemHeight - 5);
+
+        // Nombre del usuario
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(usuario.nombre.substring(0, 30), x + 5, y + 10);
+
+        // Rol/País
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        const detailText = `${usuario.rol}${usuario.pais ? ` - ${usuario.pais}` : ""}`;
+        doc.text(detailText, x + 5, y + 15);
+
+        // Imagen del código de barras
+        doc.addImage(imgData, "PNG", x + 5, y + 18, colWidth - 15, 25);
+
+        // Actualizar coordenadas
+        if ((index + 1) % cols === 0) {
+          x = margin;
+          y += itemHeight;
+        } else {
+          x += colWidth;
+        }
+      });
+
+      doc.save(
+        `barcodes_usuarios_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+      toast.success("PDF de códigos de barras generado");
+    } catch (error) {
+      console.error("Error al generar PDF:", error);
+      toast.error("Error al generar el PDF");
+    }
+  };
+
+  const generarAutoBarcode = (
+    codigocatador: number | null | undefined,
+    nombre: string | null | undefined,
+  ) => {
+    if (!codigocatador) return "";
+    const nameToClean = nombre || "";
+    const cleanName = nameToClean
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove accents
+      .replace(/[^a-zA-Z]/g, "") // Keep only letters
+      .toUpperCase()
+      .substring(0, 4);
+    return `${codigocatador}${cleanName}`;
+  };
+
+  const generarCodigosMasivos = async () => {
+    try {
+      const usuariosSinCodigo = usuarios.filter(
+        (u) => !u.codigo || u.codigo.trim() === "",
+      );
+
+      if (usuariosSinCodigo.length === 0) {
+        toast.success("No hay usuarios sin código");
+        return;
+      }
+
+      setLoading(true);
+      const updates = usuariosSinCodigo.map((u) => ({
+        id: u.id,
+        nombre: u.nombre,
+        codigocatador: u.codigocatador,
+        codigo: generarAutoBarcode(u.codigocatador, u.nombre),
+      }));
+
+      for (const update of updates) {
+        if (!update.codigo) continue;
+
+        const { error } = await supabase
+          .from("usuarios")
+          .update({ codigo: update.codigo })
+          .eq("id", update.id);
+
+        if (error) {
+          console.error(
+            `Error actualizando usuario ${update.nombre || update.id}:`,
+            error,
+          );
+          throw error;
+        }
+      }
+
+      toast.success(`${updates.length} códigos generados con éxito`);
+      cargarUsuarios();
+    } catch (error: any) {
+      console.error("Error al generar códigos masivos:", error);
+      toast.error(
+        `Error al generar códigos: ${error.message || "Error desconocido"}`,
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -491,12 +656,33 @@ export default function UsuariosManager() {
             <span className="hidden sm:inline">Excel</span>
           </button>
           <button
+            onClick={exportarPDFBarcodes}
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-orange-100 text-orange-800 rounded-lg hover:bg-orange-200 transition text-xs sm:text-sm whitespace-nowrap"
+            title="Exportar Códigos de Barras a PDF"
+          >
+            <Barcode className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Barcodes</span>
+          </button>
+          <button
+            onClick={generarCodigosMasivos}
+            disabled={loading}
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition text-xs sm:text-sm whitespace-nowrap"
+            title="Generar códigos faltantes para catadores"
+          >
+            <RefreshCw
+              className={`w-3 h-3 sm:w-4 sm:h-4 ${loading ? "animate-spin" : ""}`}
+            />
+            <span className="hidden sm:inline">Generar Códigos</span>
+          </button>
+          <button
             onClick={cargarUsuarios}
             disabled={loading}
             className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
             title="Refrescar"
           >
-            <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 sm:w-5 sm:h-5 ${loading ? "animate-spin" : ""}`}
+            />
           </button>
         </div>
 
@@ -559,16 +745,19 @@ export default function UsuariosManager() {
             }
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
-          
         </div>
       </div>
 
       {/* Cards móviles/tablet */}
       <div className="lg:hidden p-3">
         {loading ? (
-          <div className="p-6 text-center text-gray-600">Cargando usuarios...</div>
+          <div className="p-6 text-center text-gray-600">
+            Cargando usuarios...
+          </div>
         ) : usuariosFiltrados.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No hay usuarios que coincidan</div>
+          <div className="p-6 text-center text-gray-500">
+            No hay usuarios que coincidan
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {usuariosOrdenados.map((usuario) => (
@@ -608,14 +797,19 @@ export default function UsuariosManager() {
                     <span className="text-gray-800">{usuario.pais || "—"}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Mesa / Puesto / Tablet</span>
+                    <span className="text-gray-500">
+                      Mesa / Puesto / Tablet
+                    </span>
                     <span className="text-gray-800">
-                      {usuario.mesa ?? "-"} / {usuario.puesto ?? "-"} / {usuario.tablet ?? "-"}
+                      {usuario.mesa ?? "-"} / {usuario.puesto ?? "-"} /{" "}
+                      {usuario.tablet ?? "-"}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Código</span>
-                    <span className="text-gray-800">{usuario.codigocatador || "—"}</span>
+                    <span className="text-gray-800">
+                      {usuario.codigocatador || "—"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Último login</span>
@@ -632,9 +826,13 @@ export default function UsuariosManager() {
                   {usuario.dispositivos.length > 0 ? (
                     <div className="space-y-1">
                       {usuario.dispositivos.map((disp) => (
-                        <div key={disp.id} className="flex items-center gap-2 text-xs">
+                        <div
+                          key={disp.id}
+                          className="flex items-center gap-2 text-xs"
+                        >
                           <span className="text-gray-700">
-                            {disp.nombre_asignado || `Dispositivo ${disp.tablet_number || "?"}`}
+                            {disp.nombre_asignado ||
+                              `Dispositivo ${disp.tablet_number || "?"}`}
                           </span>
                           {disp.activo && (
                             <button
@@ -648,7 +846,9 @@ export default function UsuariosManager() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-xs text-gray-400">Sin dispositivos</div>
+                    <div className="text-xs text-gray-400">
+                      Sin dispositivos
+                    </div>
                   )}
                 </div>
 
@@ -707,39 +907,51 @@ export default function UsuariosManager() {
                     className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
                     onClick={() => handleSort("nombre")}
                   >
-                    <span className="inline-flex items-center">Usuario{renderSortIcon("nombre")}</span>
+                    <span className="inline-flex items-center">
+                      Usuario{renderSortIcon("nombre")}
+                    </span>
                   </th>
                   <th
                     className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
                     onClick={() => handleSort("rol")}
                   >
-                    <span className="inline-flex items-center">Rol{renderSortIcon("rol")}</span>
-                  </th>
-                  <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
-                    onClick={() => handleSort("pais")}
-                  >
-                    <span className="inline-flex items-center">País{renderSortIcon("pais")}</span>
+                    <span className="inline-flex items-center">
+                      Rol{renderSortIcon("rol")}
+                    </span>
                   </th>
                   <th
                     className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
                     onClick={() => handleSort("mesa")}
                   >
-                    <span className="inline-flex items-center">Mesa/Puesto/Tablet{renderSortIcon("mesa")}</span>
+                    <span className="inline-flex items-center">
+                      Mesa/Puesto/Tablet{renderSortIcon("mesa")}
+                    </span>
                   </th>
                   <th
                     className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
                     onClick={() => handleSort("codigocatador")}
                   >
-                    <span className="inline-flex items-center">Código{renderSortIcon("codigocatador")}</span>
+                    <span className="inline-flex items-center">
+                      Cód. Catador{renderSortIcon("codigocatador")}
+                    </span>
+                  </th>
+                  <th
+                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    onClick={() => handleSort("codigo")}
+                  >
+                    <span className="inline-flex items-center">
+                      Cód. Barras{renderSortIcon("codigo")}
+                    </span>
                   </th>
                   <th
                     className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
                     onClick={() => handleSort("last_login")}
                   >
-                    <span className="inline-flex items-center">Último login{renderSortIcon("last_login")}</span>
+                    <span className="inline-flex items-center">
+                      Último login{renderSortIcon("last_login")}
+                    </span>
                   </th>
-                  
+
                   <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">
                     Dispositivos
                   </th>
@@ -748,7 +960,9 @@ export default function UsuariosManager() {
                     onClick={() => handleSort("activo")}
                     title="Controla el acceso al sistema"
                   >
-                    <span className="inline-flex items-center">Estado (acceso){renderSortIcon("activo")}</span>
+                    <span className="inline-flex items-center">
+                      Estado (acceso){renderSortIcon("activo")}
+                    </span>
                   </th>
                   <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider">
                     Acciones
@@ -777,32 +991,45 @@ export default function UsuariosManager() {
                           <User className="w-5 h-5 text-primary-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-sm text-gray-900">{usuario.nombre}</p>
-                          <p className="text-xs text-gray-500">{usuario.email}</p>
+                          <p className="font-medium text-sm text-gray-900">
+                            {usuario.nombre}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {usuario.email}
+                          </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
                         <Shield className="w-4 h-4 text-gray-400" />
-                        <span className={`text-sm font-medium ${usuario.rol === 'SuperAdmin' ? 'text-purple-600' : usuario.rol === 'Administrador' ? 'text-primary-600' : 'text-gray-900'}`}>
+                        <span
+                          className={`text-sm font-medium ${usuario.rol === "SuperAdmin" ? "text-purple-600" : usuario.rol === "Administrador" ? "text-primary-600" : "text-gray-900"}`}
+                        >
                           {usuario.rol}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-2">
-                      <span className="text-xs text-gray-600">{usuario.pais || '—'}</span>
                     </td>
                     <td className="px-4 py-2">
                       <div className="text-xs text-gray-600 space-y-1">
                         {usuario.mesa && <div>Mesa: {usuario.mesa}</div>}
                         {usuario.puesto && <div>Puesto: {usuario.puesto}</div>}
                         {usuario.tablet && <div>Tablet: {usuario.tablet}</div>}
-                        {!usuario.mesa && !usuario.puesto && !usuario.tablet && '—'}
+                        {!usuario.mesa &&
+                          !usuario.puesto &&
+                          !usuario.tablet &&
+                          "—"}
                       </div>
                     </td>
                     <td className="px-4 py-2">
-                      <span className="text-xs text-gray-600">{usuario.codigocatador || '—'}</span>
+                      <span className="text-xs text-gray-600">
+                        {usuario.codigocatador || "—"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="text-xs text-gray-600 font-mono bg-gray-50 px-1 rounded">
+                        {usuario.codigo || "—"}
+                      </span>
                     </td>
                     <td className="px-4 py-2">
                       <span className="text-xs text-gray-600">
@@ -811,7 +1038,7 @@ export default function UsuariosManager() {
                           : "—"}
                       </span>
                     </td>
-                    
+
                     <td className="px-4 py-2">
                       {usuario.dispositivos.length > 0 ? (
                         <div className="space-y-1">
@@ -822,7 +1049,8 @@ export default function UsuariosManager() {
                             >
                               <Smartphone className="w-4 h-4 text-gray-400" />
                               <span className="text-gray-600">
-                                {disp.nombre_asignado || `Dispositivo ${disp.tablet_number || "?"}`}
+                                {disp.nombre_asignado ||
+                                  `Dispositivo ${disp.tablet_number || "?"}`}
                               </span>
                               {disp.activo ? (
                                 <CheckCircle className="w-4 h-4 text-green-500" />
@@ -841,16 +1069,24 @@ export default function UsuariosManager() {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">Sin dispositivos</span>
+                        <span className="text-xs text-gray-400">
+                          Sin dispositivos
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-2">
                       {usuario.activo ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" title="Usuario puede acceder al sistema">
+                        <span
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                          title="Usuario puede acceder al sistema"
+                        >
                           Activo
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800" title="Usuario sin acceso (deshabilitado)">
+                        <span
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                          title="Usuario sin acceso (deshabilitado)"
+                        >
                           Inactivo
                         </span>
                       )}
@@ -902,7 +1138,10 @@ export default function UsuariosManager() {
                     type="email"
                     value={nuevoUsuario.email}
                     onChange={(e) =>
-                      setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        email: e.target.value,
+                      })
                     }
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
@@ -918,7 +1157,10 @@ export default function UsuariosManager() {
                     type={showPassword ? "text" : "password"}
                     value={nuevoUsuario.password}
                     onChange={(e) =>
-                      setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        password: e.target.value,
+                      })
                     }
                     className="w-full pr-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
@@ -1023,7 +1265,10 @@ export default function UsuariosManager() {
                     type="text"
                     value={nuevoUsuario.tablet || ""}
                     onChange={(e) =>
-                      setNuevoUsuario({ ...nuevoUsuario, tablet: e.target.value })
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        tablet: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
@@ -1033,7 +1278,7 @@ export default function UsuariosManager() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código
+                    Código Catador (Numérico)
                   </label>
                   <input
                     type="number"
@@ -1047,18 +1292,36 @@ export default function UsuariosManager() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código
-                  </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Código de Barras (Login)
+                </label>
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={nuevoUsuario.codigo || ""}
                     onChange={(e) =>
-                      setNuevoUsuario({ ...nuevoUsuario, codigo: e.target.value })
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        codigo: e.target.value,
+                      })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
+                  <button
+                    onClick={() =>
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        codigo: generarAutoBarcode(
+                          nuevoUsuario.codigocatador,
+                          nuevoUsuario.nombre,
+                        ),
+                      })
+                    }
+                    className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
+                    title="Generar automáticamente"
+                  >
+                    Auto
+                  </button>
                 </div>
               </div>
             </div>
@@ -1087,7 +1350,9 @@ export default function UsuariosManager() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Editar Usuario</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                Editar Usuario
+              </h3>
               <button
                 onClick={() => setEditingUser(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -1194,7 +1459,7 @@ export default function UsuariosManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código
+                  Código Catador (Numérico)
                 </label>
                 <input
                   type="number"
@@ -1210,16 +1475,55 @@ export default function UsuariosManager() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Código de Barras (Login)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editingUser.codigo || ""}
+                    onChange={(e) =>
+                      setEditingUser({
+                        ...editingUser,
+                        codigo: e.target.value,
+                      })
+                    }
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={() =>
+                      setEditingUser({
+                        ...editingUser,
+                        codigo: generarAutoBarcode(
+                          editingUser.codigocatador,
+                          editingUser.nombre,
+                        ),
+                      })
+                    }
+                    className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
+                    title="Generar automáticamente"
+                  >
+                    Auto
+                  </button>
+                </div>
+              </div>
+
+              <div>
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={editingUser.activo}
                     onChange={(e) =>
-                      setEditingUser({ ...editingUser, activo: e.target.checked })
+                      setEditingUser({
+                        ...editingUser,
+                        activo: e.target.checked,
+                      })
                     }
                     className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Usuario activo (puede acceder al sistema)</span>
+                  <span className="text-sm text-gray-700">
+                    Usuario activo (puede acceder al sistema)
+                  </span>
                 </label>
               </div>
             </div>

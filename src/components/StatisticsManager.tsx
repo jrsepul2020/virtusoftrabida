@@ -374,13 +374,18 @@ export default function StatisticsManager({
         {/* Lista de items con cantidades individuales */}
         <div className="space-y-1.5 sm:space-y-2">
           {data.map((item, index) => (
-            <div key={index} className="flex items-center justify-between gap-2">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-2"
+            >
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                 <div
                   className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-[10px] sm:text-xs text-gray-700 truncate">{item.name}</span>
+                <span className="text-[10px] sm:text-xs text-gray-700 truncate">
+                  {item.name}
+                </span>
               </div>
               <span className="text-xs sm:text-sm font-bold text-gray-900 flex-shrink-0">
                 {item.value}
@@ -391,7 +396,6 @@ export default function StatisticsManager({
       </div>
     );
   };
-
 
   if (loading) {
     return (
@@ -440,7 +444,7 @@ export default function StatisticsManager({
               </h3>
             </div>
             <div className="h-48 sm:h-56 md:h-64 overflow-hidden">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <LineChart data={inscripcionesPorDia}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
@@ -475,7 +479,7 @@ export default function StatisticsManager({
                 </h3>
               </div>
               <div className="h-48 sm:h-56 md:h-64 overflow-hidden">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <PieChart>
                     <Pie
                       data={pieData}
@@ -514,7 +518,7 @@ export default function StatisticsManager({
                 </h3>
               </div>
               <div className="h-48 sm:h-56 md:h-64 overflow-hidden">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <BarChart data={barData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" tick={{ fontSize: 10 }} />
@@ -525,7 +529,11 @@ export default function StatisticsManager({
                       width={60}
                     />
                     <Tooltip />
-                    <Bar dataKey="cantidad" fill="#10B981" radius={[0, 4, 4, 0]} />
+                    <Bar
+                      dataKey="cantidad"
+                      fill="#10B981"
+                      radius={[0, 4, 4, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -548,7 +556,11 @@ export default function StatisticsManager({
                 data={espirituososAromatizadosData}
                 icon={Wine}
               />
-              <MiniBarChart title="ACEITES DE OLIVA" data={aceitesData} icon={Droplet} />
+              <MiniBarChart
+                title="ACEITES DE OLIVA"
+                data={aceitesData}
+                icon={Droplet}
+              />
             </div>
           )}
 
@@ -608,7 +620,7 @@ export default function StatisticsManager({
                   <span className="text-xs text-gray-500">Últimos días</span>
                 </div>
                 <div className="h-48 sm:h-64 overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <LineChart data={inscripcionesPorDia}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                       <XAxis dataKey="fecha" tick={{ fontSize: 11 }} />
@@ -635,7 +647,7 @@ export default function StatisticsManager({
                   </h3>
                 </div>
                 <div className="h-48 sm:h-64 overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <PieChart>
                       <Pie
                         data={pieData}
@@ -656,7 +668,10 @@ export default function StatisticsManager({
                 </div>
                 <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-[10px] sm:text-xs text-gray-500">
                   {pieData.slice(0, 4).map((item) => (
-                    <div key={item.name} className="flex items-center justify-between gap-2">
+                    <div
+                      key={item.name}
+                      className="flex items-center justify-between gap-2"
+                    >
                       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                         <span
                           className="h-2 w-2 rounded-full flex-shrink-0"
@@ -664,13 +679,14 @@ export default function StatisticsManager({
                         />
                         <span className="truncate">{item.name}</span>
                       </div>
-                      <span className="font-semibold text-gray-700">{item.value}</span>
+                      <span className="font-semibold text-gray-700">
+                        {item.value}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
           </div>
         </>
       )}

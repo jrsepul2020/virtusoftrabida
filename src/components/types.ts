@@ -34,4 +34,15 @@ export type SampleData = {
   foto_botella?: string; // URL de la imagen en Supabase Storage
 };
 
-export type PaymentMethod = 'transferencia' | 'paypal';
+export type PaymentMethod = "transferencia" | "paypal";
+
+export type View =
+  | "home"
+  | "adminLogin"
+  | "admin"
+  | "catador"
+  | "inscripcion"
+  | "reglamento"
+  | "resultados"
+  | "diplomas"
+  | "configurarTablet";

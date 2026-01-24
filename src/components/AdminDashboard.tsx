@@ -63,11 +63,11 @@ import UsuariosManager from "./UsuariosManager";
 import UltimasInscripciones from "./UltimasInscripciones";
 import GestorTemplates from "./GestorTemplates";
 import UserProfile from "./UserProfile";
+import AuthorizedDevicesManager from "./AuthorizedDevicesManager";
 // Removed: Estadisticas2 and CompaniesManager2 screens (no longer used)
 
 type Tab =
   | "statistics"
-  
   | "inscripciones"
   | "companies"
   | "muestras"
@@ -89,6 +89,7 @@ type Tab =
   | "comunicaciones"
   | "mailrelay"
   | "templates"
+  | "authorizedDevices"
   | "profile";
 
 interface MenuItem {
@@ -130,10 +131,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const breadcrumbLabels: Record<Tab, string> = {
     statistics: "Panel",
-    
+
     inscripciones: "Inscripciones",
     companies: "Empresas",
-    
+
     muestras: "Muestras",
     tandas: "Tandas",
     mesas: "Mesas",
@@ -153,34 +154,36 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     comunicaciones: "Comunicaciones",
     mailrelay: "Mailrelay",
     templates: "Templates",
+    authorizedDevices: "Dispositivos autorizados",
     profile: "Perfil",
   };
 
   // Map tab -> source filename for quick reference in breadcrumb
   const tabToFile: Record<Tab, string | undefined> = {
-    statistics: 'StatisticsManager.tsx',
-    inscripciones: 'InscripcionesManager.tsx',
-    companies: 'CompaniesManager.tsx',
-    muestras: 'GestionMuestras.tsx',
-    tandas: 'TandasManager.tsx',
-    mesas: 'MesasManager.tsx',
-    puntuaciones: 'PuntuacionesManager.tsx',
-    catadores: 'CatadoresManager.tsx',
-    dispositivos: 'DispositivosManager.tsx',
-    paypal: 'PayPalDashboard.tsx',
-    print: 'PrintSamples.tsx',
-    form: 'UnifiedInscriptionForm.tsx',
-    emailTest: 'EmailTest.tsx',
-    configuracion: 'SettingsManager.tsx',
-    usuarios: 'UsuariosManager.tsx',
-    pantallas: 'PantallasManager.tsx',
-    fotosBotellas: 'BottlePhotosGallery.tsx',
-    resultados: 'ResultadosCatas.tsx',
-    backup: 'BackupManager.tsx',
-    comunicaciones: 'ComunicacionesManager.tsx',
-    mailrelay: 'MailrelayManager.tsx',
-    templates: 'GestorTemplates.tsx',
-    profile: 'UserProfile.tsx',
+    statistics: "StatisticsManager.tsx",
+    inscripciones: "InscripcionesManager.tsx",
+    companies: "CompaniesManager.tsx",
+    muestras: "GestionMuestras.tsx",
+    tandas: "TandasManager.tsx",
+    mesas: "MesasManager.tsx",
+    puntuaciones: "PuntuacionesManager.tsx",
+    catadores: "CatadoresManager.tsx",
+    dispositivos: "DispositivosManager.tsx",
+    paypal: "PayPalDashboard.tsx",
+    print: "PrintSamples.tsx",
+    form: "UnifiedInscriptionForm.tsx",
+    emailTest: "EmailTest.tsx",
+    configuracion: "SettingsManager.tsx",
+    usuarios: "UsuariosManager.tsx",
+    pantallas: "PantallasManager.tsx",
+    fotosBotellas: "BottlePhotosGallery.tsx",
+    resultados: "ResultadosCatas.tsx",
+    backup: "BackupManager.tsx",
+    comunicaciones: "ComunicacionesManager.tsx",
+    mailrelay: "MailrelayManager.tsx",
+    templates: "GestorTemplates.tsx",
+    authorizedDevices: "AuthorizedDevicesManager.tsx",
+    profile: "UserProfile.tsx",
   };
 
   // Persist sidebar state
@@ -281,7 +284,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         { id: "puntuaciones", label: "Puntuaciones", icon: BarChart3 },
         { id: "catadores", label: "Catadores", icon: Users },
         { id: "mesas", label: "Mesas", icon: Grid3X3 },
-        { id: "dispositivos", label: "Dispositivos", icon: Smartphone },
+        { id: "dispositivos", label: "Detecciones", icon: Smartphone },
+        {
+          id: "authorizedDevices",
+          label: "Dispositivos Autorizados",
+          icon: Smartphone,
+        },
       ],
     },
     {
@@ -662,11 +670,15 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
               <span>Inicio</span>
               <span className="text-gray-300">/</span>
-              <span className="text-gray-700 font-medium">{breadcrumbLabels[activeTab]}</span>
+              <span className="text-gray-700 font-medium">
+                {breadcrumbLabels[activeTab]}
+              </span>
               {tabToFile[activeTab] && (
                 <>
                   <span className="text-gray-300">/</span>
-                  <span className="text-xs text-gray-400">{tabToFile[activeTab]}</span>
+                  <span className="text-xs text-gray-400">
+                    {tabToFile[activeTab]}
+                  </span>
                 </>
               )}
             </div>
@@ -710,6 +722,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === "profile" && (
               <UserProfile onBack={() => setActiveTab("statistics")} />
             )}
+            {activeTab === "authorizedDevices" && <AuthorizedDevicesManager />}
             {activeTab === "pantallas" && (
               <PantallasManager key={pantallasKey} />
             )}
