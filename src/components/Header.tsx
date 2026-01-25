@@ -8,11 +8,13 @@ export default function Header({
   adminLoggedIn,
   onLogout,
   currentView,
+  currentUser,
 }: {
   setView: Dispatch<SetStateAction<View>>;
   adminLoggedIn?: boolean;
   onLogout?: () => void;
   currentView?: View;
+  currentUser?: { nombre: string; email: string } | null;
 }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { t, lang, setLang } = useI18n();
@@ -42,7 +44,7 @@ export default function Header({
       try {
         localStorage.setItem("admin_unlocked", "1");
         location.reload();
-      } catch (e) {
+      } catch {
         /* ignore */
       }
       return;
@@ -64,13 +66,13 @@ export default function Header({
 
   return (
     <header
-      className={`${isHomePage ? "bg-transparent absolute top-0 left-0 right-0" : "bg-white shadow-md"} relative z-50 transition-all duration-300`}
+      className={`${isHomePage ? "bg-transparent absolute top-0 left-0 right-0 border-b border-transparent" : "bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0"} z-50 transition-all duration-300`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center py-5">
           <button
             type="button"
-            className="flex items-center cursor-pointer focus:outline-none"
+            className="flex items-center cursor-pointer focus:outline-none transition-transform hover:scale-105"
             onClick={() => handleNavigation("home")}
             aria-label={t("nav.home")}
           >
@@ -79,107 +81,122 @@ export default function Header({
                 isHomePage ? "/logo-blanco-virtus.png" : "/logo-bandera-1.png"
               }
               alt="International Virtus"
-              className="h-10 w-auto"
+              className="h-12 w-auto"
               loading="lazy"
               decoding="async"
             />
           </button>
 
-          <nav className="hidden md:flex space-x-6" aria-label={t("nav.label")}>
+          <nav className="hidden md:flex space-x-1" aria-label={t("nav.label")}>
             {menuItems.map((item) => (
               <button
                 key={item.name}
                 onClick={item.onClick}
-                className={`${isHomePage ? "text-white hover:text-gray-100 font-semibold" : "text-black hover:text-gray-800"} px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                className={`${
+                  isHomePage
+                    ? "text-white hover:text-champagne-300"
+                    : "text-midnight-500 hover:text-champagne-600"
+                } px-5 py-2 rounded-full text-xs font-bold tracking-[0.15em] uppercase transition-all duration-300 font-body`}
               >
                 {item.name}
               </button>
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-6">
             <div
-              className={`flex gap-1 ${isHomePage ? "border border-transparent" : "border border-gray-200"} rounded-md p-1`}
+              className={`flex gap-1 ${isHomePage ? "border border-white/20" : "border border-gray-100"} rounded-full p-1`}
             >
               <button
                 onClick={() => setLang("es")}
-                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${
                   lang === "es"
                     ? isHomePage
-                      ? "bg-white text-gray-900"
-                      : "bg-gray-200 text-black"
+                      ? "bg-white text-midnight-900 shadow-lg"
+                      : "bg-midnight-500 text-white shadow-md"
                     : isHomePage
-                      ? "text-white hover:bg-white/20"
-                      : "text-black hover:bg-gray-100"
+                      ? "text-white hover:bg-white/10"
+                      : "text-midnight-500 hover:bg-midnight-50"
                 }`}
                 aria-label="Español"
                 title="Español"
               >
-                <span aria-hidden="true">🇪🇸</span>
+                <span aria-hidden="true" className="text-sm">
+                  ES
+                </span>
               </button>
               <button
                 onClick={() => setLang("en")}
-                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${
                   lang === "en"
                     ? isHomePage
-                      ? "bg-white text-gray-900"
-                      : "bg-gray-200 text-black"
+                      ? "bg-white text-midnight-900 shadow-lg"
+                      : "bg-midnight-500 text-white shadow-md"
                     : isHomePage
-                      ? "text-white hover:bg-white/20"
-                      : "text-black hover:bg-gray-100"
+                      ? "text-white hover:bg-white/10"
+                      : "text-midnight-500 hover:bg-midnight-50"
                 }`}
                 aria-label="English"
                 title="English"
               >
-                <span aria-hidden="true">🇬🇧</span>
+                <span aria-hidden="true" className="text-sm">
+                  EN
+                </span>
               </button>
               <button
                 onClick={() => setLang("pt")}
-                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${
                   lang === "pt"
                     ? isHomePage
-                      ? "bg-white text-gray-900"
-                      : "bg-gray-200 text-black"
+                      ? "bg-white text-midnight-900 shadow-lg"
+                      : "bg-midnight-500 text-white shadow-md"
                     : isHomePage
-                      ? "text-white hover:bg-white/20"
-                      : "text-black hover:bg-gray-100"
+                      ? "text-white hover:bg-white/10"
+                      : "text-midnight-500 hover:bg-midnight-50"
                 }`}
                 aria-label="Português"
                 title="Português"
               >
-                <span aria-hidden="true">🇵🇹</span>
+                <span aria-hidden="true" className="text-sm">
+                  PT
+                </span>
               </button>
             </div>
+
             {!isAdminLoggedIn && (
               <button
                 onClick={handleLoginClick}
                 className={`${
                   isHomePage
-                    ? "text-white hover:bg-white/10 border border-white/30"
-                    : "text-gray-700 hover:bg-gray-100 border border-gray-300"
-                } text-sm font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors`}
+                    ? "text-white bg-white/10 border border-white/30 hover:bg-white/20"
+                    : "text-midnight-600 bg-midnight-50 border border-midnight-100 hover:bg-midnight-100"
+                } text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-300`}
                 aria-label="Acceso"
                 title={import.meta.env.DEV ? "Acceso local" : "Acceso"}
               >
-                <LogIn size={14} />
+                <LogIn size={12} />
                 Acceso
               </button>
             )}
-            {!isAdminLoggedIn ? null : (
-              <div className="flex items-center space-x-3">
-                <span
-                  className="text-sm font-medium text-black"
-                  aria-label={t("nav.admin")}
-                >
-                  🔧 {t("nav.admin")}
-                </span>
+
+            {isAdminLoggedIn && (
+              <div className="flex items-center space-x-5">
+                <div className="hidden lg:flex flex-col items-end">
+                  <span className="text-[10px] font-bold text-midnight-900 tracking-tighter uppercase leading-none mb-0.5">
+                    {currentUser?.nombre || "Admin"}
+                  </span>
+                  <div className="h-0.5 w-full bg-champagne-500 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-right" />
+                  <span className="text-[8px] text-midnight-400 font-medium">
+                    {currentUser?.email || ""}
+                  </span>
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2"
+                  className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all duration-300 flex items-center gap-2 shadow-sm"
                   aria-label={t("nav.logout")}
                 >
-                  <LogOut size={16} />
-                  <span>{t("nav.logout")}</span>
+                  <LogOut size={12} />
+                  <span className="hidden sm:inline">{t("nav.logout")}</span>
                 </button>
               </div>
             )}

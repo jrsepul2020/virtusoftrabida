@@ -4,12 +4,13 @@ import {
   Smartphone,
   Plus,
   CheckCircle,
-  XCircle,
   Copy,
   Calendar,
   AlertTriangle,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
+import DetailSidebar, { DetailGroup, DetailItem } from "./DetailSidebar";
 import toast from "react-hot-toast";
 
 interface AuthorizedDevice {
@@ -24,6 +25,9 @@ export default function AuthorizedDevicesManager() {
   const [devices, setDevices] = useState<AuthorizedDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [newToken, setNewToken] = useState<string | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<AuthorizedDevice | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchDevices();
@@ -56,11 +60,9 @@ export default function AuthorizedDevicesManager() {
         enabled: true,
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("authorized_devices")
-        .insert([newDevice])
-        .select()
-        .single();
+        .insert([newDevice]);
 
       if (error) throw error;
 
@@ -93,6 +95,10 @@ export default function AuthorizedDevicesManager() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Token copiado al portapapeles");
+  };
+
+  const closeSidebar = () => {
+    setSelectedDevice(null);
   };
 
   return (
@@ -156,94 +162,111 @@ export default function AuthorizedDevicesManager() {
       )}
 
       {/* Table Section */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
         {loading ? (
-          <div className="flex flex-col items-center justify-center p-20 text-gray-500">
-            <RefreshCw className="w-8 h-8 animate-spin mb-4 text-primary-600" />
-            <p>Cargando dispositivos...</p>
+          <div className="flex flex-col items-center justify-center p-20 text-slate-400">
+            <RefreshCw className="w-10 h-10 animate-spin mb-4 text-primary-600" />
+            <p className="font-medium">Cargando dispositivos...</p>
           </div>
         ) : devices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-20 text-gray-500">
+          <div className="flex flex-col items-center justify-center p-20 text-slate-400">
             <Smartphone className="w-16 h-16 opacity-20 mb-4" />
-            <p className="text-lg font-medium">No hay tablets autorizadas</p>
-            <p className="text-sm">Usa el botón superior para añadir una</p>
+            <p className="text-lg font-bold">No hay tablets autorizadas</p>
+            <p className="text-sm italic">
+              Usa el botón superior para añadir una
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-[#1A2514] text-white">
-                <tr>
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider">
+              <thead>
+                <tr className="bg-slate-900 border-b border-slate-800">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Nombre / Identificador
                   </th>
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Device Token
                   </th>
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider text-center">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
                     Estado
                   </th>
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
                     Fecha registro
                   </th>
-                  <th className="px-6 py-4 text-sm font-semibold uppercase tracking-wider text-right">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {devices.map((device) => (
                   <tr
                     key={device.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    onClick={() => setSelectedDevice(device)}
+                    className="group hover:bg-slate-50 transition-all cursor-pointer"
                   >
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">
                         {device.name}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        ID: {device.id}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 group">
-                        <code className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                      <div className="flex items-center gap-2 group/token">
+                        <code className="text-xs text-slate-500 bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg font-mono">
                           {device.device_token.substring(0, 18)}...
                         </code>
                         <button
-                          onClick={() => copyToClipboard(device.device_token)}
-                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary-600 transition"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard(device.device_token);
+                          }}
+                          className="opacity-0 group-hover/token:opacity-100 p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
                         >
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center">
                         {device.enabled ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            HABILITADA
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-green-100 text-green-700 border border-green-200 uppercase">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            Habilitada
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                            <XCircle className="w-3.5 h-3.5" />
-                            PENDIENTE
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-amber-100 text-amber-700 border border-amber-200 uppercase">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            Pendiente
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Calendar className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                        <Calendar className="w-4 h-4 text-slate-400" />
                         {new Date(device.created_at).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {!device.enabled && (
-                        <button
-                          onClick={() => authorizeDevice(device.id)}
-                          className="px-3 py-1 bg-green-600 text-white rounded-md text-xs font-bold hover:bg-green-700 transition shadow-sm"
-                        >
-                          Autorizar
-                        </button>
-                      )}
+                      <div className="flex justify-end items-center gap-2">
+                        {!device.enabled && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              authorizeDevice(device.id);
+                            }}
+                            className="px-4 py-1.5 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-700 transition shadow-lg shadow-green-100"
+                          >
+                            Autorizar
+                          </button>
+                        )}
+                        <span className="p-2 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Plus className="w-5 h-5" />
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -252,6 +275,107 @@ export default function AuthorizedDevicesManager() {
           </div>
         )}
       </div>
+
+      {/* Detail Sidebar */}
+      <DetailSidebar
+        isOpen={!!selectedDevice}
+        onClose={closeSidebar}
+        title={
+          selectedDevice ? `Dispositivo: ${selectedDevice.name}` : "Detalles"
+        }
+      >
+        {selectedDevice && (
+          <>
+            <div className="flex flex-col items-center mb-10">
+              <div className="w-24 h-24 rounded-3xl bg-primary-50 flex items-center justify-center text-primary-600 shadow-xl shadow-primary-50 mb-4 border-2 border-white">
+                <Smartphone className="w-12 h-12" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900">
+                {selectedDevice.name}
+              </h3>
+              <p className="text-slate-400 font-mono text-xs mt-1 uppercase tracking-widest">
+                {selectedDevice.id}
+              </p>
+            </div>
+
+            <DetailGroup
+              title="Estado de Autorización"
+              icon={<ShieldCheck className="w-4 h-4" />}
+            >
+              <DetailItem
+                label="Estado Actual"
+                value={
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black tracking-widest uppercase border ${
+                      selectedDevice.enabled
+                        ? "bg-green-50 text-green-700 border-green-100"
+                        : "bg-amber-50 text-amber-700 border-amber-100"
+                    }`}
+                  >
+                    {selectedDevice.enabled
+                      ? "Dispositivo Habilitado"
+                      : "Pendiente de Autorización"}
+                  </span>
+                }
+                fullWidth
+              />
+              <DetailItem
+                label="Fecha de Registro"
+                value={new Date(selectedDevice.created_at).toLocaleString()}
+              />
+            </DetailGroup>
+
+            <DetailGroup
+              title="Seguridad y Credenciales"
+              icon={<Copy className="w-4 h-4" />}
+            >
+              <DetailItem
+                label="Token de Acceso (Completo)"
+                fullWidth
+                value={
+                  <div className="flex items-center gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800 mt-2 relative overflow-hidden group/token-full">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary-500" />
+                    <code className="text-primary-400 font-mono font-bold text-sm break-all leading-relaxed">
+                      {selectedDevice.device_token}
+                    </code>
+                    <button
+                      onClick={() =>
+                        copyToClipboard(selectedDevice.device_token)
+                      }
+                      className="p-3 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-all shadow-lg"
+                      title="Copiar token completo"
+                    >
+                      <Copy className="w-5 h-5" />
+                    </button>
+                  </div>
+                }
+              />
+            </DetailGroup>
+
+            {!selectedDevice.enabled && (
+              <div className="mt-10 p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                <div className="flex items-center gap-3 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  <h4 className="font-black text-amber-900 uppercase tracking-wider text-sm">
+                    Acción Requerida
+                  </h4>
+                </div>
+                <p className="text-amber-800 text-sm mb-6 leading-relaxed">
+                  Este dispositivo aún no ha sido autorizado. Hasta que se
+                  autorice, no podrá realizar logins por tablet.
+                </p>
+                <button
+                  onClick={() => authorizeDevice(selectedDevice.id)}
+                  className="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-xl shadow-green-100 flex items-center justify-center gap-2"
+                >
+                  <ShieldCheck className="w-5 h-5" />
+                  Autorizar Dispositivo Ahora
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </DetailSidebar>
 
       {/* Warning Footer */}
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">

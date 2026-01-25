@@ -6,23 +6,20 @@ import {
   RefreshCw,
   Edit2,
   Trash2,
-  Save,
   X,
-  Eye,
-  EyeOff,
-  Mail,
-  Shield,
   User,
   Smartphone,
-  CheckCircle,
-  XCircle,
   ChevronUp,
   ChevronDown,
   Printer,
   FileDown,
   FileSpreadsheet,
   Barcode,
+  ShieldCheck,
+  Calendar,
+  Grid3X3,
 } from "lucide-react";
+import DetailSidebar, { DetailGroup, DetailItem } from "./DetailSidebar";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
@@ -101,9 +98,9 @@ export default function UsuariosManager() {
     | "activo"
   >("nombre");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<Usuario | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [selectedUsuario, setSelectedUsuario] =
+    useState<UsuarioConDispositivos | null>(null);
+  const [modalMode, setModalMode] = useState<"view" | "edit" | null>(null);
   const [nuevoUsuario, setNuevoUsuario] = useState<NuevoUsuario>({
     email: "",
     password: "",
@@ -236,29 +233,42 @@ export default function UsuariosManager() {
     }
   };
 
+  const openModal = (
+    usuario: UsuarioConDispositivos,
+    mode: "view" | "edit",
+  ) => {
+    setSelectedUsuario(usuario);
+    setModalMode(mode);
+  };
+
+  const closeModal = () => {
+    setSelectedUsuario(null);
+    setModalMode(null);
+  };
+
   const actualizarUsuario = async () => {
-    if (!editingUser) return;
+    if (!selectedUsuario) return;
 
     try {
       const { error } = await supabase
         .from("usuarios")
         .update({
-          nombre: editingUser.nombre,
-          rol: editingUser.rol,
-          mesa: editingUser.mesa,
-          puesto: editingUser.puesto,
-          tablet: editingUser.tablet,
-          pais: editingUser.pais,
-          codigocatador: editingUser.codigocatador,
-          codigo: editingUser.codigo,
-          activo: editingUser.activo,
+          nombre: selectedUsuario.nombre,
+          rol: selectedUsuario.rol,
+          mesa: selectedUsuario.mesa,
+          puesto: selectedUsuario.puesto,
+          tablet: selectedUsuario.tablet,
+          pais: selectedUsuario.pais,
+          codigocatador: selectedUsuario.codigocatador,
+          codigo: selectedUsuario.codigo,
+          activo: selectedUsuario.activo,
         })
-        .eq("id", editingUser.id);
+        .eq("id", selectedUsuario.id);
 
       if (error) throw error;
 
       toast.success("Usuario actualizado");
-      setEditingUser(null);
+      closeModal();
       cargarUsuarios();
     } catch (error: any) {
       console.error("Error actualizando usuario:", error);
@@ -973,137 +983,139 @@ export default function UsuariosManager() {
                 {usuariosOrdenados.map((usuario) => (
                   <tr
                     key={usuario.id}
-                    className={`hover:bg-gray-50 transition ${
-                      usuario.rol === "SuperAdmin"
-                        ? "bg-purple-50/50"
-                        : usuario.rol === "Administrador"
-                          ? "bg-primary-50/50"
-                          : usuario.rol === "Presidente"
-                            ? "bg-blue-50/50"
-                            : usuario.rol === "Catador"
-                              ? "bg-emerald-50/40"
-                              : ""
-                    }`}
+                    onClick={() => openModal(usuario, "view")}
+                    className="hover:bg-slate-50 transition-colors cursor-pointer group"
                   >
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                          <User className="w-5 h-5 text-primary-600" />
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ${
+                            usuario.rol === "SuperAdmin"
+                              ? "bg-purple-600"
+                              : usuario.rol === "Administrador"
+                                ? "bg-primary-600"
+                                : "bg-slate-400"
+                          }`}
+                        >
+                          {usuario.nombre?.charAt(0).toUpperCase() || "U"}
                         </div>
-                        <div>
-                          <p className="font-medium text-sm text-gray-900">
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-bold text-slate-900 truncate">
                             {usuario.nombre}
-                          </p>
-                          <p className="text-xs text-gray-500">
+                          </span>
+                          <span className="text-[11px] text-slate-500 truncate">
                             {usuario.email}
-                          </p>
+                          </span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-gray-400" />
+                        <ShieldCheck className="w-4 h-4 text-primary-500" />
                         <span
-                          className={`text-sm font-medium ${usuario.rol === "SuperAdmin" ? "text-purple-600" : usuario.rol === "Administrador" ? "text-primary-600" : "text-gray-900"}`}
+                          className={`text-xs font-bold ${usuario.rol === "SuperAdmin" ? "text-purple-600" : usuario.rol === "Administrador" ? "text-primary-600" : "text-slate-700"}`}
                         >
                           {usuario.rol}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-2">
-                      <div className="text-xs text-gray-600 space-y-1">
-                        {usuario.mesa && <div>Mesa: {usuario.mesa}</div>}
-                        {usuario.puesto && <div>Puesto: {usuario.puesto}</div>}
-                        {usuario.tablet && <div>Tablet: {usuario.tablet}</div>}
-                        {!usuario.mesa &&
-                          !usuario.puesto &&
-                          !usuario.tablet &&
-                          "—"}
+                    <td className="px-4 py-3">
+                      <div className="text-[11px] text-slate-600 space-y-0.5 font-medium">
+                        {usuario.mesa && (
+                          <div>
+                            Mesa:{" "}
+                            <span className="font-bold text-slate-900">
+                              #{usuario.mesa}
+                            </span>
+                          </div>
+                        )}
+                        {usuario.tablet && (
+                          <div>
+                            Tablet:{" "}
+                            <span className="font-bold text-slate-900">
+                              {usuario.tablet}
+                            </span>
+                          </div>
+                        )}
+                        {!usuario.mesa && !usuario.tablet && (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </div>
                     </td>
-                    <td className="px-4 py-2">
-                      <span className="text-xs text-gray-600">
-                        {usuario.codigocatador || "—"}
+                    <td className="px-4 py-3">
+                      <span className="text-sm font-bold text-slate-700">
+                        {usuario.codigocatador || (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </span>
                     </td>
-                    <td className="px-4 py-2">
-                      <span className="text-xs text-gray-600 font-mono bg-gray-50 px-1 rounded">
-                        {usuario.codigo || "—"}
+                    <td className="px-4 py-3">
+                      <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                        {usuario.codigo || (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </span>
                     </td>
-                    <td className="px-4 py-2">
-                      <span className="text-xs text-gray-600">
-                        {usuario.last_login_at
-                          ? new Date(usuario.last_login_at).toLocaleString()
-                          : "—"}
+                    <td className="px-4 py-3">
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        {usuario.last_login_at ? (
+                          new Date(usuario.last_login_at).toLocaleDateString()
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </span>
                     </td>
-
-                    <td className="px-4 py-2">
-                      {usuario.dispositivos.length > 0 ? (
-                        <div className="space-y-1">
-                          {usuario.dispositivos.map((disp) => (
-                            <div
-                              key={disp.id}
-                              className="flex items-center gap-2 text-xs"
-                            >
-                              <Smartphone className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">
-                                {disp.nombre_asignado ||
-                                  `Dispositivo ${disp.tablet_number || "?"}`}
-                              </span>
-                              {disp.activo ? (
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                              ) : (
-                                <XCircle className="w-4 h-4 text-red-500" />
-                              )}
-                              {disp.activo && (
-                                <button
-                                  onClick={() => revocarDispositivo(disp.id)}
-                                  className="text-xs text-red-600 hover:text-red-700"
-                                >
-                                  Revocar
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400">
-                          Sin dispositivos
-                        </span>
-                      )}
+                    <td className="px-4 py-3">
+                      <div className="flex -space-x-1.5 overflow-hidden">
+                        {usuario.dispositivos.map((disp) => (
+                          <div
+                            key={disp.id}
+                            className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center shadow-sm ${disp.activo ? "bg-green-100" : "bg-red-100"}`}
+                            title={
+                              disp.nombre_asignado ||
+                              `Tablet ${disp.tablet_number}`
+                            }
+                          >
+                            <Smartphone
+                              className={`w-3 h-3 ${disp.activo ? "text-green-600" : "text-red-600"}`}
+                            />
+                          </div>
+                        ))}
+                        {usuario.dispositivos.length === 0 && (
+                          <span className="text-xs text-slate-300">N/A</span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-4 py-2">
-                      {usuario.activo ? (
-                        <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                          title="Usuario puede acceder al sistema"
-                        >
-                          Activo
-                        </span>
-                      ) : (
-                        <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-                          title="Usuario sin acceso (deshabilitado)"
-                        >
-                          Inactivo
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-right space-x-2">
-                      <button
-                        onClick={() => setEditingUser(usuario)}
-                        className="text-primary-600 hover:text-primary-700"
+                    <td className="px-4 py-3 text-center">
+                      <div
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${usuario.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
                       >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => eliminarUsuario(usuario)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        {usuario.activo ? "Activo" : "Inactivo"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openModal(usuario, "edit");
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          title="Editar usuario"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            eliminarUsuario(usuario);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar usuario"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1113,29 +1125,391 @@ export default function UsuariosManager() {
         )}
       </div>
 
-      {/* Modal Crear Usuario */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Nuevo Usuario</h3>
+      {/* Sidebar de Detalles del Usuario */}
+      {selectedUsuario && (
+        <DetailSidebar
+          isOpen={modalMode === "view"}
+          onClose={closeModal}
+          title={`Detalle - ${selectedUsuario.nombre}`}
+        >
+          <div className="flex flex-col items-center mb-8">
+            <div
+              className={`w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-4 ${
+                selectedUsuario.rol === "SuperAdmin"
+                  ? "bg-purple-600"
+                  : selectedUsuario.rol === "Administrador"
+                    ? "bg-primary-600"
+                    : "bg-slate-400"
+              }`}
+            >
+              {selectedUsuario.nombre?.charAt(0).toUpperCase() || "U"}
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">
+              {selectedUsuario.nombre}
+            </h3>
+            <p className="text-slate-500 font-medium">
+              {selectedUsuario.email}
+            </p>
+          </div>
+
+          <DetailGroup
+            title="Información de Perfil"
+            icon={<User className="w-4 h-4" />}
+          >
+            <DetailItem
+              label="Rol del Sistema"
+              value={
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedUsuario.rol === "SuperAdmin"
+                      ? "bg-purple-100 text-purple-700"
+                      : selectedUsuario.rol === "Administrador"
+                        ? "bg-primary-100 text-primary-700"
+                        : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  {selectedUsuario.rol}
+                </span>
+              }
+            />
+            <DetailItem
+              label="Estado de Cuenta"
+              value={
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedUsuario.activo
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {selectedUsuario.activo
+                    ? "Cuenta Activa"
+                    : "Cuenta Desactivada"}
+                </span>
+              }
+            />
+            <DetailItem
+              label="País"
+              value={selectedUsuario.pais || "No especificado"}
+            />
+            <DetailItem
+              label="Fecha Registro"
+              value={
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <span>
+                    {selectedUsuario.created_at
+                      ? new Date(
+                          selectedUsuario.created_at,
+                        ).toLocaleDateString()
+                      : "S/N"}
+                  </span>
+                </div>
+              }
+            />
+          </DetailGroup>
+
+          <DetailGroup
+            title="Configuración de Cata"
+            icon={<Grid3X3 className="w-4 h-4" />}
+          >
+            <DetailItem
+              label="Mesa Asignada"
+              value={
+                selectedUsuario.mesa ? `#${selectedUsuario.mesa}` : "Sin mesa"
+              }
+            />
+            <DetailItem
+              label="Puesto"
+              value={
+                selectedUsuario.puesto
+                  ? `#${selectedUsuario.puesto}`
+                  : "Sin puesto"
+              }
+            />
+            <DetailItem
+              label="Código Catador"
+              value={selectedUsuario.codigocatador || "Sin código"}
+            />
+            <DetailItem
+              label="Tanda Actual"
+              value={
+                selectedUsuario.tandaencurso
+                  ? `Tanda ${selectedUsuario.tandaencurso}`
+                  : "Ninguna"
+              }
+            />
+            <DetailItem
+              label="Código de Acceso"
+              value={
+                <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-sm font-bold text-slate-600">
+                  {selectedUsuario.codigo || "—"}
+                </span>
+              }
+              fullWidth
+            />
+          </DetailGroup>
+
+          {selectedUsuario.dispositivos.length > 0 && (
+            <DetailGroup
+              title="Dispositivos Autorizados"
+              icon={<Smartphone className="w-4 h-4" />}
+            >
+              <div className="col-span-2 space-y-3">
+                {selectedUsuario.dispositivos.map((disp) => (
+                  <div
+                    key={disp.id}
+                    className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`p-2 rounded-lg ${disp.activo ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
+                      >
+                        <Smartphone className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">
+                          {disp.nombre_asignado ||
+                            `Tablet ${disp.tablet_number || "?"}`}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-mono">
+                          Fingerprint: {disp.device_fingerprint.substring(0, 8)}
+                          ...
+                        </p>
+                      </div>
+                    </div>
+                    {disp.activo && (
+                      <button
+                        onClick={() => revocarDispositivo(disp.id)}
+                        className="px-3 py-1 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-100"
+                      >
+                        Revocar
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </DetailGroup>
+          )}
+
+          <div className="mt-8 pt-6 border-t border-slate-100 flex gap-3">
+            <button
+              onClick={() => openModal(selectedUsuario, "edit")}
+              className="flex-1 flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200"
+            >
+              <Edit2 className="w-4 h-4" />
+              Editar Usuario
+            </button>
+            <button
+              onClick={() => eliminarUsuario(selectedUsuario)}
+              className="flex items-center justify-center gap-2 bg-white text-red-600 border border-red-200 px-4 py-2.5 rounded-xl font-bold hover:bg-red-50 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              Eliminar
+            </button>
+          </div>
+        </DetailSidebar>
+      )}
+
+      {/* Modal Editar Usuario (Refinado) */}
+      {modalMode === "edit" && selectedUsuario && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-8 max-h-[90vh] overflow-y-auto border border-slate-100">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-50 rounded-lg">
+                  <Edit2 className="w-5 h-5 text-amber-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900">
+                  Editar Usuario
+                </h3>
+              </div>
               <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={closeModal}
+                className="p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-all"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Nombre Completo
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedUsuario.nombre}
+                    onChange={(e) =>
+                      setSelectedUsuario({
+                        ...selectedUsuario,
+                        nombre: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Rol
+                  </label>
+                  <select
+                    value={selectedUsuario.rol}
+                    onChange={(e) =>
+                      setSelectedUsuario({
+                        ...selectedUsuario,
+                        rol: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  >
+                    <option value="SuperAdmin">SuperAdmin</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Presidente">Presidente</option>
+                    <option value="Catador">Catador</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    País
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedUsuario.pais || ""}
+                    onChange={(e) =>
+                      setSelectedUsuario({
+                        ...selectedUsuario,
+                        pais: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Mesa
+                  </label>
+                  <input
+                    type="number"
+                    value={selectedUsuario.mesa || ""}
+                    onChange={(e) =>
+                      setSelectedUsuario({
+                        ...selectedUsuario,
+                        mesa: parseInt(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Código Catador
+                  </label>
+                  <input
+                    type="number"
+                    value={selectedUsuario.codigocatador || ""}
+                    onChange={(e) =>
+                      setSelectedUsuario({
+                        ...selectedUsuario,
+                        codigocatador: parseInt(e.target.value),
+                      })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="user-active"
+                  checked={selectedUsuario.activo}
+                  onChange={(e) =>
+                    setSelectedUsuario({
+                      ...selectedUsuario,
+                      activo: e.target.checked,
+                    })
+                  }
+                  className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                />
+                <label
+                  htmlFor="user-active"
+                  className="text-sm font-bold text-slate-700 cursor-pointer"
+                >
+                  Usuario Activo (Permite el acceso al sistema)
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="mt-10 flex gap-4">
+              <button
+                onClick={closeModal}
+                className="flex-1 px-6 py-3 font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={actualizarUsuario}
+                className="flex-1 px-6 py-3 font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-200"
+              >
+                Guardar Cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Crear Usuario (Refinado) */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto border border-slate-100">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary-50 rounded-lg">
+                  <Plus className="w-5 h-5 text-primary-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900">
+                  Nuevo Usuario
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Nombre Completo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nuevoUsuario.nombre}
+                    onChange={(e) =>
+                      setNuevoUsuario({
+                        ...nuevoUsuario,
+                        nombre: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                    placeholder="Ej. Juan Pérez"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Email *
+                  </label>
                   <input
                     type="email"
+                    required
                     value={nuevoUsuario.email}
                     onChange={(e) =>
                       setNuevoUsuario({
@@ -1143,18 +1517,18 @@ export default function UsuariosManager() {
                         email: e.target.value,
                       })
                     }
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                    placeholder="juan@ejemplo.com"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contraseña *
-                </label>
-                <div className="relative">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Contraseña *
+                  </label>
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type="password"
+                    required
                     value={nuevoUsuario.password}
                     onChange={(e) =>
                       setNuevoUsuario({
@@ -1162,71 +1536,44 @@ export default function UsuariosManager() {
                         password: e.target.value,
                       })
                     }
-                    className="w-full pr-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre *
-                </label>
-                <input
-                  type="text"
-                  value={nuevoUsuario.nombre}
-                  onChange={(e) =>
-                    setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rol *
-                </label>
-                <select
-                  value={nuevoUsuario.rol}
-                  onChange={(e) =>
-                    setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="Catador">Catador</option>
-                  <option value="Presidente">Presidente</option>
-                  <option value="Administrador">Administrador</option>
-                  <option value="SuperAdmin">SuperAdmin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  País
-                </label>
-                <input
-                  type="text"
-                  value={nuevoUsuario.pais || ""}
-                  onChange={(e) =>
-                    setNuevoUsuario({ ...nuevoUsuario, pais: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Rol del Sistema
+                  </label>
+                  <select
+                    value={nuevoUsuario.rol}
+                    onChange={(e) =>
+                      setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  >
+                    <option value="Catador">Catador</option>
+                    <option value="Presidente">Presidente</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="SuperAdmin">SuperAdmin</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    País
+                  </label>
+                  <input
+                    type="text"
+                    value={nuevoUsuario.pais || ""}
+                    onChange={(e) =>
+                      setNuevoUsuario({ ...nuevoUsuario, pais: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
                     Mesa
                   </label>
                   <input
@@ -1238,309 +1585,79 @@ export default function UsuariosManager() {
                         mesa: parseInt(e.target.value) || undefined,
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Puesto
-                  </label>
-                  <input
-                    type="number"
-                    value={nuevoUsuario.puesto || ""}
-                    onChange={(e) =>
-                      setNuevoUsuario({
-                        ...nuevoUsuario,
-                        puesto: parseInt(e.target.value) || undefined,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tablet
-                  </label>
-                  <input
-                    type="text"
-                    value={nuevoUsuario.tablet || ""}
-                    onChange={(e) =>
-                      setNuevoUsuario({
-                        ...nuevoUsuario,
-                        tablet: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Código Catador (Numérico)
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Código Catador
                   </label>
-                  <input
-                    type="number"
-                    value={nuevoUsuario.codigocatador || ""}
-                    onChange={(e) =>
-                      setNuevoUsuario({
-                        ...nuevoUsuario,
-                        codigocatador: parseInt(e.target.value) || undefined,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      value={nuevoUsuario.codigocatador || ""}
+                      onChange={(e) =>
+                        setNuevoUsuario({
+                          ...nuevoUsuario,
+                          codigocatador: parseInt(e.target.value) || undefined,
+                        })
+                      }
+                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                    />
+                  </div>
                 </div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código de Barras (Login)
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={nuevoUsuario.codigo || ""}
-                    onChange={(e) =>
-                      setNuevoUsuario({
-                        ...nuevoUsuario,
-                        codigo: e.target.value,
-                      })
-                    }
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                  <button
-                    onClick={() =>
-                      setNuevoUsuario({
-                        ...nuevoUsuario,
-                        codigo: generarAutoBarcode(
-                          nuevoUsuario.codigocatador,
-                          nuevoUsuario.nombre,
-                        ),
-                      })
-                    }
-                    className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
-                    title="Generar automáticamente"
-                  >
-                    Auto
-                  </button>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Código de Acceso (Login)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={nuevoUsuario.codigo || ""}
+                      onChange={(e) =>
+                        setNuevoUsuario({
+                          ...nuevoUsuario,
+                          codigo: e.target.value,
+                        })
+                      }
+                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNuevoUsuario({
+                          ...nuevoUsuario,
+                          codigo: generarAutoBarcode(
+                            nuevoUsuario.codigocatador,
+                            nuevoUsuario.nombre,
+                          ),
+                        })
+                      }
+                      className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-bold"
+                    >
+                      Autogenerar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="mt-10 flex gap-4">
               <button
+                type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="flex-1 px-6 py-3 font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
               >
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={crearUsuario}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+                className="flex-1 px-6 py-3 font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-200"
               >
-                <Save className="w-4 h-4 inline mr-2" />
                 Crear Usuario
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Editar Usuario */}
-      {editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">
-                Editar Usuario
-              </h3>
-              <button
-                onClick={() => setEditingUser(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  value={editingUser.nombre}
-                  onChange={(e) =>
-                    setEditingUser({ ...editingUser, nombre: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rol
-                  </label>
-                  <select
-                    value={editingUser.rol}
-                    onChange={(e) =>
-                      setEditingUser({ ...editingUser, rol: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="Catador">Catador</option>
-                    <option value="Presidente">Presidente</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="SuperAdmin">SuperAdmin</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    País
-                  </label>
-                  <input
-                    type="text"
-                    value={editingUser.pais || ""}
-                    onChange={(e) =>
-                      setEditingUser({ ...editingUser, pais: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mesa
-                  </label>
-                  <input
-                    type="number"
-                    value={editingUser.mesa || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        mesa: parseInt(e.target.value) || null,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Puesto
-                  </label>
-                  <input
-                    type="number"
-                    value={editingUser.puesto || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        puesto: parseInt(e.target.value) || null,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tablet
-                  </label>
-                  <input
-                    type="text"
-                    value={editingUser.tablet || ""}
-                    onChange={(e) =>
-                      setEditingUser({ ...editingUser, tablet: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código Catador (Numérico)
-                </label>
-                <input
-                  type="number"
-                  value={editingUser.codigocatador || ""}
-                  onChange={(e) =>
-                    setEditingUser({
-                      ...editingUser,
-                      codigocatador: parseInt(e.target.value) || null,
-                    })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código de Barras (Login)
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={editingUser.codigo || ""}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        codigo: e.target.value,
-                      })
-                    }
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                  <button
-                    onClick={() =>
-                      setEditingUser({
-                        ...editingUser,
-                        codigo: generarAutoBarcode(
-                          editingUser.codigocatador,
-                          editingUser.nombre,
-                        ),
-                      })
-                    }
-                    className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
-                    title="Generar automáticamente"
-                  >
-                    Auto
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editingUser.activo}
-                    onChange={(e) =>
-                      setEditingUser({
-                        ...editingUser,
-                        activo: e.target.checked,
-                      })
-                    }
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                  />
-                  <span className="text-sm text-gray-700">
-                    Usuario activo (puede acceder al sistema)
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setEditingUser(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={actualizarUsuario}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-              >
-                <Save className="w-4 h-4 inline mr-2" />
-                Guardar
               </button>
             </div>
           </div>

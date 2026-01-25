@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import {
+  Mail,
   Building2,
   BarChart3,
-  Layers,
   List,
   Users,
   Menu,
   X,
   Grid3X3,
-  Mail,
   LogOut,
   FolderTree,
   LucideIcon,
@@ -17,59 +16,52 @@ import {
   Camera,
   Trophy,
   CreditCard,
-  Tag,
   Send,
-  Barcode,
   ClipboardList,
   Download,
-  Upload,
   Package,
   ChevronDown,
   ChevronRight,
   ChevronLeft,
   User,
   Smartphone,
+  Moon,
+  Sun,
+  Search,
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import { supabase } from "../lib/supabase";
-import CompaniesManager from "./CompaniesManager";
 import InscripcionesManager from "./InscripcionesManager";
 import UnifiedInscriptionForm from "./UnifiedInscriptionForm";
-import SimpleSamplesList from "./SimpleSamplesList";
 import GestionMuestras from "./GestionMuestras";
 import PrintSamples from "./PrintSamples";
 import TandasManager from "./TandasManager";
 import StatisticsManager from "./StatisticsManager";
 import MesasManager from "./MesasManager";
-import EmailTest from "./EmailTest";
 import CatadoresManager from "./CatadoresManager";
 import GestionTandas from "./GestionTandas";
-import ListadoEmpresas from "./ListadoEmpresas";
 import DispositivosManager from "./DispositivosManager";
 import SettingsManager from "./SettingsManager";
 import MailrelayManager from "./MailrelayManager";
-import ManageSamples from "./ManageSamples";
-import Chequeo from "./Chequeo";
 import PantallasManager from "./PantallasManager";
 import BottlePhotosGallery from "./BottlePhotosGallery";
 import ResultadosCatas from "./ResultadosCatas";
 import PuntuacionesManager from "./PuntuacionesManager";
 import PayPalDashboard from "./PayPalDashboard";
-import CategoriasManager from "./CategoriasManager";
+import AdminResumen from "./AdminResumen";
 import BackupManager from "./BackupManager";
 import ComunicacionesManager from "./ComunicacionesManager";
-import EtiquetadoMuestras from "./EtiquetadoMuestras";
 import UsuariosManager from "./UsuariosManager";
-import UltimasInscripciones from "./UltimasInscripciones";
 import GestorTemplates from "./GestorTemplates";
 import UserProfile from "./UserProfile";
 import AuthorizedDevicesManager from "./AuthorizedDevicesManager";
+import EmailTest from "./EmailTest";
 // Removed: Estadisticas2 and CompaniesManager2 screens (no longer used)
 
 type Tab =
+  | "resumen"
   | "statistics"
   | "inscripciones"
-  | "companies"
   | "muestras"
   | "tandas"
   | "mesas"
@@ -110,7 +102,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("statistics");
+  const [activeTab, setActiveTab] = useState<Tab>("resumen");
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(
     undefined,
@@ -128,13 +120,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     return saved === "true";
   });
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem("darkMode");
+    return saved === "true";
+  });
+  const [globalSearchTerm, setGlobalSearchTerm] = useState("");
 
   const breadcrumbLabels: Record<Tab, string> = {
+    resumen: "Resumen",
     statistics: "Panel",
 
     inscripciones: "Inscripciones",
-    companies: "Empresas",
-
     muestras: "Muestras",
     tandas: "Tandas",
     mesas: "Mesas",
@@ -160,9 +156,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   // Map tab -> source filename for quick reference in breadcrumb
   const tabToFile: Record<Tab, string | undefined> = {
+    resumen: "AdminResumen.tsx",
     statistics: "StatisticsManager.tsx",
     inscripciones: "InscripcionesManager.tsx",
-    companies: "CompaniesManager.tsx",
     muestras: "GestionMuestras.tsx",
     tandas: "TandasManager.tsx",
     mesas: "MesasManager.tsx",
@@ -191,8 +187,23 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     localStorage.setItem("sidebarCollapsed", String(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
+  // Handle Dark Mode
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("darkMode", String(isDarkMode));
+  }, [isDarkMode]);
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
   };
 
   // Obtener datos del usuario actual
@@ -262,6 +273,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       id: "dashboard",
       title: "PANEL PRINCIPAL",
       items: [
+        { id: "resumen", label: "Resumen", icon: Grid3X3 },
         { id: "statistics", label: "Estadísticas", icon: BarChart3 },
         { id: "inscripciones", label: "Inscripciones", icon: ClipboardList },
       ],
@@ -270,7 +282,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       id: "inscriptions",
       title: "GESTIÓN DE INSCRIPCIONES",
       items: [
-        { id: "companies", label: "Empresas", icon: Building2 },
         { id: "muestras", label: "Muestras", icon: List },
         { id: "fotosBotellas", label: "Fotos Botellas", icon: Camera },
       ],
@@ -284,6 +295,32 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         { id: "puntuaciones", label: "Puntuaciones", icon: BarChart3 },
         { id: "catadores", label: "Catadores", icon: Users },
         { id: "mesas", label: "Mesas", icon: Grid3X3 },
+      ],
+    },
+    {
+      id: "communications",
+      title: "COMUNICACIONES",
+      items: [
+        { id: "comunicaciones", label: "Mensajería", icon: Send },
+        { id: "mailrelay", label: "Mailrelay", icon: Mail },
+        { id: "emailTest", label: "Probar Emails", icon: Mail },
+        { id: "templates", label: "Plantillas", icon: Package },
+      ],
+    },
+    {
+      id: "admin",
+      title: "ADMINISTRACIÓN",
+      items: [
+        { id: "usuarios", label: "Usuarios", icon: Users },
+        { id: "paypal", label: "PayPal", icon: CreditCard },
+        { id: "backup", label: "Backups", icon: FileText },
+      ],
+    },
+    {
+      id: "settings",
+      title: "CONFIGURACIÓN",
+      items: [
+        { id: "configuracion", label: "Ajustes Sistema", icon: Settings },
         { id: "dispositivos", label: "Detecciones", icon: Smartphone },
         {
           id: "authorizedDevices",
@@ -292,32 +329,19 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         },
       ],
     },
-    {
-      id: "admin",
-      title: "ADMINISTRACIÓN",
-      items: [
-        { id: "comunicaciones", label: "Comunicaciones", icon: Send },
-        { id: "mailrelay", label: "Mailrelay", icon: Mail },
-        { id: "paypal", label: "PAYPAL", icon: CreditCard },
-        { id: "emailTest", label: "Probar Emails", icon: Mail },
-        { id: "templates", label: "Templates", icon: Package },
-        { id: "usuarios", label: "Usuarios", icon: Users },
-        { id: "configuracion", label: "Configuración", icon: Settings },
-      ],
-    },
   ];
 
   return (
-    <div className="flex flex-1 bg-gray-100 min-h-screen">
+    <div className="flex flex-1 bg-[#E6EBEE] h-full">
       {/* Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      <div className="hidden lg:flex lg:flex-shrink-0 h-full">
         <div
-          className={`flex flex-col bg-[#3D5432] min-h-screen lg:h-screen lg:sticky lg:top-0 transition-all duration-300 ${
+          className={`flex flex-col bg-[#00273A] h-full lg:sticky lg:top-0 transition-all duration-300 ${
             isSidebarCollapsed ? "w-16" : "w-64"
           }`}
         >
           {/* Logo/Header with Toggle */}
-          <div className="flex items-center h-16 px-4 justify-between bg-[#3D5432] shadow-sm flex-shrink-0">
+          <div className="flex items-center h-16 px-4 justify-between bg-[#00273A] shadow-sm flex-shrink-0">
             {!isSidebarCollapsed && (
               <div className="flex items-center gap-3 text-white">
                 <img
@@ -329,7 +353,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             )}
             <button
               onClick={toggleSidebar}
-              className="p-1.5 rounded-lg hover:bg-[#4a6540] text-white transition-colors ml-auto"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white transition-colors ml-auto"
               title={
                 isSidebarCollapsed ? "Expandir sidebar" : "Colapsar sidebar"
               }
@@ -425,9 +449,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             className="fixed inset-0 bg-black bg-opacity-50"
             onClick={() => setShowMobileMenu(false)}
           ></div>
-          <div className="fixed inset-y-0 left-0 w-72 bg-[#3D5432] shadow-xl flex flex-col">
+          <div className="fixed inset-y-0 left-0 w-72 bg-[#00273A] shadow-xl flex flex-col">
             {/* Mobile Header */}
-            <div className="flex items-center justify-between h-16 px-4 bg-[#3D5432]">
+            <div className="flex items-center justify-between h-16 px-4 bg-[#00273A]">
               <div className="flex items-center gap-2">
                 <img
                   src="/logo-blanco-virtus.png"
@@ -527,7 +551,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="fixed top-3 left-3 z-40 lg:hidden">
             <button
               onClick={() => setShowMobileMenu(true)}
-              className="p-2 rounded-lg bg-[#3D5432] text-white shadow-md"
+              className="p-2 rounded-lg bg-[#00273A] text-white shadow-md"
               aria-label="Abrir menú"
             >
               <Menu className="w-5 h-5" />
@@ -536,7 +560,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         )}
 
         {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-[#5A7A4A] text-white border-b border-[#6a8a5a]">
+        <div className="sticky top-0 z-30 bg-[#00273A] text-white border-b border-white/10">
           <div className="flex items-center justify-between px-4 py-3">
             {/* Quick Navigation Buttons */}
             <div className="flex items-center gap-4">
@@ -574,6 +598,32 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
             </div>
 
+            {/* Global Search & Theme Toggle */}
+            <div className="flex items-center gap-4 flex-1 max-w-2xl mx-4">
+              <div className="relative flex-1 group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4 group-focus-within:text-white transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Búsqueda global..."
+                  value={globalSearchTerm}
+                  onChange={(e) => setGlobalSearchTerm(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/20 transition-all shadow-inner"
+                />
+              </div>
+
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg bg-white/10 border border-white/20 text-white/90 hover:text-white hover:bg-white/20 transition-all"
+                title={isDarkMode ? "Modo claro" : "Modo oscuro"}
+              >
+                {isDarkMode ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+
             {/* Right side buttons */}
             <div className="flex items-center gap-4">
               <button
@@ -592,7 +642,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/10 transition-colors border border-transparent hover:border-white/20"
                 >
-                  <div className="w-8 h-8 bg-[#b91c1c] rounded-full flex items-center justify-center text-white font-bold border-2 border-[#5A7A4A]">
+                  <div className="w-8 h-8 bg-[#b91c1c] rounded-full flex items-center justify-center text-white font-bold border-2 border-[#00273A]">
                     {currentUser?.nombre?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <ChevronDown
@@ -682,6 +732,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </>
               )}
             </div>
+            {activeTab === "resumen" && (
+              <AdminResumen
+                onVerDetalle={() => setActiveTab("inscripciones")}
+              />
+            )}
             {activeTab === "statistics" && (
               <StatisticsManager
                 onNavigateToSamples={handleNavigateToSamplesByCategory}
@@ -693,8 +748,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 onNewInscripcion={() => setActiveTab("form")}
               />
             )}
-            {activeTab === "companies" && <CompaniesManager />}
-            {/* CompaniesManager2 removed */}
             {activeTab === "muestras" && (
               <GestionMuestras initialCategoryFilter={categoryFilter} />
             )}

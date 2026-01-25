@@ -1,6 +1,48 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --font-display: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* Palette: Midnight & Champagne */
+  --bg-main: #faf9f6; /* Paper-like off-white */
+  --text-main: #1a1c1e;
+  --primary: #1e293b; /* Midnight */
+  --accent: #c5a059; /* Champagne Gold */
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+}
+
+.dark {
+  --bg-main: #0f172a;
+  --text-main: #f8fafc;
+  --card-bg: #1e293b;
+  --border-color: #334155;
+  --accent: #d4b475;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition:
+    background-color 0.5s ease,
+    color 0.5s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+}
 
 /* Accesibilidad: enlace para saltar contenido */
 .skip-link {
@@ -12,7 +54,9 @@
   padding: 10px 14px;
   border-radius: 0 0 8px 8px;
   z-index: 1000;
-  transition: left 0.2s ease, top 0.2s ease;
+  transition:
+    left 0.2s ease,
+    top 0.2s ease;
   text-decoration: none;
   font-weight: 600;
 }
@@ -30,9 +74,9 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #ef4444;
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
   border-radius: 6px;
 }
 
@@ -54,9 +98,15 @@ textarea:focus-visible {
 
 /* Subtle float animation for prominent CTA buttons */
 @keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .animate-float {
@@ -71,39 +121,87 @@ textarea:focus-visible {
   overflow: hidden;
 }
 
-/* Colores primarios personalizados - ROJO */
-.bg-primary-50 { background-color: #fef2f2; }
-.bg-primary-100 { background-color: #fee2e2; }
-.bg-primary-200 { background-color: #fecaca; }
-.bg-primary-500 { background-color: #390404; }
-.bg-primary-600 { background-color: #460404; }
-.bg-primary-700 { background-color: #160000; }
-.bg-primary-800 { background-color: #000; }
+/* Colores del Sistema - Modernos y Neutros */
+.bg-primary-50 {
+  background-color: #eff6ff;
+} /* blue-50 */
+.bg-primary-100 {
+  background-color: #dbeafe;
+} /* blue-100 */
+.bg-primary-200 {
+  background-color: #bfdbfe;
+} /* blue-200 */
+.bg-primary-500 {
+  background-color: #3b82f6;
+} /* blue-500 */
+.bg-primary-600 {
+  background-color: #2563eb;
+} /* blue-600 */
+.bg-primary-700 {
+  background-color: #1d4ed8;
+} /* blue-700 */
+.bg-primary-800 {
+  background-color: #1e40af;
+} /* blue-800 */
 
-.text-primary-600 { color: #480707; }
-.text-primary-700 { color: #3a0606; }
-.text-primary-800 { color: #000; }
+.text-primary-600 {
+  color: #2563eb;
+}
+.text-primary-700 {
+  color: #1d4ed8;
+}
+.text-primary-800 {
+  color: #1e40af;
+}
 
-.border-primary-100 { border-color: #480909; }
-.border-primary-200 { border-color: #613f3f; }
-.border-primary-500 { border-color: #570909; }
+.border-primary-100 {
+  border-color: #dbeafe;
+}
+.border-primary-200 {
+  border-color: #bfdbfe;
+}
+.border-primary-500 {
+  border-color: #3b82f6;
+}
 
-.hover\:bg-primary-700:hover { background-color: #b91c1c; }
-.hover\:bg-primary-500:hover { background-color: #ef4444; }
-.hover\:border-primary-500:hover { border-color: #ef4444; }
+/* Éxito - Verde */
+.bg-success-50 {
+  background-color: #f0fdf4;
+}
+.bg-success-500 {
+  background-color: #22c55e;
+}
+.text-success-700 {
+  color: #15803d;
+}
 
-.focus\:border-primary-500:focus { border-color: #ef4444; }
-.focus\:border-red-500:focus { border-color: #ef4444; }
-.focus\:ring-primary-200:focus { --tw-ring-color: #511313; box-shadow: 0 0 0 3px rgba(254, 202, 202, 0.5); }
-.focus\:ring-red-200:focus { --tw-ring-color: #681919; box-shadow: 0 0 0 3px rgba(254, 202, 202, 0.5); }
-.focus\:ring-2:focus { --tw-ring-offset-width: 2px; }
+/* Error - Rojo (Suave) */
+.bg-error-50 {
+  background-color: #fef2f2;
+}
+.bg-error-500 {
+  background-color: #ef4444;
+}
+.text-error-700 {
+  color: #b91c1c;
+}
 
-.bg-red-50 { background-color: #fef2f2; }
-.border-red-500 { border-color: #801717; }
-.text-red-500 { color: #621818; }
+.transition-all {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-.group:hover .group-hover\:bg-primary-500 { background-color: #ef4444; }
-.group:hover .group-hover\:text-white { color: white; }
+.hover\:shadow-lg:hover {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.group:hover .group-hover\:bg-primary-500 {
+  background-color: #ef4444;
+}
+.group:hover .group-hover\:text-white {
+  color: white;
+}
 
 /* Estilos específicos para tablet horizontal (1000x600) */
 @media (min-width: 768px) and (max-width: 1200px) and (max-height: 700px) {
@@ -112,47 +210,47 @@ textarea:focus-visible {
     height: 100vh;
     overflow: hidden;
   }
-  
+
   .cata-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
     height: 100%;
   }
-  
+
   .cata-section {
     min-height: 0;
   }
-  
+
   .cata-header {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
   }
-  
+
   .cata-content {
     padding: 0.375rem;
   }
-  
+
   .cata-row {
     margin-bottom: 0.375rem;
   }
-  
+
   .cata-label {
     font-size: 0.7rem;
     margin-bottom: 0.25rem;
   }
-  
+
   .cata-button {
     width: 1.75rem;
     height: 1.75rem;
     font-size: 0.7rem;
     margin: 0.125rem;
   }
-  
+
   .cata-footer {
     padding: 0.375rem 0.75rem;
     margin-top: 0.375rem;
   }
-  
+
   .cata-footer button {
     font-size: 0.75rem;
     padding: 0.375rem 0.75rem;
@@ -191,16 +289,68 @@ textarea:focus-visible {
 
 /* Ensure wide elements shrink on print to avoid overflow */
 @media print {
-  img { max-width: 100%; height: auto; }
-  .avoid-page-break { display: block; }
-  
-  /* Ensure each section stays together */
-  .bg-white.rounded-2xl { 
-    page-break-inside: avoid;
-    break-inside: avoid;
+  img {
+    max-width: 100%;
+    height: auto;
   }
-  
-  /* Force samples section to start on page 2 */
+  .avoid-page-break {
+    display: block;
+  }
+
+  /* Ensure each section stays together */
+  .bg-white.rounded-2xl {
+    page-break-inside: auto;
+    break-inside: auto;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Hide sidebar, filters, and actions for clean list printing */
+  aside,
+  nav,
+  button,
+  .no-print,
+  .lg\:flex-shrink-0,
+  main > div:first-child > div:last-child {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Simplify table for printing */
+  table th:nth-child(1),
+  table td:nth-child(1),
+  table th:nth-child(6),
+  table td:nth-child(6),
+  table th:nth-child(7),
+  table td:nth-child(7),
+  table th:nth-child(8),
+  table td:nth-child(8) {
+    display: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table td,
+  table th {
+    border: 1px solid #e2e8f0 !important;
+    padding: 6px !important; /* Slightly more compact */
+    color: black !important;
+    background-color: white !important; /* Ensure headers are white */
+  }
+
+  /* Ensure summary report font weights */
+  .print\:block p {
+    color: black !important;
+  }
+
+  /* Force samples section to start on page 2 if needed (optional based on UX) */
   .force-page-break-before {
     page-break-before: always !important;
     break-before: page !important;

@@ -1,6 +1,6 @@
-import React, { memo, useMemo } from 'react';
-import { Line, LineChart, ResponsiveContainer } from 'recharts';
-import type { LucideIcon } from 'lucide-react';
+import React, { memo, useMemo } from "react";
+import { Line, LineChart, ResponsiveContainer } from "recharts";
+import type { LucideIcon } from "lucide-react";
 
 export type StatsCardSparklinePoint = {
   value: number;
@@ -8,7 +8,7 @@ export type StatsCardSparklinePoint = {
 
 export type StatsCardTrend = {
   value: number;
-  direction: 'up' | 'down';
+  direction: "up" | "down";
   label?: string;
 };
 
@@ -27,7 +27,7 @@ function StatsCardBase({
   title,
   value,
   icon: Icon,
-  iconColorClass = 'bg-gradient-to-br from-primary-600 to-primary-700',
+  iconColorClass = "bg-midnight-500",
   trend,
   sparklineData,
   onClick,
@@ -35,15 +35,16 @@ function StatsCardBase({
 }: StatsCardProps) {
   const normalizedSparkline = useMemo(() => {
     if (!sparklineData) return [] as StatsCardSparklinePoint[];
-    if (typeof sparklineData[0] === 'number') {
+    if (typeof sparklineData[0] === "number") {
       return (sparklineData as number[]).map((item) => ({ value: item }));
     }
     return sparklineData as StatsCardSparklinePoint[];
   }, [sparklineData]);
 
-  const trendColor = trend?.direction === 'up' ? 'text-emerald-600' : 'text-rose-600';
+  const trendColor =
+    trend?.direction === "up" ? "text-emerald-600" : "text-rose-600";
   const trendLabel = trend
-    ? `${trend.direction === 'up' ? '▲' : '▼'} ${trend.value}%${trend.label ? ` ${trend.label}` : ''}`
+    ? `${trend.direction === "up" ? "▲" : "▼"} ${trend.value}%${trend.label ? ` ${trend.label}` : ""}`
     : null;
 
   return (
@@ -51,43 +52,51 @@ function StatsCardBase({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel || title}
-      className={`w-full text-left bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
-        onClick ? 'cursor-pointer' : 'cursor-default'
+      className={`w-full text-left bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 p-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-champagne-400 ${
+        onClick ? "cursor-pointer hover:-translate-y-1" : "cursor-default"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-midnight-400 font-body">
             {title}
           </p>
-          <p className="text-2xl font-semibold text-gray-900">
-            {typeof value === 'number' ? value.toLocaleString() : value}
+          <p className="text-3xl font-bold text-midnight-900 font-body tracking-tight">
+            {typeof value === "number" ? value.toLocaleString() : value}
           </p>
-          {trendLabel && (
-            <p className={`text-xs font-semibold ${trendColor}`}>{trendLabel}</p>
+          {trendLabel && trend && (
+            <p
+              className={`text-xs font-bold tracking-tight ${trendColor} font-body flex items-center gap-1`}
+            >
+              <span className="opacity-70">
+                {trend.direction === "up" ? "↗" : "↘"}
+              </span>
+              {trendLabel}
+            </p>
           )}
         </div>
         <span
-          className={`inline-flex items-center justify-center rounded-lg p-2 text-white shadow-sm ${iconColorClass}`}
+          className={`inline-flex items-center justify-center rounded-xl p-3 text-white shadow-lg shadow-midnight-900/10 ${iconColorClass}`}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-5 h-5 text-champagne-100" />
         </span>
       </div>
-      <div className="mt-3 h-12 w-full overflow-hidden">
+      <div className="mt-6 h-12 w-full overflow-hidden opacity-40">
         {normalizedSparkline.length > 1 ? (
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={normalizedSparkline}>
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#64748B"
-                strokeWidth={2}
+                stroke="currentColor"
+                className="text-midnight-300"
+                strokeWidth={1.5}
                 dot={false}
               />
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full rounded-md bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50" />
+          <div className="h-full rounded-lg bg-gradient-to-r from-midnight-50 via-midnight-100/30 to-midnight-50" />
         )}
       </div>
     </button>

@@ -37,6 +37,10 @@ function App() {
   const [view, setView] = useState<View>("home");
   const [loading, setLoading] = useState(true);
   const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<{
+    nombre: string;
+    email: string;
+  } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -130,7 +134,7 @@ function App() {
 
           const { data: userData, error: userError } = await supabase
             .from("usuarios")
-            .select("rol, mesa, tandaencurso")
+            .select("nombre, rol, mesa, tandaencurso")
             .eq("id", session.user.id)
             .single();
 
@@ -140,14 +144,18 @@ function App() {
             clearAuthState();
           } else {
             setAdminLoggedIn(true);
+            setCurrentUser({
+              nombre: (userData as any).nombre,
+              email: session.user.email || "",
+            });
             localStorage.setItem("adminLoggedIn", "true");
             localStorage.setItem("userRole", userData.rol);
             localStorage.setItem(
               "userRoleData",
               JSON.stringify({
-                rol: userData.rol,
-                mesa: userData.mesa,
-                tandaencurso: userData.tandaencurso,
+                rol: (userData as any).rol,
+                mesa: (userData as any).mesa,
+                tandaencurso: (userData as any).tandaencurso,
               }),
             );
 
@@ -170,7 +178,7 @@ function App() {
       // Escuchar cambios en la autenticación
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
+      } = supabase.auth.onAuthStateChange(async (event, _session) => {
         // Solo actuar en logout explícito, no en estado inicial
         if (event === "SIGNED_OUT") {
           clearAuthState();
@@ -248,6 +256,7 @@ function App() {
       setView={setView}
       adminLoggedIn={adminLoggedIn}
       onAdminLogout={handleAdminLogout}
+      currentUser={currentUser}
     >
       {/* Vista principal/home */}
       {view === "home" && (
