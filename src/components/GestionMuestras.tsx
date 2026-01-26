@@ -270,10 +270,10 @@ export default function GestionMuestras({
     categoryFilter || countryFilter || yearFilter || search;
 
   return (
-    <div className="p-3 sm:p-4 max-w-full overflow-x-hidden min-h-screen bg-[#E6EBEE]">
+    <div className="p-2 sm:p-4 max-w-full overflow-x-hidden min-h-screen bg-[#E6EBEE]">
       {/* Header con búsqueda */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4 sticky top-2 z-10">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {/* Búsqueda */}
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -331,8 +331,8 @@ export default function GestionMuestras({
           <div
             className={`
             ${showFilters ? "grid" : "hidden"}
-            md:flex md:flex-row md:items-center md:gap-3
-            grid-cols-1 sm:grid-cols-3 gap-3
+            md:flex md:flex-row md:items-center md:gap-2
+            grid-cols-1 sm:grid-cols-3 gap-2
             transition-all duration-300
           `}
           >
@@ -560,7 +560,7 @@ export default function GestionMuestras({
 
                 {/* Detalles de la muestra */}
                 <div className="px-4 py-3">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1.5">
                         <Tag className="w-3.5 h-3.5 text-blue-500" />
@@ -675,10 +675,10 @@ export default function GestionMuestras({
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+            <thead className="bg-[#00273A] border-b border-white/10 text-white/90">
               <tr className="transition-colors">
                 <th
-                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group"
+                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group w-[120px]"
                   onClick={() => handleSort("codigo")}
                 >
                   <div className="flex items-center gap-1.5 group-hover:text-primary-600">
@@ -687,7 +687,7 @@ export default function GestionMuestras({
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group"
+                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group w-auto"
                   onClick={() => handleSort("nombre")}
                 >
                   <div className="flex items-center gap-1.5 group-hover:text-primary-600">
@@ -695,7 +695,7 @@ export default function GestionMuestras({
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group"
+                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group w-auto"
                   onClick={() => handleSort("empresa")}
                 >
                   <div className="flex items-center gap-1.5 group-hover:text-primary-600">
@@ -704,7 +704,7 @@ export default function GestionMuestras({
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group"
+                  className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group w-[200px]"
                   onClick={() => handleSort("categoria")}
                 >
                   <div className="flex items-center gap-1.5 group-hover:text-primary-600">
@@ -713,7 +713,7 @@ export default function GestionMuestras({
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center cursor-pointer group"
+                  className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center cursor-pointer group w-[100px]"
                   onClick={() => handleSort("recibida")}
                 >
                   <div className="flex items-center gap-1.5 group-hover:text-primary-600 justify-center">
@@ -721,14 +721,14 @@ export default function GestionMuestras({
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center cursor-pointer group"
+                  className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center cursor-pointer group w-[80px]"
                   onClick={() => handleSort("anio")}
                 >
                   <div className="flex items-center gap-1.5 group-hover:text-primary-600 justify-center">
                     Año {renderSortIcon("anio")}
                   </div>
                 </th>
-                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest w-[120px]">
                   Acciones
                 </th>
               </tr>

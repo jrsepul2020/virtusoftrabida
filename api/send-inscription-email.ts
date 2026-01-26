@@ -17,153 +17,190 @@ const RATE_LIMIT_WINDOW = 60 * 1000; // Ventana de 1 minuto
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const record = rateLimitMap.get(ip);
-  
+
   if (!record || now > record.resetTime) {
     // Nueva ventana
     rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return false;
   }
-  
+
   if (record.count >= RATE_LIMIT_MAX) {
     return true; // Límite excedido
   }
-  
+
   record.count++;
   return false;
 }
 
 function getClientIP(req: any): string {
-  return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
-         req.headers['x-real-ip'] || 
-         req.socket?.remoteAddress || 
-         'unknown';
+  return (
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    req.headers["x-real-ip"] ||
+    req.socket?.remoteAddress ||
+    "unknown"
+  );
 }
 
 // ============================================
 // HANDLER PRINCIPAL
 // ============================================
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 export default async function handler(req: any, res: any) {
   // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   // Rate limiting check
   const clientIP = getClientIP(req);
   if (isRateLimited(clientIP)) {
     console.log(`⚠️ Rate limit exceeded for IP: ${clientIP}`);
-    return res.status(429).json({ 
-      error: 'Too many requests. Please try again later.',
-      retryAfter: 60
+    return res.status(429).json({
+      error: "Too many requests. Please try again later.",
+      retryAfter: 60,
     });
   }
 
   let payload;
   try {
     payload = req.body;
-    if (typeof payload === 'string') payload = JSON.parse(payload);
+    if (typeof payload === "string") payload = JSON.parse(payload);
   } catch (err) {
-    return res.status(400).json({ error: 'Invalid JSON body' });
+    return res.status(400).json({ error: "Invalid JSON body" });
   }
 
   const { empresa, muestras, precio, metodoPago, pedido } = payload;
-  
+
   if (!empresa || !empresa.email || !empresa.nombre_empresa) {
-    return res.status(400).json({ error: 'Missing empresa data' });
+    return res.status(400).json({ error: "Missing empresa data" });
   }
 
   // Validación básica del email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(empresa.email)) {
-    return res.status(400).json({ error: 'Invalid email format' });
+    return res.status(400).json({ error: "Invalid email format" });
   }
 
   // Debug: Verificar variables de entorno
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
-  const SENDER_EMAIL = process.env.SENDER_EMAIL || 'info@internationalvirtus.es';
-  const SENDER_NAME = process.env.SENDER_NAME || 'International Virtus La Rábida';
+  const SENDER_EMAIL =
+    process.env.SENDER_EMAIL || "info@internationalvirtus.es";
+  const SENDER_NAME =
+    process.env.SENDER_NAME || "International Virtus La Rábida";
   // Determine Supabase connection for server-side lookup of admin email
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY;
 
-  let ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jrsepul2000@gmail.com'; // fallback
+  let ADMIN_EMAIL = process.env.ADMIN_EMAIL || "jrsepul2000@gmail.com"; // fallback
 
   if (supabaseUrl && supabaseKey) {
     try {
       const supabase = createClient(supabaseUrl, supabaseKey as string);
       const { data: cfg, error: cfgErr } = await supabase
-        .from('configuracion')
-        .select('valor')
-        .eq('clave', 'email_envio')
+        .from("configuracion")
+        .select("valor")
+        .eq("clave", "email_envio")
         .maybeSingle();
 
       if (cfgErr) {
-        console.warn('Warning: could not read configuracion.email_envio', cfgErr.message || cfgErr);
+        console.warn(
+          "Warning: could not read configuracion.email_envio",
+          cfgErr.message || cfgErr,
+        );
       } else if (cfg && (cfg as any).valor) {
         ADMIN_EMAIL = (cfg as any).valor;
       }
     } catch (err) {
-      console.warn('Error connecting to Supabase to read admin email:', String(err));
+      console.warn(
+        "Error connecting to Supabase to read admin email:",
+        String(err),
+      );
     }
   } else {
-    console.warn('Supabase env not found; using ADMIN_EMAIL fallback');
+    console.warn("Supabase env not found; using ADMIN_EMAIL fallback");
   }
 
-  console.log('🔍 Debug variables de entorno:');
-  console.log('BREVO_API_KEY existe:', !!BREVO_API_KEY);
-  console.log('BREVO_API_KEY length:', BREVO_API_KEY ? BREVO_API_KEY.length : 0);
-  console.log('BREVO_API_KEY preview:', BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...${BREVO_API_KEY.substring(-4)}` : 'undefined');
-  console.log('SENDER_EMAIL:', SENDER_EMAIL);
-  console.log('SENDER_NAME:', SENDER_NAME);
-  console.log('Environment:', process.env.NODE_ENV || 'unknown');
-  console.log('Vercel Region:', process.env.VERCEL_REGION || 'unknown');
-  console.log('Client IP:', clientIP);
-  console.log('Variables disponibles:', Object.keys(process.env).filter(key => key.includes('BREVO') || key.includes('SENDER')));
+  console.log("🔍 Debug variables de entorno:");
+  console.log("BREVO_API_KEY existe:", !!BREVO_API_KEY);
+  console.log(
+    "BREVO_API_KEY length:",
+    BREVO_API_KEY ? BREVO_API_KEY.length : 0,
+  );
+  console.log(
+    "BREVO_API_KEY preview:",
+    BREVO_API_KEY
+      ? `${BREVO_API_KEY.substring(0, 8)}...${BREVO_API_KEY.substring(-4)}`
+      : "undefined",
+  );
+  console.log("SENDER_EMAIL:", SENDER_EMAIL);
+  console.log("SENDER_NAME:", SENDER_NAME);
+  console.log("Environment:", process.env.NODE_ENV || "unknown");
+  console.log("Vercel Region:", process.env.VERCEL_REGION || "unknown");
+  console.log("Client IP:", clientIP);
+  console.log(
+    "Variables disponibles:",
+    Object.keys(process.env).filter(
+      (key) => key.includes("BREVO") || key.includes("SENDER"),
+    ),
+  );
 
   if (!BREVO_API_KEY) {
-    return res.status(500).json({ 
-      error: 'BREVO_API_KEY not configured',
+    return res.status(500).json({
+      error: "BREVO_API_KEY not configured",
       debug: {
         hasBrevoKey: !!BREVO_API_KEY,
-        envKeys: Object.keys(process.env).filter(key => key.includes('BREVO') || key.includes('SENDER')),
+        envKeys: Object.keys(process.env).filter(
+          (key) => key.includes("BREVO") || key.includes("SENDER"),
+        ),
         senderEmail: SENDER_EMAIL,
-        senderName: SENDER_NAME
-      }
+        senderName: SENDER_NAME,
+      },
     });
   }
 
-  const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
+  const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 
   // Generar lista de muestras para los emails
-  const muestrasHtml = muestras.map((muestra: any, index: number) => `
+  const muestrasHtml = muestras
+    .map(
+      (muestra: any, index: number) => `
     <li>
-      <strong>Muestra ${index + 1}:</strong> ${muestra.nombre_muestra || 'Sin nombre'}<br>
-      ${muestra.categoria ? `<em>Categoría:</em> ${muestra.categoria}<br>` : ''}
-      ${muestra.origen ? `<em>Origen:</em> ${muestra.origen}<br>` : ''}
-      ${muestra.pais ? `<em>País:</em> ${muestra.pais}` : ''}
+      <strong>Muestra ${index + 1}:</strong> ${muestra.nombre_muestra || "Sin nombre"}<br>
+      ${muestra.categoria ? `<em>Categoría:</em> ${muestra.categoria}<br>` : ""}
+      ${muestra.origen ? `<em>Origen:</em> ${muestra.origen}<br>` : ""}
+      ${muestra.pais ? `<em>País:</em> ${muestra.pais}` : ""}
     </li>
-  `).join('');
+  `,
+    )
+    .join("");
 
   // Email para la bodega/empresa
   const bodegaEmailBody = {
     sender: { email: SENDER_EMAIL, name: SENDER_NAME },
-    to: [{ email: empresa.email, name: empresa.persona_contacto || empresa.nombre_empresa }],
-    subject: '¡Inscripción confirmada - International Virtus La Rábida 2026!',
+    to: [
+      {
+        email: empresa.email,
+        name: empresa.persona_contacto || empresa.nombre_empresa,
+      },
+    ],
+    subject: "¡Inscripción confirmada - International Virtus La Rábida 2026!",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #4B3A2A;">¡Gracias por tu inscripción!</h2>
         
-        <p>Estimado/a ${empresa.persona_contacto || 'representante'},</p>
+        <p>Estimado/a ${empresa.persona_contacto || "representante"},</p>
         
         <p>Hemos recibido correctamente la inscripción de <strong>${empresa.nombre_empresa}</strong> para el concurso International Virtus La Rábida 2026.</p>
         
@@ -173,11 +210,10 @@ export default async function handler(req: any, res: any) {
           <li><strong>NIF:</strong> ${empresa.nif}</li>
           <li><strong>Email:</strong> ${empresa.email}</li>
           <li><strong>Teléfono:</strong> ${empresa.telefono}</li>
-          <li><strong>Número de muestras:</strong> ${empresa.num_muestras}</li>
-          <li><strong>Muestras pagadas (pagada${precio.pagadas === 1 ? '' : 's'} por muestra):</strong> ${precio.pagadas}</li>
+          <li><strong>Muestras pagadas:</strong> ${precio.pagadas}</li>
           <li><strong>Muestras gratis:</strong> ${precio.gratis}</li>
           <li><strong>Total a pagar:</strong> ${precio.total}€</li>
-          <li><strong>Método de pago:</strong> ${metodoPago === 'transferencia' ? 'Transferencia bancaria' : 'PayPal'}</li>
+          <li><strong>Estado de pago:</strong> ${metodoPago === "paypal" ? '<span style="color: green; font-weight: bold;">Pagada (PayPal)</span>' : '<span style="color: #d97706; font-weight: bold;">Pendiente de pago (Transferencia)</span>'}</li>
         </ul>
         
         <h3 style="color: #8A754C;">Muestras inscritas:</h3>
@@ -185,14 +221,18 @@ export default async function handler(req: any, res: any) {
           ${muestrasHtml}
         </ol>
         
-        ${metodoPago === 'transferencia' ? `
+        ${
+          metodoPago === "transferencia"
+            ? `
         <h3 style="color: #8A754C;">Datos para transferencia bancaria:</h3>
         <p><strong>Titular:</strong>Excelencias de Huelva S.L.<br>
         <strong>Banco:</strong>CAJASUR<br>
         <strong>IBAN:</strong> ES21 0237 0506 4091 7146 4247<br>
         <strong>BIC/SWIFT:</strong>CSURES2CXXX<br>
         <strong>Concepto:</strong> ${pedido} - ${empresa.nombre_empresa}</p>
-        ` : ''}
+        `
+            : ""
+        }
         
         <p>En breve nos pondremos en contacto contigo para confirmar todos los detalles.</p>
         
@@ -206,8 +246,8 @@ export default async function handler(req: any, res: any) {
   // Email para el administrador
   const adminEmailBody = {
     sender: { email: SENDER_EMAIL, name: SENDER_NAME },
-    to: [{ email: ADMIN_EMAIL, name: 'Administrador' }],
-    subject: `${pedido ? `Pedido ${pedido} - ` : ''}Nueva inscripción: ${empresa.nombre_empresa} - ${empresa.num_muestras} muestras`,
+    to: [{ email: ADMIN_EMAIL, name: "Administrador" }],
+    subject: `${pedido ? `Pedido ${pedido} - ` : ""}Nueva inscripción: ${empresa.nombre_empresa} - ${empresa.num_muestras} muestras`,
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #4B3A2A;">Nueva inscripción recibida</h2>
@@ -232,11 +272,10 @@ export default async function handler(req: any, res: any) {
         
         <h3 style="color: #8A754C;">Resumen económico:</h3>
         <ul>
-          <li><strong>Número de muestras:</strong> ${empresa.num_muestras}</li>
-          <li><strong>Muestras pagadas (pagada${precio.pagadas === 1 ? '' : 's'} por muestra):</strong> ${precio.pagadas}</li>
+          <li><strong>Muestras pagadas:</strong> ${precio.pagadas}</li>
           <li><strong>Muestras gratis:</strong> ${precio.gratis}</li>
           <li><strong>Total a pagar:</strong> ${precio.total}€</li>
-          <li><strong>Método de pago:</strong> ${metodoPago === 'transferencia' ? 'Transferencia bancaria' : 'PayPal'}</li>
+          <li><strong>Estado de pago:</strong> ${metodoPago === "paypal" ? '<span style="color: green; font-weight: bold;">Pagada (PayPal)</span>' : '<span style="color: #d97706; font-weight: bold;">Pendiente de pago (Transferencia)</span>'}</li>
         </ul>
         
         <h3 style="color: #8A754C;">Muestras inscritas:</h3>
@@ -254,55 +293,71 @@ export default async function handler(req: any, res: any) {
   try {
     // Enviar email a la bodega
     const resBodega = await fetch(BREVO_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'api-key': BREVO_API_KEY,
-        'Content-Type': 'application/json',
+        "api-key": BREVO_API_KEY,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(bodegaEmailBody),
     });
 
     if (!resBodega.ok) {
       const txt = await resBodega.text();
-      console.error('Brevo bodega email error:', resBodega.status, txt);
-      console.error('Brevo headers:', Object.fromEntries(resBodega.headers.entries()));
-      console.error('Request headers sent:', {
-        'api-key': BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined',
-        'Content-Type': 'application/json'
+      console.error("Brevo bodega email error:", resBodega.status, txt);
+      console.error(
+        "Brevo headers:",
+        Object.fromEntries(resBodega.headers.entries()),
+      );
+      console.error("Request headers sent:", {
+        "api-key": BREVO_API_KEY
+          ? `${BREVO_API_KEY.substring(0, 8)}...`
+          : "undefined",
+        "Content-Type": "application/json",
       });
     }
 
     // Enviar email al administrador
     const resAdmin = await fetch(BREVO_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'api-key': BREVO_API_KEY,
-        'Content-Type': 'application/json',
+        "api-key": BREVO_API_KEY,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(adminEmailBody),
     });
 
     if (!resAdmin.ok) {
       const txt = await resAdmin.text();
-      console.error('Brevo admin email error:', resAdmin.status, txt);
-      console.error('Brevo headers:', Object.fromEntries(resAdmin.headers.entries()));
-      console.error('Request headers sent:', {
-        'api-key': BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined',
-        'Content-Type': 'application/json'
+      console.error("Brevo admin email error:", resAdmin.status, txt);
+      console.error(
+        "Brevo headers:",
+        Object.fromEntries(resAdmin.headers.entries()),
+      );
+      console.error("Request headers sent:", {
+        "api-key": BREVO_API_KEY
+          ? `${BREVO_API_KEY.substring(0, 8)}...`
+          : "undefined",
+        "Content-Type": "application/json",
       });
-      return res.status(502).json({ 
-        error: 'Failed to send admin email', 
+      return res.status(502).json({
+        error: "Failed to send admin email",
         details: txt,
         status: resAdmin.status,
-        apiKeyPreview: BREVO_API_KEY ? `${BREVO_API_KEY.substring(0, 8)}...` : 'undefined',
-        environment: process.env.NODE_ENV || 'unknown',
-        vercelRegion: process.env.VERCEL_REGION || 'unknown'
+        apiKeyPreview: BREVO_API_KEY
+          ? `${BREVO_API_KEY.substring(0, 8)}...`
+          : "undefined",
+        environment: process.env.NODE_ENV || "unknown",
+        vercelRegion: process.env.VERCEL_REGION || "unknown",
       });
     }
 
-    return res.status(200).json({ success: true, message: 'Emails enviados correctamente' });
+    return res
+      .status(200)
+      .json({ success: true, message: "Emails enviados correctamente" });
   } catch (error: any) {
-    console.error('Error sending emails:', error);
-    return res.status(500).json({ error: 'Internal error sending emails', details: String(error) });
+    console.error("Error sending emails:", error);
+    return res
+      .status(500)
+      .json({ error: "Internal error sending emails", details: String(error) });
   }
 }

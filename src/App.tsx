@@ -22,6 +22,7 @@ const ResultadosPublicos = lazy(
 );
 const DiplomasPublicos = lazy(() => import("./components/DiplomasPublicos"));
 const ConfigurarTablet = lazy(() => import("./components/ConfigurarTablet"));
+const PinGate = lazy(() => import("./components/PinGate"));
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -259,8 +260,26 @@ function App() {
       currentUser={currentUser}
     >
       {/* Vista principal/home */}
-      {view === "home" && (
-        <HeroLanding onInscribirse={() => setView("inscripcion")} />
+      {(view === "home" || view === "pinGate") && (
+        <div
+          className={
+            view === "pinGate"
+              ? "blur-md pointer-events-none transition-all duration-500"
+              : "transition-all duration-500"
+          }
+        >
+          <HeroLanding onInscribirse={() => setView("inscripcion")} />
+        </div>
+      )}
+
+      {/* PIN Gate de seguridad */}
+      {view === "pinGate" && (
+        <Suspense fallback={<LoadingFallback />}>
+          <PinGate
+            onSuccess={() => setView("adminLogin")}
+            onBack={() => setView("home")}
+          />
+        </Suspense>
       )}
 
       {/* Login de administrador */}

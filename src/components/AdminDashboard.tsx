@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Mail,
-  Building2,
   BarChart3,
   List,
   Users,
@@ -56,6 +55,7 @@ import GestorTemplates from "./GestorTemplates";
 import UserProfile from "./UserProfile";
 import AuthorizedDevicesManager from "./AuthorizedDevicesManager";
 import EmailTest from "./EmailTest";
+import CompanyProfile from "./CompanyProfile";
 // Removed: Estadisticas2 and CompaniesManager2 screens (no longer used)
 
 type Tab =
@@ -82,7 +82,8 @@ type Tab =
   | "mailrelay"
   | "templates"
   | "authorizedDevices"
-  | "profile";
+  | "profile"
+  | "companyProfile";
 
 interface MenuItem {
   id: string;
@@ -124,6 +125,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     const saved = localStorage.getItem("darkMode");
     return saved === "true";
   });
+  const [selectedInscripcionId, setSelectedInscripcionId] = useState<
+    string | null
+  >(null);
   const [globalSearchTerm, setGlobalSearchTerm] = useState("");
 
   const breadcrumbLabels: Record<Tab, string> = {
@@ -152,6 +156,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     templates: "Templates",
     authorizedDevices: "Dispositivos autorizados",
     profile: "Perfil",
+    companyProfile: "Ficha de Empresa",
   };
 
   // Map tab -> source filename for quick reference in breadcrumb
@@ -180,6 +185,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     templates: "GestorTemplates.tsx",
     authorizedDevices: "AuthorizedDevicesManager.tsx",
     profile: "UserProfile.tsx",
+    companyProfile: "CompanyProfile.tsx",
   };
 
   // Persist sidebar state
@@ -746,6 +752,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === "inscripciones" && (
               <InscripcionesManager
                 onNewInscripcion={() => setActiveTab("form")}
+                onViewProfile={(id) => {
+                  setSelectedInscripcionId(id);
+                  setActiveTab("companyProfile");
+                }}
+              />
+            )}
+            {activeTab === "companyProfile" && selectedInscripcionId && (
+              <CompanyProfile
+                id={selectedInscripcionId}
+                onBack={() => setActiveTab("inscripciones")}
               />
             )}
             {activeTab === "muestras" && (

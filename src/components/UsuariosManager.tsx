@@ -108,6 +108,10 @@ export default function UsuariosManager() {
     rol: "Catador",
     pais: "España",
   });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<UsuarioConDispositivos | null>(
+    null,
+  );
 
   useEffect(() => {
     cargarUsuarios();
@@ -911,10 +915,10 @@ export default function UsuariosManager() {
         ) : (
           <div>
             <table className="w-full">
-              <thead className="bg-[#1C2716] border-b border-gray-200 text-white">
+              <thead className="bg-[#00273A] border-b border-white/10 text-white/90">
                 <tr>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    className="p-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B] w-auto"
                     onClick={() => handleSort("nombre")}
                   >
                     <span className="inline-flex items-center">
@@ -922,7 +926,7 @@ export default function UsuariosManager() {
                     </span>
                   </th>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    className="p-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B] w-[120px]"
                     onClick={() => handleSort("rol")}
                   >
                     <span className="inline-flex items-center">
@@ -930,7 +934,7 @@ export default function UsuariosManager() {
                     </span>
                   </th>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    className="p-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B] w-[150px]"
                     onClick={() => handleSort("mesa")}
                   >
                     <span className="inline-flex items-center">
@@ -938,7 +942,7 @@ export default function UsuariosManager() {
                     </span>
                   </th>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    className="p-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B] w-[110px]"
                     onClick={() => handleSort("codigocatador")}
                   >
                     <span className="inline-flex items-center">
@@ -946,7 +950,7 @@ export default function UsuariosManager() {
                     </span>
                   </th>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    className="p-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B] w-[110px]"
                     onClick={() => handleSort("codigo")}
                   >
                     <span className="inline-flex items-center">
@@ -954,7 +958,7 @@ export default function UsuariosManager() {
                     </span>
                   </th>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    className="p-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B] w-[110px]"
                     onClick={() => handleSort("last_login")}
                   >
                     <span className="inline-flex items-center">
@@ -962,11 +966,11 @@ export default function UsuariosManager() {
                     </span>
                   </th>
 
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">
+                  <th className="p-2 text-left text-xs font-medium uppercase tracking-wider w-[120px]">
                     Dispositivos
                   </th>
                   <th
-                    className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B]"
+                    className="p-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-[#24311B] w-[130px]"
                     onClick={() => handleSort("activo")}
                     title="Controla el acceso al sistema"
                   >
@@ -974,7 +978,7 @@ export default function UsuariosManager() {
                       Estado (acceso){renderSortIcon("activo")}
                     </span>
                   </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider">
+                  <th className="p-2 text-right text-xs font-medium uppercase tracking-wider w-[100px]">
                     Acciones
                   </th>
                 </tr>
@@ -986,7 +990,7 @@ export default function UsuariosManager() {
                     onClick={() => openModal(usuario, "view")}
                     className="hover:bg-slate-50 transition-colors cursor-pointer group"
                   >
-                    <td className="px-4 py-3">
+                    <td className="p-2">
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ${
@@ -1009,7 +1013,7 @@ export default function UsuariosManager() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="p-2">
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-primary-500" />
                         <span
@@ -1019,7 +1023,7 @@ export default function UsuariosManager() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="p-2">
                       <div className="text-[11px] text-slate-600 space-y-0.5 font-medium">
                         {usuario.mesa && (
                           <div>
@@ -1042,21 +1046,21 @@ export default function UsuariosManager() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="p-2">
                       <span className="text-sm font-bold text-slate-700">
                         {usuario.codigocatador || (
                           <span className="text-slate-300">—</span>
                         )}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="p-2">
                       <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                         {usuario.codigo || (
                           <span className="text-slate-300">—</span>
                         )}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="p-2">
                       <span className="text-[11px] text-slate-500 font-medium">
                         {usuario.last_login_at ? (
                           new Date(usuario.last_login_at).toLocaleDateString()
@@ -1065,7 +1069,7 @@ export default function UsuariosManager() {
                         )}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="p-2">
                       <div className="flex -space-x-1.5 overflow-hidden">
                         {usuario.dispositivos.map((disp) => (
                           <div
@@ -1086,14 +1090,14 @@ export default function UsuariosManager() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="p-2 text-center">
                       <div
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${usuario.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
                       >
                         {usuario.activo ? "Activo" : "Inactivo"}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="p-2 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => {

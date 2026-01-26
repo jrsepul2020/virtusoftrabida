@@ -272,7 +272,7 @@ export default function AdminResumen({
             </span>
           </div>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart data={dailyEvolution}>
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -320,7 +320,7 @@ export default function AdminResumen({
             Distribución por Tipo
           </h3>
           <div className="h-[250px] w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={categoryDistribution}

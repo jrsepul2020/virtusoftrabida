@@ -794,34 +794,34 @@ export default function UnifiedInscriptionForm({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
-      <div className="max-w-6xl mx-auto p-4">
+    <div className="min-h-screen bg-[#faf9f6]">
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
         {/* Header con indicador de inscripción manual (solo para admin) */}
         {isAdmin && (
           <div
-            className={`border rounded-xl p-4 mb-4 ${isManualInscription ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200"}`}
+            className={`border rounded-xl p-4 mb-4 ${isManualInscription ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"}`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isManualInscription ? "bg-orange-100" : "bg-blue-100"
+                    isManualInscription ? "bg-orange-100" : "bg-gray-100"
                   }`}
                 >
                   <User
-                    className={`w-5 h-5 ${isManualInscription ? "text-orange-600" : "text-blue-600"}`}
+                    className={`w-5 h-5 ${isManualInscription ? "text-orange-600" : "text-black"}`}
                   />
                 </div>
                 <div>
                   <h3
-                    className={`font-semibold ${isManualInscription ? "text-orange-800" : "text-blue-800"}`}
+                    className={`font-semibold ${isManualInscription ? "text-orange-800" : "text-black"}`}
                   >
                     {isManualInscription
                       ? t("admin.manual.title")
                       : t("admin.automatic.title")}
                   </h3>
                   <p
-                    className={`text-sm ${isManualInscription ? "text-orange-600" : "text-blue-600"}`}
+                    className={`text-sm ${isManualInscription ? "text-orange-600" : "text-gray-600"}`}
                   >
                     {isManualInscription
                       ? t("admin.manual.description")
@@ -885,7 +885,7 @@ export default function UnifiedInscriptionForm({
                 }}
               />
             </div>
-            <div className="absolute -top-1 right-0 text-xs font-medium text-primary-600">
+            <div className="absolute -top-1 right-0 text-xs font-medium text-black">
               {currentStep === "empresa"
                 ? "33%"
                 : currentStep === "muestras"
@@ -897,12 +897,12 @@ export default function UnifiedInscriptionForm({
           {/* Pasos */}
           <div className="flex items-center justify-between">
             <div
-              className={`flex items-center ${String(currentStep) === "empresa" ? "text-primary-600" : String(currentStep) !== "empresa" ? "text-green-600" : "text-gray-400"}`}
+              className={`flex items-center ${String(currentStep) === "empresa" ? "text-black" : String(currentStep) !== "empresa" ? "text-green-600" : "text-gray-400"}`}
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
                   String(currentStep) === "empresa"
-                    ? "bg-primary-600 text-white"
+                    ? "bg-black text-white"
                     : String(currentStep) !== "empresa"
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600"
@@ -923,12 +923,12 @@ export default function UnifiedInscriptionForm({
             </div>
 
             <div
-              className={`flex items-center ${currentStep === "muestras" ? "text-primary-600" : currentStep === "confirmacion" ? "text-green-600" : "text-gray-400"}`}
+              className={`flex items-center ${currentStep === "muestras" ? "text-black" : currentStep === "confirmacion" ? "text-green-600" : "text-gray-400"}`}
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
                   currentStep === "muestras"
-                    ? "bg-primary-600 text-white"
+                    ? "bg-black text-white"
                     : currentStep === "confirmacion"
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600"
@@ -951,12 +951,12 @@ export default function UnifiedInscriptionForm({
             </div>
 
             <div
-              className={`flex items-center ${currentStep === "confirmacion" ? "text-primary-600" : "text-gray-400"}`}
+              className={`flex items-center ${currentStep === "confirmacion" ? "text-black" : "text-gray-400"}`}
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shadow-sm ${
                   currentStep === "confirmacion"
-                    ? "bg-primary-600 text-white"
+                    ? "bg-black text-white"
                     : "bg-gray-200 text-gray-600"
                 }`}
               >
@@ -976,7 +976,7 @@ export default function UnifiedInscriptionForm({
           </span>
           <a
             href="mailto:inscripciones@internationalvirtus.com"
-            className="text-primary-700 underline underline-offset-2"
+            className="text-black underline underline-offset-2"
           >
             inscripciones@internationalvirtus.com
           </a>

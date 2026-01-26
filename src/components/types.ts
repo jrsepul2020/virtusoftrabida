@@ -45,4 +45,6 @@ export type View =
   | "reglamento"
   | "resultados"
   | "diplomas"
-  | "configurarTablet";
+  | "configurarTablet"
+  | "companyProfile"
+  | "pinGate";

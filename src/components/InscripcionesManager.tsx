@@ -73,12 +73,14 @@ type SortField = "created_at" | "pedido" | "name" | "status";
 type SortDirection = "asc" | "desc";
 
 interface InscripcionesManagerProps {
-  onNewInscripcion?: () => void;
+  onNewInscripcion: () => void;
+  onViewProfile?: (id: string) => void;
 }
 
-const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
+export default function InscripcionesManager({
   onNewInscripcion,
-}) => {
+  onViewProfile,
+}: InscripcionesManagerProps) {
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortField, setSortField] = useState<SortField>("created_at");
@@ -96,6 +98,27 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
     [],
   );
   const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEditingStatusId(null);
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".status-popover-container")) {
+        setEditingStatusId(null);
+      }
+    };
+
+    if (editingStatusId) {
+      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [editingStatusId]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -784,125 +807,153 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
     <div className="min-h-full bg-[#E6EBEE] dark:bg-slate-950 transition-colors">
       <main className="flex-1 p-4 lg:p-8 transition-all overflow-x-hidden">
         {/* Top Header & Stats Bar */}
-        <div className="flex flex-col gap-6 lg:gap-8 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
             <div>
-              <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 Inscripciones
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 font-medium flex items-center gap-2">
-                <Database className="w-4 h-4 text-primary-500" />
+              <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 font-medium flex items-center gap-2">
+                <Database className="w-3.5 h-3.5 text-primary-500" />
                 Gestión centralizada 2026
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <button
-                  onClick={() => window.print()}
-                  className="p-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all"
-                  title="Imprimir"
-                >
-                  <Printer className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={handlePrintPDF}
-                  className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all font-black text-xs uppercase tracking-wider"
-                >
-                  PDF
-                </button>
-                <button
-                  onClick={exportToExcel}
-                  className="px-4 py-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all font-black text-xs uppercase tracking-wider"
-                >
-                  XLS
-                </button>
+            {/* Resumen al lado del título */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  Total
+                </p>
+                <p className="text-lg font-black text-slate-900 dark:text-white leading-none mt-0.5">
+                  {stats.total}
+                </p>
               </div>
-              <button
-                onClick={() => onNewInscripcion?.()}
-                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-black hover:bg-red-700 transition-all shadow-lg shadow-red-500/30 active:scale-95 whitespace-nowrap"
-              >
-                <PlusCircle className="w-5 h-5" />
-                Nueva Inscripción
-              </button>
+              <div className="bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">
+                  Pagadas
+                </p>
+                <p className="text-lg font-black text-slate-900 dark:text-white leading-none mt-0.5">
+                  {stats.pagadas}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm border-l-4 border-l-red-500">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  Muestras
+                </p>
+                <p className="text-lg font-black text-slate-900 dark:text-white leading-none mt-0.5">
+                  {stats.totalMuestras}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* New Horizontal Filter Bar */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col xl:flex-row gap-4">
-            <div className="flex-1 flex flex-col md:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1 relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Buscar por Empresa, Email, Pedido..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary-500 transition-all text-sm font-medium dark:text-white"
-                />
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <button
+                onClick={() => window.print()}
+                className="p-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all"
+                title="Imprimir"
+              >
+                <Printer className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handlePrintPDF}
+                className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all font-black text-xs uppercase tracking-wider"
+              >
+                PDF
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="px-4 py-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all font-black text-xs uppercase tracking-wider"
+              >
+                XLS
+              </button>
+            </div>
+            <button
+              onClick={onNewInscripcion}
+              className="group flex items-center gap-2 px-5 py-2.5 bg-red-800 text-white rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-900/10 active:scale-95 text-sm"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Nueva Inscripción
+            </button>
+          </div>
+        </div>
 
-              {/* Status Select Simplified */}
-              <div className="relative md:w-64">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full h-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary-500 appearance-none text-sm font-bold text-slate-600 dark:text-slate-400"
-                >
-                  <option value="all">Todos los estados</option>
-                  {statusOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
-                </div>
+        {/* New Horizontal Filter Bar */}
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col xl:flex-row gap-4">
+          <div className="flex-1 flex flex-col md:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4 group-focus-within:text-red-600 transition-colors" />
+              <input
+                type="text"
+                placeholder="Buscar por empresa, email, pedido o país..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-gray-400 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all placeholder:text-gray-500"
+              />
+            </div>
+
+            {/* Status Select Simplified */}
+            <div className="relative md:w-64">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full h-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary-500 appearance-none text-sm font-bold text-slate-600 dark:text-slate-400"
+              >
+                <option value="all">Todos los estados</option>
+                {statusOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 border-t xl:border-t-0 xl:border-l border-slate-100 dark:border-slate-800 pt-4 xl:pt-0 xl:pl-4">
+            {/* Stats within the bar */}
+            <div className="flex gap-4 px-2">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                  Empresas
+                </span>
+                <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
+                  {stats.total}
+                </span>
+              </div>
+              <div className="w-px h-8 bg-slate-100 dark:bg-slate-800 hidden md:block" />
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                  Muestras
+                </span>
+                <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
+                  {stats.totalMuestras}
+                </span>
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 border-t xl:border-t-0 xl:border-l border-slate-100 dark:border-slate-800 pt-4 xl:pt-0 xl:pl-4">
-              {/* Stats within the bar */}
-              <div className="flex gap-4 px-2">
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
-                    Empresas
-                  </span>
-                  <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                    {stats.total}
-                  </span>
-                </div>
-                <div className="w-px h-8 bg-slate-100 dark:bg-slate-800 hidden md:block" />
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
-                    Muestras
-                  </span>
-                  <span className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                    {stats.totalMuestras}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-2 ml-auto lg:ml-0">
-                <button
-                  onClick={resetFilters}
-                  className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-                  title="Resetear filtros"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={fetchInscripciones}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 shadow-md shadow-primary-500/20 transition-all active:scale-95"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                  />
-                  {loading ? "..." : "Actualizar"}
-                </button>
-              </div>
+            <div className="flex gap-2 ml-auto lg:ml-0">
+              <button
+                onClick={resetFilters}
+                className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                title="Resetear filtros"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={fetchInscripciones}
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 shadow-md shadow-primary-500/20 transition-all active:scale-95"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "..." : "Actualizar"}
+              </button>
             </div>
           </div>
         </div>
@@ -1112,9 +1163,9 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 transition-colors">
-                    <th className="p-4 w-12 text-center">
+                <thead className="bg-[#00273A] border-b border-white/10 text-white/90">
+                  <tr>
+                    <th className="p-2 w-12 text-center">
                       <input
                         type="checkbox"
                         checked={
@@ -1123,48 +1174,51 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                           filteredInscripciones.length > 0
                         }
                         onChange={toggleSelectAllInscripciones}
-                        className="w-5 h-5 rounded-md text-primary-600 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        className="w-4 h-4 rounded border-white/30 text-red-600 focus:ring-red-500 bg-transparent"
                       />
                     </th>
                     <th
-                      className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group"
+                      className="p-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer group w-[80px]"
                       onClick={() => handleSort("pedido")}
                     >
-                      <div className="flex items-center gap-1.5 group-hover:text-primary-600 text-center justify-center">
+                      <div className="flex items-center gap-1.5 group-hover:text-white justify-center">
                         <Hash className="w-3.5 h-3.5" />
-                        Pedido {renderSortIcon("pedido")}
+                        Ped. {renderSortIcon("pedido")}
                       </div>
                     </th>
                     <th
-                      className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group"
+                      className="p-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer group w-[110px]"
                       onClick={() => handleSort("created_at")}
                     >
-                      <div className="flex items-center gap-1.5 group-hover:text-primary-600">
+                      <div className="flex items-center gap-1.5 group-hover:text-white">
                         <Calendar className="w-3.5 h-3.5" />
                         Fecha {renderSortIcon("created_at")}
                       </div>
                     </th>
                     <th
-                      className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer group w-[25%]"
+                      className="p-2 text-[10px] font-bold uppercase tracking-widest cursor-pointer group w-auto"
                       onClick={() => handleSort("name")}
                     >
-                      <div className="flex items-center gap-1.5 group-hover:text-primary-600">
+                      <div className="flex items-center gap-1.5 group-hover:text-white">
                         <User className="w-3.5 h-3.5" />
                         Empresa {renderSortIcon("name")}
                       </div>
                     </th>
-                    <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
-                      Muestras
+                    <th className="p-2 text-[10px] font-bold uppercase tracking-widest w-[130px]">
+                      Conoció
+                    </th>
+                    <th className="p-2 text-[10px] font-bold uppercase tracking-widest text-center w-[85px]">
+                      Mué.
                     </th>
                     <th
-                      className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center cursor-pointer group"
+                      className="p-2 text-[10px] font-bold uppercase tracking-widest text-center cursor-pointer group w-[160px]"
                       onClick={() => handleSort("status")}
                     >
-                      <div className="flex items-center gap-1.5 group-hover:text-primary-600 justify-center">
-                        Pagado {renderSortIcon("status")}
+                      <div className="flex items-center gap-1.5 group-hover:text-white justify-center">
+                        Estado {renderSortIcon("status")}
                       </div>
                     </th>
-                    <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">
+                    <th className="p-2 text-[10px] font-bold uppercase tracking-widest text-right w-[120px]">
                       Acciones
                     </th>
                   </tr>
@@ -1173,11 +1227,15 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                   {paginatedInscripciones.map((insc) => (
                     <tr
                       key={insc.id}
-                      onClick={() => openModal(insc, "view")}
+                      onClick={() =>
+                        onViewProfile
+                          ? onViewProfile(insc.id)
+                          : openModal(insc, "view")
+                      }
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all cursor-pointer group"
                     >
                       <td
-                        className="p-4 text-center"
+                        className="p-2 text-center"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <input
@@ -1187,12 +1245,12 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                           className="w-5 h-5 rounded-md text-primary-600 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                         />
                       </td>
-                      <td className="p-4 text-center">
+                      <td className="p-2 text-center">
                         <span className="inline-flex px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg font-extrabold text-sm border border-red-100 dark:border-red-900/30">
                           #{insc.pedido || "-"}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-2">
                         <div className="flex flex-col">
                           <p className="text-sm font-bold text-slate-900 dark:text-white">
                             {new Date(insc.created_at).toLocaleDateString(
@@ -1210,24 +1268,31 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                           </p>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-2">
                         <p
-                          className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[200px]"
+                          className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[250px]"
                           title={insc.name}
                         >
                           {insc.name}
                         </p>
-                        <p className="text-[10px] font-medium text-slate-400 truncate max-w-[200px]">
+                        <p className="text-[10px] font-medium text-slate-400 truncate max-w-[250px]">
                           {insc.email}
                         </p>
                       </td>
-                      <td className="p-4 text-center">
+                      <td className="p-2">
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {insc.conocimiento || (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="p-2 text-center">
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
                           {insc.muestras_count || 0}
                         </span>
                       </td>
                       <td
-                        className="p-4 text-center relative"
+                        className="p-2 text-center relative status-popover-container"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex flex-col items-center justify-center gap-1">
@@ -1265,7 +1330,6 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                             </span>
                           )}
                         </div>
-
                         {editingStatusId === insc.id && (
                           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 p-1 w-48 animate-in zoom-in-95 duration-200">
                             {statusOptions.map((opt) => (
@@ -1287,7 +1351,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
                         )}
                       </td>
                       <td
-                        className="p-4 text-right"
+                        className="p-2 text-right"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
@@ -1323,7 +1387,7 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
 
           {/* Improved Pagination */}
           {filteredInscripciones.length > 0 && (
-            <div className="p-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors">
+            <div className="p-2 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Mostrando{" "}
                 <span className="text-slate-900 dark:text-white">
@@ -1713,6 +1777,4 @@ const InscripcionesManager: React.FC<InscripcionesManagerProps> = ({
       )}
     </div>
   );
-};
-
-export default InscripcionesManager;
+}

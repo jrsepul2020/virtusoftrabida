@@ -40,16 +40,7 @@ export default function Header({
   };
 
   const handleLoginClick = () => {
-    if (import.meta.env.DEV) {
-      try {
-        localStorage.setItem("admin_unlocked", "1");
-        location.reload();
-      } catch {
-        /* ignore */
-      }
-      return;
-    }
-    handleNavigation("adminLogin");
+    handleNavigation("pinGate");
   };
 
   const menuItems = [
