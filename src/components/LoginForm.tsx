@@ -1,8 +1,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { checkDeviceAccess, loadUserRole } from "../lib/deviceAccessControl";
-import { Lock, Mail, X, Shield, AlertTriangle, Tablet } from "lucide-react";
-import toast from "react-hot-toast";
+import { Lock, Mail, X, Shield, AlertTriangle } from "lucide-react";
 import TabletLoginView from "./TabletLoginView";
 
 type Props = {
@@ -68,136 +67,6 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
     // Generic error for any other case
     return "Error al iniciar sesión. Verifica tus credenciales e intenta de nuevo";
-  };
-
-  const getDeviceToken = () => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; device_token=`);
-    if (parts.length === 2) return parts.pop()?.split(";").shift();
-    return null;
-  };
-
-  const loginByDevice = async () => {
-    const token = getDeviceToken();
-
-    try {
-      setLoading(true);
-      setError("");
-
-      if (!token) {
-        // --- FLUJO DE AUTO-REGISTRO ---
-        const newToken = crypto.randomUUID();
-
-        // 1. Contar dispositivos existentes para asignar número
-        const { count, error: countError } = await supabase
-          .from("authorized_devices")
-          .select("*", { count: "exact", head: true });
-
-        if (countError) throw countError;
-
-        const numeroTablet = (count || 0) + 1;
-        const mesa = Math.ceil(numeroTablet / 5);
-
-        // 2. Insertar nuevo dispositivo (deshabilitado por defecto)
-        const { error: insertError } = await supabase
-          .from("authorized_devices")
-          .insert([
-            {
-              device_token: newToken,
-              name: `Mesa ${mesa} - Tablet ${numeroTablet}`,
-              enabled: false,
-            },
-          ]);
-
-        if (insertError) throw insertError;
-
-        // 3. Guardar cookie
-        document.cookie = `device_token=${newToken}; path=/; SameSite=Strict; Secure`;
-
-        toast.success("Tablet registrada. Pendiente de autorización.");
-        setLoading(false);
-        return;
-      }
-
-      // --- FLUJO DE LOGIN ACTUAL (Token existe) ---
-      const { data, error: queryError } = await supabase
-        .from("authorized_devices")
-        .select("*")
-        .eq("device_token", token)
-        .eq("enabled", true)
-        .maybeSingle();
-
-      if (queryError || !data) {
-        setError("Esta tablet no está autorizada");
-        return;
-      }
-
-      console.log("Tablet autorizada. Accediendo...");
-
-      // 1. Autenticar con el usuario fijo para tablets
-      const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email: "tablet@system.local",
-          password: "AQUI_LA_CONTRASEÑA_QUE_YO_PONGA",
-        });
-
-      if (authError || !authData.user) {
-        console.error("❌ Error login tablet:", authError);
-        throw new Error("No se pudo acceder con esta tablet");
-      }
-
-      console.log("✅ Auth tablet exitoso:", authData.user.id);
-
-      // 2. Obtener datos del usuario (rol, mesa, etc.) para la sesión
-      const { data: userData } = await supabase
-        .from("usuarios")
-        .select("rol, mesa, tandaencurso, nombre")
-        .eq("id", authData.user.id)
-        .single();
-
-      // 3. Normalizar rol (siguiendo la lógica de handleSubmit)
-      let userRole = "Catador";
-      let displayRole = "Catador";
-
-      if (userData) {
-        const rawRol = (userData.rol || "").toLowerCase();
-        if (
-          [
-            "administrador",
-            "admin",
-            "presidente",
-            "supervisor",
-            "superadmin",
-          ].includes(rawRol)
-        ) {
-          displayRole = "Admin";
-        }
-        userRole = userData.rol;
-      }
-
-      // 4. Guardar sesión local
-      localStorage.setItem("userRole", displayRole);
-      localStorage.setItem("authMethod", "email");
-      localStorage.setItem(
-        "userRoleData",
-        JSON.stringify({
-          rol: userRole,
-          mesa: userData?.mesa,
-          tandaencurso: userData?.tandaencurso,
-          id: authData.user.id,
-          nombre: userData?.nombre || "Tablet",
-        }),
-      );
-
-      // 5. Entrar a la app
-      toast.success(`Acceso autorizado: ${userData?.nombre || "Tablet"}`);
-      onLogin(true, displayRole);
-    } catch (err) {
-      console.error("Error validando tablet:", err);
-      setError("Error al validar la tablet");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -672,18 +541,6 @@ export default function LoginForm({ onLogin, onBack }: Props) {
         ) : (
           <TabletLoginView onLogin={onLogin} />
         )}
-
-        {/* Botón Acceso por Dispositivo */}
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={loginByDevice}
-            className="w-full py-3 px-4 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl transition-all duration-200 font-semibold flex items-center justify-center gap-2 shadow-sm hover:shadow-md transform active:scale-[0.98]"
-          >
-            <Tablet className="w-5 h-5" />
-            Acceder con esta tablet
-          </button>
-        </div>
 
         {/* Footer */}
         <div className="mt-6 text-center">
