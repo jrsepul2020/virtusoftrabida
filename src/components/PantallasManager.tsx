@@ -42,7 +42,6 @@ import CatadorDashboard from "./CatadorDashboard";
 import ConfigurarTablet from "./ConfigurarTablet";
 import PinGate from "./PinGate";
 import CompanyProfile from "./CompanyProfile";
-import AuthorizedDevicesManager from "./AuthorizedDevicesManager";
 import ClasificadorIA from "./ClasificadorIA";
 import MailrelayManager from "./MailrelayManager";
 import PayPalDashboard from "./PayPalDashboard";
@@ -55,7 +54,6 @@ import BackupManager from "./BackupManager";
 import BottlePhotosGallery from "./BottlePhotosGallery";
 import CategoriasManager from "./CategoriasManager";
 import ComunicacionesManager from "./ComunicacionesManager";
-import DispositivosManager from "./DispositivosManager";
 import EtiquetadoMuestras from "./EtiquetadoMuestras";
 import GeneradorImagenes from "./GeneradorImagenes";
 import GestionMuestras from "./GestionMuestras";
@@ -121,7 +119,6 @@ const componentMap: Record<string, ComponentType<any>> = {
   ConfigurarTablet: () => <ConfigurarTablet onDone={() => {}} />,
   PinGate: () => <PinGate onSuccess={() => {}} onBack={() => {}} />,
   CompanyProfile: () => <CompanyProfile id="mock-id" onBack={() => {}} />,
-  AuthorizedDevicesManager: AuthorizedDevicesManager,
   ClasificadorIA: ClasificadorIA,
   MailrelayManager: MailrelayManager,
   PayPalDashboard: PayPalDashboard,
@@ -132,7 +129,6 @@ const componentMap: Record<string, ComponentType<any>> = {
   BottlePhotosGallery: BottlePhotosGallery,
   CategoriasManager: CategoriasManager,
   ComunicacionesManager: ComunicacionesManager,
-  DispositivosManager: DispositivosManager,
   EtiquetadoMuestras: EtiquetadoMuestras,
   GeneradorImagenes: GeneradorImagenes,
   GestionMuestras: GestionMuestras,
@@ -305,14 +301,6 @@ const allComponents: ComponentInfo[] = [
     path: "src/components/UsuariosManager.tsx",
     category: "Admin",
     description: "👤 Gestión de usuarios administradores y permisos.",
-    canPreview: true,
-  },
-  {
-    name: "AuthorizedDevicesManager",
-    path: "src/components/AuthorizedDevicesManager.tsx",
-    category: "Admin",
-    description:
-      "📱 Control de dispositivos autorizados para acceso administrativo.",
     canPreview: true,
   },
   {

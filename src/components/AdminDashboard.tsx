@@ -23,7 +23,6 @@ import {
   ChevronRight,
   ChevronLeft,
   User,
-  Smartphone,
   Monitor,
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
@@ -37,7 +36,6 @@ import StatisticsManager from "./StatisticsManager";
 import MesasManager from "./MesasManager";
 import CatadoresManager from "./CatadoresManager";
 import GestionTandas from "./GestionTandas";
-import DispositivosManager from "./DispositivosManager";
 import SettingsManager from "./SettingsManager";
 import MailrelayManager from "./MailrelayManager";
 import PantallasManager from "./PantallasManager";
@@ -51,7 +49,6 @@ import ComunicacionesManager from "./ComunicacionesManager";
 import UsuariosManager from "./UsuariosManager";
 import GestorTemplates from "./GestorTemplates";
 import UserProfile from "./UserProfile";
-import AuthorizedDevicesManager from "./AuthorizedDevicesManager";
 import EmailTest from "./EmailTest";
 import CompanyProfile from "./CompanyProfile";
 import Chequeo from "./Chequeo";
@@ -67,7 +64,6 @@ type Tab =
   | "mesas"
   | "puntuaciones"
   | "catadores"
-  | "dispositivos"
   | "paypal"
   | "print"
   | "form"
@@ -81,7 +77,6 @@ type Tab =
   | "comunicaciones"
   | "mailrelay"
   | "templates"
-  | "authorizedDevices"
   | "profile"
   | "companyProfile"
   | "chequeo"
@@ -141,7 +136,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     mesas: "Mesas",
     puntuaciones: "Puntuaciones",
     catadores: "Catadores",
-    dispositivos: "Dispositivos",
     paypal: "PayPal",
     print: "Impresión",
     form: "Nueva inscripción",
@@ -155,7 +149,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     comunicaciones: "Comunicaciones",
     mailrelay: "Mailrelay",
     templates: "Templates",
-    authorizedDevices: "Dispositivos autorizados",
     profile: "Perfil",
     companyProfile: "Ficha de Empresa",
     chequeo: "Chequeo de muestras",
@@ -172,7 +165,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     mesas: "MesasManager.tsx",
     puntuaciones: "PuntuacionesManager.tsx",
     catadores: "CatadoresManager.tsx",
-    dispositivos: "DispositivosManager.tsx",
     paypal: "PayPalDashboard.tsx",
     print: "PrintSamples.tsx",
     form: "UnifiedInscriptionForm.tsx",
@@ -186,7 +178,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     comunicaciones: "ComunicacionesManager.tsx",
     mailrelay: "MailrelayManager.tsx",
     templates: "GestorTemplates.tsx",
-    authorizedDevices: "AuthorizedDevicesManager.tsx",
     profile: "UserProfile.tsx",
     companyProfile: "CompanyProfile.tsx",
     chequeo: "Chequeo.tsx",
@@ -324,12 +315,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       title: "CONFIGURACIÓN",
       items: [
         { id: "configuracion", label: "Ajustes Sistema", icon: Settings },
-        { id: "dispositivos", label: "Detecciones", icon: Smartphone },
-        {
-          id: "authorizedDevices",
-          label: "Dispositivos Autorizados",
-          icon: Smartphone,
-        },
         {
           id: "tabletSessions",
           label: "Sesiones de Tablets",
@@ -815,7 +800,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === "puntuaciones" && <PuntuacionesManager />}
             {activeTab === "mesas" && <MesasManager />}
             {activeTab === "catadores" && <CatadoresManager />}
-            {activeTab === "dispositivos" && <DispositivosManager />}
             {activeTab === "comunicaciones" && <ComunicacionesManager />}
             {activeTab === "mailrelay" && <MailrelayManager />}
             {activeTab === "paypal" && <PayPalDashboard />}
@@ -831,12 +815,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {activeTab === "profile" && (
               <UserProfile onBack={() => setActiveTab("statistics")} />
             )}
-            {activeTab === "authorizedDevices" && <AuthorizedDevicesManager />}
-            {activeTab === "chequeo" && <Chequeo />}
-            {activeTab === "tabletSessions" && <TabletSessionsManager />}
             {activeTab === "pantallas" && (
               <PantallasManager key={pantallasKey} />
             )}
+            {activeTab === "chequeo" && <Chequeo />}
+            {activeTab === "tabletSessions" && <TabletSessionsManager />}
           </div>
         </div>
       </div>
