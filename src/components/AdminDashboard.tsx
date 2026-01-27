@@ -625,52 +625,38 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </div>
 
             {/* User Stats Display (Centered) */}
-            <div className="flex-1 flex justify-center items-center gap-6">
-              <div className="flex flex-col items-center">
-                <span className="text-[13px] font-black text-white uppercase tracking-tight">
-                  {currentUser?.nombre}
+            <div className="flex-1 flex justify-center items-center gap-3">
+              <span className="text-[13px] font-black text-white uppercase tracking-tight">
+                {currentUser?.nombre}
+              </span>
+              <span className="text-white/30">|</span>
+              <div className="flex items-center gap-4 text-[11px] text-white/80">
+                <span>
+                  <span className="text-white/50 font-medium">Rol:</span>{" "}
+                  <span className="font-bold">
+                    {currentUser?.rol || "Admin"}
+                  </span>
                 </span>
-                <span className="text-[10px] text-white/70 font-bold uppercase tracking-widest bg-white/10 px-1.5 rounded mt-0.5">
-                  {currentUser?.rol || "Admin"}
-                </span>
-                <span className="text-[9px] text-white/40 font-medium mt-0.5">
-                  {currentUser?.email}
-                </span>
-              </div>
-
-              <div className="h-8 w-px bg-white/10 mx-2"></div>
-
-              <div className="flex gap-4">
-                {currentUser?.tablet && (
-                  <div className="flex flex-col items-center bg-white/5 px-3 py-1 rounded-lg border border-white/10">
-                    <span className="text-[14px] font-black text-white">
-                      T{currentUser.tablet}
-                    </span>
-                    <span className="text-[8px] text-white/50 font-bold uppercase">
-                      Tablet
-                    </span>
-                  </div>
-                )}
                 {currentUser?.mesa && (
-                  <div className="flex flex-col items-center bg-white/5 px-3 py-1 rounded-lg border border-white/10">
-                    <span className="text-[14px] font-black text-white">
-                      M{currentUser.mesa}
-                    </span>
-                    <span className="text-[8px] text-white/50 font-bold uppercase">
-                      Mesa
-                    </span>
-                  </div>
+                  <span>
+                    <span className="text-white/50 font-medium">Mesa:</span>{" "}
+                    <span className="font-bold">{currentUser.mesa}</span>
+                  </span>
                 )}
                 {currentUser?.puesto && (
-                  <div className="flex flex-col items-center bg-white/5 px-3 py-1 rounded-lg border border-white/10">
-                    <span className="text-[14px] font-black text-white">
-                      P{currentUser.puesto}
-                    </span>
-                    <span className="text-[8px] text-white/50 font-bold uppercase">
-                      Puesto
-                    </span>
-                  </div>
+                  <span>
+                    <span className="text-white/50 font-medium">Puesto:</span>{" "}
+                    <span className="font-bold">{currentUser.puesto}</span>
+                  </span>
                 )}
+                <span>
+                  <span className="text-white/50 font-medium">
+                    Tanda Próxima:
+                  </span>{" "}
+                  <span className="font-bold">
+                    {localStorage.getItem("tandaencurso") || "N/A"}
+                  </span>
+                </span>
               </div>
             </div>
 
@@ -689,13 +675,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <button
                 type="button"
                 onClick={onLogout}
-                className="flex items-center gap-2 p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-white/10 transition-colors"
+                className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-white/10 transition-colors"
+                aria-label="Cerrar sesión"
                 title="Cerrar sesión"
               >
                 <LogOut className="w-5 h-5" />
-                <span className="text-xs font-bold hidden xl:inline">
-                  Cerrar sesión
-                </span>
               </button>
 
               {/* User Menu Dropdown */}
