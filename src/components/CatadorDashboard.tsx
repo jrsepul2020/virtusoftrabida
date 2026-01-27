@@ -10,6 +10,7 @@ import {
   Save,
   AlertCircle,
   LogOut,
+  Monitor,
 } from "lucide-react";
 
 interface CatadorInfo {
@@ -20,9 +21,13 @@ interface CatadorInfo {
 
 interface CatadorDashboardProps {
   onLogout?: () => void;
+  onViewChange?: (view: any) => void;
 }
 
-export default function CatadorDashboard({ onLogout }: CatadorDashboardProps) {
+export default function CatadorDashboard({
+  onLogout,
+  onViewChange,
+}: CatadorDashboardProps) {
   const [catador, setCatador] = useState<CatadorInfo | null>(null);
   const [muestras, setMuestras] = useState<Sample[]>([]);
   const [puntuaciones, setPuntuaciones] = useState<
@@ -289,9 +294,26 @@ export default function CatadorDashboard({ onLogout }: CatadorDashboardProps) {
               </h1>
               <p className="text-gray-600 mt-1">
                 {catador.nombre} - Mesa {catador.mesa}
+                {localStorage.getItem("userRole") && (
+                  <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded uppercase border border-gray-200">
+                    {localStorage.getItem("userRole")}
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex items-center gap-4">
+              {["SuperAdmin", "Administrador"].includes(
+                localStorage.getItem("userRole") || "",
+              ) &&
+                onViewChange && (
+                  <button
+                    onClick={() => onViewChange("tabletSessions")}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm font-bold text-sm"
+                  >
+                    <Monitor className="w-4 h-4" />
+                    Tablets
+                  </button>
+                )}
               <div className="text-right">
                 <div className="text-sm text-gray-500">Muestras asignadas</div>
                 <div className="text-3xl font-bold text-primary-600">

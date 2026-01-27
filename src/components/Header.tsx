@@ -182,8 +182,8 @@ export default function Header({
             )}
 
             {isAdminLoggedIn && (
-              <div className="flex items-center space-x-5">
-                <div className="hidden lg:flex flex-col items-end">
+              <div className="flex items-center space-x-3 sm:space-x-5">
+                <div className="hidden sm:flex flex-col items-end">
                   <span className="text-[10px] font-bold text-midnight-900 tracking-tighter uppercase leading-none mb-0.5">
                     {currentUser?.nombre || "Admin"}
                   </span>

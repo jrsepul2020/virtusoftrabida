@@ -114,6 +114,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [currentUser, setCurrentUser] = useState<{
     nombre: string;
     email: string;
+    rol?: string;
     tablet?: string | null;
     mesa?: number | null;
     puesto?: number | null;
@@ -212,7 +213,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           // Buscar en tabla usuarios
           const { data: userData } = await supabase
             .from("usuarios")
-            .select("nombre, email, tablet, mesa, puesto")
+            .select("nombre, email, rol, tablet, mesa, puesto")
             .eq("id", session.user.id)
             .single();
 
@@ -220,6 +221,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             setCurrentUser({
               nombre: userData.nombre,
               email: userData.email,
+              rol: userData.rol,
               tablet: userData.tablet,
               mesa: userData.mesa,
               puesto: userData.puesto,
@@ -610,6 +612,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               >
                 Chequeo
               </button>
+              <button
+                onClick={() => handleTabChange("tabletSessions")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                  activeTab === "tabletSessions"
+                    ? "bg-red-500 text-white border-red-400"
+                    : "text-white/80 hover:bg-white/10 hover:text-white border-transparent"
+                }`}
+              >
+                Tablets
+              </button>
             </div>
 
             {/* User Stats Display (Centered) */}
@@ -618,7 +630,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <span className="text-[13px] font-black text-white uppercase tracking-tight">
                   {currentUser?.nombre}
                 </span>
-                <span className="text-[10px] text-white/60 font-medium">
+                <span className="text-[10px] text-white/70 font-bold uppercase tracking-widest bg-white/10 px-1.5 rounded mt-0.5">
+                  {currentUser?.rol || "Admin"}
+                </span>
+                <span className="text-[9px] text-white/40 font-medium mt-0.5">
                   {currentUser?.email}
                 </span>
               </div>

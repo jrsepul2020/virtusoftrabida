@@ -362,7 +362,10 @@ function App() {
       {/* Panel de catador */}
       {view === "catador" && adminLoggedIn && (
         <Suspense fallback={<LoadingFallback />}>
-          <CatadorDashboard onLogout={handleAdminLogout} />
+          <CatadorDashboard
+            onLogout={handleAdminLogout}
+            onViewChange={setView}
+          />
         </Suspense>
       )}
 
