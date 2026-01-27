@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { checkDeviceAccess, loadUserRole } from "../lib/deviceAccessControl";
 import { Lock, Mail, X, Shield, AlertTriangle, Tablet } from "lucide-react";
 import toast from "react-hot-toast";
+import TabletLoginView from "./TabletLoginView";
 
 type Props = {
   onLogin: (success: boolean, userRole?: string) => void;
@@ -25,10 +26,8 @@ export default function LoginForm({ onLogin, onBack }: Props) {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
 
-  // Barcode Login State
-  const [loginMode, setLoginMode] = useState<"email" | "barcode">("email");
-  const [barcode, setBarcode] = useState("");
-  const barcodeInputRef = useRef<HTMLInputElement | null>(null);
+  // Login Mode State
+  const [loginMode, setLoginMode] = useState<"email" | "tablet">("email");
 
   const passwordInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -69,96 +68,6 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
     // Generic error for any other case
     return "Error al iniciar sesión. Verifica tus credenciales e intenta de nuevo";
-  };
-
-  const handleBarcodeLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!barcode.trim()) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      console.log("🔍 Buscando usuario por código:", barcode);
-
-      // Buscar usuario por código usando una función RPC (Security Definer) para saltar el RLS
-      const { data: userData, error: userError } = await supabase.rpc(
-        "verify_barcode_user",
-        { scanned_code: barcode.trim() },
-      );
-
-      if (userError) {
-        console.error("❌ Error en RPC verify_barcode_user:", userError);
-        // Mostrar el mensaje real del error para depurar (ej: function not found)
-        throw new Error(
-          `Error técnico: ${userError.message || JSON.stringify(userError)}`,
-        );
-      }
-
-      if (!userData || userData.length === 0) {
-        console.warn("⚠️ No se encontró usuario para el código:", barcode);
-        throw new Error("Código no válido o usuario no encontrado");
-      }
-
-      // Como RPC puede devolver múltiples (aunque pongamos LIMIT 1), cogemos el primero
-      const user = Array.isArray(userData) ? userData[0] : userData;
-
-      if (!user.activo) {
-        throw new Error("Usuario inactivo. Contacta con el administrador.");
-      }
-
-      console.log("✅ Usuario encontrado por código:", user.nombre);
-
-      // Normalizar rol
-      let userRole = "Catador"; // Default
-      const rawRol = (user.rol || "").toLowerCase();
-
-      if (
-        [
-          "administrador",
-          "admin",
-          "presidente",
-          "supervisor",
-          "superadmin",
-        ].includes(rawRol)
-      ) {
-        userRole = "Admin";
-      } else if (rawRol === "catador") {
-        userRole = "Catador";
-      } else {
-        userRole = user.rol; // Custom role
-      }
-
-      // Guardar sesión local (simulada para usuarios de código)
-      // Como no hay auth de supabase, no tenemos access_token real para RLS seguro si se requiere
-      localStorage.setItem("userRole", userRole);
-      localStorage.setItem(
-        "userRoleData",
-        JSON.stringify({
-          rol: user.rol,
-          mesa: user.mesa,
-          tandaencurso: user.tandaencurso,
-          id: user.id,
-          nombre: user.nombre,
-        }),
-      );
-
-      // Indicador especial para saber que es login por código
-      localStorage.setItem("authMethod", "barcode");
-
-      toast.success(`Bienvenido/a ${user.nombre}`);
-      onLogin(true, userRole);
-    } catch (err: any) {
-      console.error("Error login barcode:", err);
-      setError(err.message || "Error al validar el código");
-      // Refocus para siguiente intento rápido
-      setTimeout(() => {
-        setBarcode("");
-        barcodeInputRef.current?.focus();
-      }, 100);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const getDeviceToken = () => {
@@ -344,7 +253,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
 
       // Fallback: if no role data, check usuarios table directly
       if (!roleData) {
-        const { data: userData, error: userError } = await supabase
+        const { data: userData } = await supabase
           .from("usuarios")
           .select("rol, mesa, tandaencurso")
           .eq("id", authData.user.id)
@@ -604,17 +513,16 @@ export default function LoginForm({ onLogin, onBack }: Props) {
             </button>
             <button
               onClick={() => {
-                setLoginMode("barcode");
+                setLoginMode("tablet");
                 setError("");
-                setTimeout(() => barcodeInputRef.current?.focus(), 100);
               }}
               className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                loginMode === "barcode"
-                  ? "bg-white text-red-700 shadow-sm"
+                loginMode === "tablet"
+                  ? "bg-white text-blue-700 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Acceso Pistola
+              Acceso Tablet
             </button>
           </div>
 
@@ -624,12 +532,12 @@ export default function LoginForm({ onLogin, onBack }: Props) {
           >
             {loginMode === "email"
               ? "Acceso Administrativo"
-              : "Escanear Credencial"}
+              : "Selección de Tablet"}
           </h2>
           <p id="login-subtitle" className="text-gray-500 text-sm">
             {loginMode === "email"
               ? "Introduce tus credenciales de acceso"
-              : "Usa el lector de código de barras"}
+              : "Selecciona tu tablet para acceder"}
           </p>
         </div>
 
@@ -762,54 +670,7 @@ export default function LoginForm({ onLogin, onBack }: Props) {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleBarcodeLogin} className="space-y-6">
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
-                <div className="mb-2">⚠️</div>
-                <p className="text-sm text-gray-600">
-                  Asegúrate de que el cursor esté en el campo de texto antes de
-                  escanear
-                </p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <svg
-                    className="w-6 h-6 text-gray-400"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path
-                      d="M3 5h2M3 19h2M21 5h-2M21 19h-2M8 5v14M16 5v14M12 5v14"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <input
-                  ref={barcodeInputRef}
-                  type="text"
-                  required
-                  autoFocus
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 border-2 border-red-100 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-600 transition-all bg-white text-lg font-mono text-center tracking-widest"
-                  placeholder="Escanea el código aquí"
-                  autoComplete="off"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !barcode.trim()}
-                className="w-full bg-gray-900 text-white py-3 rounded-xl hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                {loading ? "Verificando..." : "Acceder"}
-              </button>
-            </div>
-          </form>
+          <TabletLoginView onLogin={onLogin} />
         )}
 
         {/* Botón Acceso por Dispositivo */}

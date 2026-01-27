@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import {
   Users,
@@ -9,8 +9,12 @@ import {
   ChevronUp,
   Edit2,
   Trash2,
+  Check,
+  Barcode,
+  ArrowLeft,
 } from "lucide-react";
 import { showError, showWarning } from "../lib/toast";
+import JsBarcode from "jsbarcode";
 
 interface Catador {
   id: string;
@@ -44,12 +48,12 @@ export default function CatadoresManager() {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<SortField>("nombre");
+  const [showBarcodes, setShowBarcodes] = useState(false);
+  const [sortField, setSortField] = useState<SortField>("mesa");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [mesasDisponibles, setMesasDisponibles] = useState<number[]>([]);
   const [tabletsDisponibles, setTabletsDisponibles] = useState<string[]>([]);
 
-  const ROLES = ["Administrador", "Presidente", "Catador"];
   const PUESTOS = Array.from({ length: 5 }, (_, i) => i + 1);
 
   const [formData, setFormData] = useState({
@@ -58,7 +62,7 @@ export default function CatadoresManager() {
     email: "",
     password: "",
     pais: "",
-    rol: "",
+    rol: "Catador",
     mesa: "",
     puesto: "",
     tablet: "",
@@ -88,7 +92,7 @@ export default function CatadoresManager() {
       setTabletsDisponibles(
         Array.from({ length: 25 }, (_, i) => String(i + 1)),
       );
-    } catch (e) {
+    } catch {
       setMesasDisponibles(Array.from({ length: 5 }, (_, i) => i + 1));
       setTabletsDisponibles(
         Array.from({ length: 25 }, (_, i) => String(i + 1)),
@@ -109,8 +113,17 @@ export default function CatadoresManager() {
         throw error;
       }
 
-      console.log(`Catadores: ${data?.length || 0} cargados`);
-      setCatadores(data || []);
+      console.log(`Catadores: ${data?.length || 0} cargados de la BD`);
+
+      // Filtrar Administradores y SuperAdmin
+      const filteredData = (data || []).filter(
+        (c) =>
+          c.rol !== "Administrador" &&
+          c.rol !== "SuperAdmin" &&
+          c.rol !== "admin",
+      );
+
+      setCatadores(filteredData);
     } catch (error) {
       console.error("Error crítico en catadores:", error);
       showError("Error al cargar catadores");
@@ -130,14 +143,26 @@ export default function CatadoresManager() {
 
   const getSortedCatadores = () => {
     return [...catadores].sort((a, b) => {
+      // Orden primario
       const aVal = a[sortField];
       const bVal = b[sortField];
 
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
 
-      const comparison = aVal > bVal ? 1 : -1;
-      return sortDirection === "asc" ? comparison : -comparison;
+      if (aVal !== bVal) {
+        const comparison = aVal > bVal ? 1 : -1;
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
+
+      // Orden secundario (siempre puesto si el primario es mesa)
+      if (sortField === "mesa") {
+        const aPuesto = a.puesto || 99;
+        const bPuesto = b.puesto || 99;
+        return aPuesto - bPuesto;
+      }
+
+      return 0;
     });
   };
 
@@ -171,6 +196,10 @@ export default function CatadoresManager() {
       australia: "🇦🇺",
       canadá: "🇨🇦",
       canada: "🇨🇦",
+      perú: "🇵🇪",
+      peru: "🇵🇪",
+      cuba: "🇨🇺",
+      uruguay: "🇺🇾",
     };
 
     return countryFlags[countryName.toLowerCase()] || "🌍";
@@ -477,7 +506,7 @@ export default function CatadoresManager() {
       email: "",
       password: "",
       pais: "",
-      rol: "",
+      rol: "Catador",
       mesa: "",
       puesto: "",
       tablet: "",
@@ -576,12 +605,99 @@ export default function CatadoresManager() {
     );
   }
 
+  if (showBarcodes) {
+    return (
+      <div className="space-y-6 p-4 bg-white min-h-screen">
+        <div className="flex justify-between items-center print:hidden border-b pb-4">
+          <button
+            onClick={() => setShowBarcodes(false)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-semibold">Volver a Gestión</span>
+          </button>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold text-gray-800">
+              Cómputo de Catadores (Barcodes)
+            </h2>
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 flex items-center gap-2"
+            >
+              Imprimir / PDF
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-2">
+          {catadores
+            .sort((a, b) => {
+              if (a.mesa !== b.mesa) return (a.mesa || 99) - (b.mesa || 99);
+              return (a.puesto || 99) - (b.puesto || 99);
+            })
+            .map((cat) => (
+              <div
+                key={cat.id}
+                className="p-6 border-2 border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col items-center gap-3 bg-white"
+              >
+                <div className="w-full border-b pb-2 mb-1 flex justify-between items-center">
+                  <span className="text-sm font-black text-slate-400">
+                    #{cat.codigocatador}
+                  </span>
+                  <div className="flex gap-2">
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold">
+                      Mesa {cat.mesa}
+                    </span>
+                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold">
+                      Puesto {cat.puesto}
+                    </span>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-black text-slate-900 text-center uppercase tracking-tight">
+                  {cat.nombre}
+                </h3>
+
+                <div className="bg-white p-4 rounded-xl border border-gray-50 w-full flex justify-center">
+                  <BarcodeItem value={cat.codigocatador || ""} />
+                </div>
+
+                <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase">
+                  {cat.rol || "Catador"}
+                </p>
+              </div>
+            ))}
+        </div>
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+          @media print {
+            .print\\:hidden { display: none !important; }
+            body { background: white !important; }
+            .grid { display: block !important; }
+            .grid > div { 
+              break-inside: avoid; 
+              margin-bottom: 20px; 
+              border: 1px solid #eee !important;
+              page-break-inside: avoid;
+            }
+          }
+        `,
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 w-full overflow-x-hidden">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-          <h2 className="text-xl sm:text-2xl font-bold">Gestión de Catadores</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">
+            Gestión de Catadores
+          </h2>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -589,6 +705,13 @@ export default function CatadoresManager() {
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           Nuevo Catador
+        </button>
+        <button
+          onClick={() => setShowBarcodes(true)}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 whitespace-nowrap"
+        >
+          <Barcode className="w-4 h-4 sm:w-5 sm:h-5" />
+          Ver Códigos
         </button>
       </div>
 
@@ -704,21 +827,37 @@ export default function CatadoresManager() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Rol</label>
-              <select
-                value={formData.rol}
-                onChange={(e) =>
-                  setFormData({ ...formData, rol: e.target.value })
-                }
-                className="w-full p-2 border rounded bg-white"
-              >
-                <option value="">-</option>
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium mb-2">Rol</label>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, rol: "Presidente" })
+                  }
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all font-bold ${
+                    formData.rol === "Presidente"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]"
+                      : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-white"
+                  }`}
+                >
+                  {formData.rol === "Presidente" && (
+                    <Check className="w-5 h-5" />
+                  )}
+                  Presidente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, rol: "Catador" })}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all font-bold ${
+                    formData.rol === "Catador"
+                      ? "bg-blue-600 border-blue-600 text-white shadow-lg scale-[1.02]"
+                      : "bg-blue-50/50 border-blue-100 text-blue-400 hover:border-blue-200 hover:bg-white"
+                  }`}
+                >
+                  {formData.rol === "Catador" && <Check className="w-5 h-5" />}
+                  Catador
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Tablet</label>
@@ -747,11 +886,24 @@ export default function CatadoresManager() {
                 className="w-full p-2 border rounded bg-white"
               >
                 <option value="">-</option>
-                {mesasDisponibles.map((m) => (
-                  <option key={m} value={String(m)}>
-                    Mesa {m}
-                  </option>
-                ))}
+                {mesasDisponibles.map((m) => {
+                  const mesaInfo = getMesasInfo().todasLasMesas.find(
+                    (info) => info.numero === m,
+                  );
+                  const isFull = mesaInfo?.completa;
+                  // Si estamos editando y es la mesa actual del catador, mostrarla aunque esté llena
+                  const isCurrentMesa =
+                    editingId &&
+                    catadores.find((c) => c.id === editingId)?.mesa === m;
+
+                  if (isFull && !isCurrentMesa) return null;
+
+                  return (
+                    <option key={m} value={String(m)}>
+                      Mesa {m} {isFull ? "(Llena)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
             <div>
@@ -819,158 +971,116 @@ export default function CatadoresManager() {
         </div>
       </div>
 
-      {/* Sección de Mesas Completas */}
-      {getMesasInfo().mesasCompletas.length > 0 && (
-        <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
-          <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
-            <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm">
-              {getMesasInfo().mesasCompletas.length}
-            </span>
-            Mesas Completas (5/5 puestos)
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {getMesasInfo().mesasCompletas.map((mesa) => (
-              <div
-                key={mesa.numero}
-                className="bg-white rounded-lg border-2 border-green-400 overflow-hidden"
-              >
-                <div className="bg-green-600 text-white px-3 py-2 font-bold flex items-center justify-between">
-                  <span>MESA {mesa.numero}</span>
-                  <span className="text-xs bg-green-500 px-2 py-0.5 rounded-full">
-                    Completa
-                  </span>
-                </div>
-                <div className="p-2">
-                  {/* Encabezados */}
-                  <div className="grid grid-cols-12 gap-1 text-xs font-bold text-gray-600 border-b-2 border-gray-300 pb-1 mb-1">
-                    <div className="col-span-1 text-center">#</div>
-                    <div className="col-span-5">Nombre</div>
-                    <div className="col-span-4">Rol</div>
-                    <div className="col-span-2 text-center">Tab</div>
-                  </div>
-                  {/* Datos */}
-                  {mesa.catadores
-                    .sort((a, b) => (a.puesto || 0) - (b.puesto || 0))
-                    .map((cat) => (
-                      <div
-                        key={cat.id}
-                        className="grid grid-cols-12 gap-1 text-xs py-1 border-b border-gray-100 last:border-0 items-center"
-                      >
-                        <div className="col-span-1 flex justify-center">
-                          <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-xs">
-                            {cat.puesto}
-                          </span>
-                        </div>
-                        <div
-                          className="col-span-5 font-medium text-gray-900 truncate"
-                          title={cat.nombre}
-                        >
-                          {cat.nombre}
-                        </div>
-                        <div
-                          className="col-span-4 text-gray-600 text-xs truncate"
-                          title={cat.rol || "-"}
-                        >
-                          {cat.rol || "-"}
-                        </div>
-                        <div className="col-span-2 text-center">
-                          <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded text-xs font-mono">
-                            {cat.tablet || "-"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Resumen de Distribución por Mesas */}
+      <div className="bg-white border shadow-sm rounded-xl p-4">
+        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5 text-blue-600" />
+          Resumen de Mesas
+        </h3>
 
-      {/* Sección de Mesas Pendientes */}
-      {getMesasInfo().mesasPendientes.length > 0 && (
-        <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4">
-          <h3 className="text-lg font-bold text-orange-800 mb-3 flex items-center gap-2">
-            <span className="bg-orange-600 text-white px-3 py-1 rounded-full text-sm">
-              {getMesasInfo().mesasPendientes.length}
-            </span>
-            Mesas Pendientes de Completar
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {getMesasInfo().mesasPendientes.map((mesa) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {getMesasInfo().todasLasMesas.map((mesa) => {
+            const mesaColors = [
+              {
+                bg: "bg-rose-50",
+                border: "border-rose-200",
+                text: "text-rose-700",
+                header: "bg-rose-100",
+              },
+              {
+                bg: "bg-orange-50",
+                border: "border-orange-200",
+                text: "text-orange-700",
+                header: "bg-orange-100",
+              },
+              {
+                bg: "bg-amber-50",
+                border: "border-amber-200",
+                text: "text-amber-700",
+                header: "bg-amber-100",
+              },
+              {
+                bg: "bg-emerald-50",
+                border: "border-emerald-200",
+                text: "text-emerald-700",
+                header: "bg-emerald-100",
+              },
+              {
+                bg: "bg-blue-50",
+                border: "border-blue-200",
+                text: "text-blue-700",
+                header: "bg-blue-100",
+              },
+            ];
+            const color = mesaColors[(mesa.numero - 1) % mesaColors.length];
+
+            return (
               <div
                 key={mesa.numero}
-                className="bg-white rounded-lg border-2 border-orange-400 overflow-hidden"
+                className={`rounded-xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${color.bg} ${color.border}`}
               >
-                <div className="bg-orange-600 text-white px-3 py-2 font-bold flex items-center justify-between">
-                  <span>MESA {mesa.numero}</span>
-                  <span className="text-xs bg-orange-500 px-2 py-0.5 rounded-full">
-                    {mesa.puestosOcupados}/{mesa.totalPuestos}
+                <div
+                  className={`px-3 py-2 border-b flex justify-between items-center ${color.header} ${color.border}`}
+                >
+                  <span className={`font-black text-sm ${color.text}`}>
+                    MESA {mesa.numero}
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-white/50 rounded-full text-gray-600">
+                    {mesa.puestosOcupados}/5
                   </span>
                 </div>
-                <div className="p-2">
-                  {/* Encabezados */}
-                  <div className="grid grid-cols-12 gap-1 text-xs font-bold text-gray-600 border-b-2 border-gray-300 pb-1 mb-1">
-                    <div className="col-span-1 text-center">#</div>
-                    <div className="col-span-5">Nombre</div>
-                    <div className="col-span-4">Rol</div>
-                    <div className="col-span-2 text-center">Tab</div>
-                  </div>
-                  {/* Datos */}
-                  {[1, 2, 3, 4, 5].map((puestoNum) => {
-                    const cat = mesa.catadores.find(
-                      (c) => c.puesto === puestoNum,
-                    );
-                    return (
-                      <div
-                        key={puestoNum}
-                        className={`grid grid-cols-12 gap-1 text-xs py-1 border-b border-gray-100 last:border-0 items-center ${!cat ? "opacity-50" : ""}`}
-                      >
-                        <div className="col-span-1 flex justify-center">
-                          <span
-                            className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs ${
-                              cat
-                                ? "bg-orange-600 text-white"
-                                : "bg-gray-300 text-gray-600"
+
+                <div className="p-2 min-h-[110px]">
+                  {mesa.catadores.length > 0 ? (
+                    <div className="space-y-1">
+                      {mesa.catadores
+                        .sort((a, b) => (a.puesto || 0) - (b.puesto || 0))
+                        .map((c) => (
+                          <div
+                            key={c.id}
+                            className={`flex justify-between items-center text-[10px] leading-tight px-1.5 py-1 rounded ${
+                              c.rol === "Presidente"
+                                ? "bg-slate-900 text-white font-bold"
+                                : "text-gray-700"
                             }`}
                           >
-                            {puestoNum}
-                          </span>
-                        </div>
-                        {cat ? (
-                          <>
-                            <div
-                              className="col-span-5 font-medium text-gray-900 truncate"
-                              title={cat.nombre}
-                            >
-                              {cat.nombre}
+                            <span className="truncate flex-1">
+                              {c.puesto}. {c.nombre}
+                            </span>
+                            <div className="flex items-center gap-1.5 ml-2">
+                              {c.tablet && (
+                                <span
+                                  className={`text-[9px] px-1 rounded font-mono ${
+                                    c.rol === "Presidente"
+                                      ? "bg-white/20 text-white"
+                                      : "bg-gray-200 text-gray-600"
+                                  }`}
+                                >
+                                  T{c.tablet}
+                                </span>
+                              )}
+                              {c.rol === "Presidente" && (
+                                <span className="text-[8px] opacity-80 uppercase tracking-tighter">
+                                  Pres.
+                                </span>
+                              )}
                             </div>
-                            <div
-                              className="col-span-4 text-gray-600 text-xs truncate"
-                              title={cat.rol || "-"}
-                            >
-                              {cat.rol || "-"}
-                            </div>
-                            <div className="col-span-2 text-center">
-                              <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded text-xs font-mono">
-                                {cat.tablet || "-"}
-                              </span>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="col-span-11 italic text-gray-400 text-xs">
-                            Puesto vacío
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full py-6">
+                      <span className="text-[10px] text-gray-400 italic">
+                        Mesa vacía
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       {/* Tabla completa de todos los catadores */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -1019,45 +1129,70 @@ export default function CatadoresManager() {
               {getSortedCatadores().map((catador) => (
                 <tr
                   key={catador.id}
-                  className={`${getMesaBg(catador.mesa)} hover:opacity-95 border-b border-gray-200`}
+                  className={`${getMesaBg(catador.mesa)} hover:opacity-95 border-b border-gray-200 ${
+                    catador.rol === "Presidente"
+                      ? "bg-blue-50/50 ring-1 ring-inset ring-blue-200"
+                      : ""
+                  }`}
                 >
-                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
+                  <td
+                    className={`px-2 py-1.5 text-xs border-r border-gray-200 ${catador.rol === "Presidente" ? "font-black text-blue-900" : ""}`}
+                  >
                     <input
                       type="text"
-                      value={(catador as any).codigocatador || ""}
+                      value={catador.codigocatador || ""}
                       onChange={(e) =>
                         handleFieldChange(
                           catador.id,
                           "codigocatador",
-                          e.target.value || null,
+                          e.target.value,
                         )
                       }
                       onBlur={(e) =>
                         handleFieldUpdate(
                           catador.id,
                           "codigocatador",
-                          e.target.value || null,
+                          e.target.value,
                         )
                       }
-                      className="w-16 p-1 border rounded text-xs"
-                      placeholder="-"
+                      className="w-full bg-transparent border-0 p-0 focus:ring-0 text-inherit"
                       maxLength={7}
                       disabled={saving}
                     />
                   </td>
-                  <td className="px-2 py-1.5 text-xs border-r border-gray-200">
-                    <input
-                      type="text"
-                      value={catador.nombre}
-                      onChange={(e) =>
-                        handleFieldChange(catador.id, "nombre", e.target.value)
-                      }
-                      onBlur={(e) =>
-                        handleFieldUpdate(catador.id, "nombre", e.target.value)
-                      }
-                      className="w-full min-w-[120px] p-1 border rounded text-xs font-medium"
-                      disabled={saving}
-                    />
+                  <td
+                    className={`px-2 py-1.5 text-xs border-r border-gray-200 ${catador.rol === "Presidente" ? "font-black text-blue-900" : ""}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {catador.rol === "Presidente" && (
+                        <span
+                          className="w-5 h-5 flex items-center justify-center bg-blue-600 text-white rounded-full text-[10px] shrink-0 shadow-sm"
+                          title="Presidente"
+                        >
+                          P
+                        </span>
+                      )}
+                      <input
+                        type="text"
+                        value={catador.nombre}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            catador.id,
+                            "nombre",
+                            e.target.value,
+                          )
+                        }
+                        onBlur={(e) =>
+                          handleFieldUpdate(
+                            catador.id,
+                            "nombre",
+                            e.target.value,
+                          )
+                        }
+                        className="w-full bg-transparent border-0 p-0 focus:ring-0 font-inherit"
+                        disabled={saving}
+                      />
+                    </div>
                   </td>
                   <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <input
@@ -1111,25 +1246,34 @@ export default function CatadoresManager() {
                     </div>
                   </td>
                   <td className="px-2 py-1.5 text-xs border-r border-gray-200">
-                    <select
-                      value={catador.rol || ""}
-                      onChange={(e) =>
-                        handleFieldUpdate(
-                          catador.id,
-                          "rol",
-                          e.target.value || null,
-                        )
-                      }
-                      className="w-28 p-1 border rounded bg-white text-xs"
-                      disabled={saving}
-                    >
-                      <option value="">-</option>
-                      {ROLES.map((r) => (
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex gap-1 h-full items-center">
+                      <button
+                        onClick={() =>
+                          handleFieldUpdate(catador.id, "rol", "Presidente")
+                        }
+                        className={`flex-1 py-1 px-1 rounded border transition-all text-[10px] font-bold ${
+                          catador.rol === "Presidente"
+                            ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                            : "bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300"
+                        }`}
+                        disabled={saving}
+                      >
+                        {catador.rol === "Presidente" ? "Presidente" : "P"}
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleFieldUpdate(catador.id, "rol", "Catador")
+                        }
+                        className={`flex-1 py-1 px-1 rounded border transition-all text-[10px] font-bold ${
+                          catador.rol === "Catador"
+                            ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                            : "bg-blue-50/50 border-blue-100 text-blue-400 hover:border-blue-200"
+                        }`}
+                        disabled={saving}
+                      >
+                        {catador.rol === "Catador" ? "Catador" : "C"}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-2 py-1.5 text-xs border-r border-gray-200">
                     <select
@@ -1145,11 +1289,21 @@ export default function CatadoresManager() {
                       disabled={saving}
                     >
                       <option value="">-</option>
-                      {mesasDisponibles.map((m) => (
-                        <option key={m} value={String(m)}>
-                          M {m}
-                        </option>
-                      ))}
+                      {mesasDisponibles.map((m) => {
+                        const mesaInfo = getMesasInfo().todasLasMesas.find(
+                          (info) => info.numero === m,
+                        );
+                        const isFull = mesaInfo?.completa;
+                        const isCurrentMesa = catador.mesa === m;
+
+                        if (isFull && !isCurrentMesa) return null;
+
+                        return (
+                          <option key={m} value={String(m)}>
+                            M {m}
+                          </option>
+                        );
+                      })}
                     </select>
                   </td>
                   <td className="px-2 py-1.5 text-xs border-r border-gray-200">
@@ -1264,4 +1418,37 @@ export default function CatadoresManager() {
       </div>
     </div>
   );
+}
+
+// Subcomponente para el código de barras individual
+function BarcodeItem({ value }: { value: string }) {
+  const barcodeRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    if (barcodeRef.current && value) {
+      try {
+        JsBarcode(barcodeRef.current, value, {
+          format: "CODE128",
+          width: 2,
+          height: 60,
+          displayValue: true,
+          fontSize: 14,
+          font: "monospace",
+          textAlign: "center",
+          textPosition: "bottom",
+          textMargin: 4,
+          background: "#ffffff",
+          lineColor: "#000000",
+          margin: 10,
+        });
+      } catch (e) {
+        console.error("Barcode error:", e);
+      }
+    }
+  }, [value]);
+
+  if (!value)
+    return <div className="text-red-500 text-xs italic">Sin código</div>;
+
+  return <svg ref={barcodeRef}></svg>;
 }

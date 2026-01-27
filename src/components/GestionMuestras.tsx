@@ -18,6 +18,8 @@ import {
   ChevronRight,
   Check,
   Edit,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import SampleEditModal from "./SampleEditModal";
@@ -55,6 +57,44 @@ export default function GestionMuestras({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedSample, setSelectedSample] = useState<Sample | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const startVoiceSearch = () => {
+    const SpeechRecognition =
+      (window as any).webkitSpeechRecognition ||
+      (window as any).SpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Tu navegador no soporta búsqueda por voz");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-ES";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearch(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Voice recognition error:", event.error);
+      setIsListening(false);
+      toast.error("Error al reconocer voz");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
 
   const fetchSamples = useCallback(async () => {
     setLoading(true);
@@ -281,16 +321,34 @@ export default function GestionMuestras({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre, empresa, código o país"
-              className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className={`w-full pl-10 pr-24 py-2.5 border ${isListening ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-300"} rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
             />
-            {search && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded"
+                onClick={startVoiceSearch}
+                className={`p-1.5 rounded-full transition-all ${
+                  isListening
+                    ? "bg-red-100 text-red-600 animate-pulse shadow-sm"
+                    : "text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                }`}
+                title="Búsqueda por voz"
               >
-                <X className="w-4 h-4" />
+                {isListening ? (
+                  <MicOff className="w-4 h-4" />
+                ) : (
+                  <Mic className="w-4 h-4" />
+                )}
               </button>
-            )}
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-full"
+                  title="Limpiar búsqueda"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Botones de filtro en móvil */}

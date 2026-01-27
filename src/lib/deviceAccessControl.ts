@@ -290,7 +290,7 @@ export async function forceLogoutAndClearDevice(): Promise<void> {
 
 /**
  * Validates if current device fingerprint matches stored one
- * If changed, forces logout
+ * Now more permissive - only warns instead of forcing logout
  */
 export async function validateDeviceConsistency(): Promise<boolean> {
   try {
@@ -298,14 +298,16 @@ export async function validateDeviceConsistency(): Promise<boolean> {
     const storedFingerprint = localStorage.getItem("virtus_device_fingerprint");
 
     if (storedFingerprint && storedFingerprint !== currentFingerprint) {
-      console.warn("Device fingerprint changed, forcing logout");
-      await forceLogoutAndClearDevice();
-      return false;
+      console.warn("Device fingerprint changed - updating stored fingerprint");
+      // Instead of forcing logout, just update the fingerprint
+      // This makes the system more permissive and reduces unexpected logouts
+      localStorage.setItem("virtus_device_fingerprint", currentFingerprint);
     }
 
-    return true;
+    return true; // Always return true to avoid forced logouts
   } catch (error) {
     console.error("Error validating device consistency:", error);
-    return false;
+    // Even on error, return true to avoid blocking user access
+    return true;
   }
 }

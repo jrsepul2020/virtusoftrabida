@@ -43,6 +43,33 @@ export const supabase: SupabaseClient = createClient(
     global: {
       fetch: customFetch,
     },
+    auth: {
+      // Persistir sesión en localStorage para evitar logouts
+      persistSession: true,
+      // Auto-refresh de tokens antes de expiración
+      autoRefreshToken: true,
+      // Detectar cambios de sesión en otras pestañas
+      detectSessionInUrl: true,
+      // Storage personalizado para sesión
+      storage: {
+        getItem: (key: string) => {
+          if (typeof window !== "undefined") {
+            return window.localStorage.getItem(key);
+          }
+          return null;
+        },
+        setItem: (key: string, value: string) => {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(key, value);
+          }
+        },
+        removeItem: (key: string) => {
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(key);
+          }
+        },
+      },
+    },
   },
 );
 

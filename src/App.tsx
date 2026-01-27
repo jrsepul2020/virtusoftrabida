@@ -2,6 +2,15 @@ import { useState, useEffect, Suspense, lazy } from "react";
 import { Toaster } from "react-hot-toast";
 import { supabase } from "./lib/supabase";
 import { validateDeviceConsistency } from "./lib/deviceAccessControl";
+import {
+  tryAutoLogin,
+  getTabletSession,
+  normalizeRole,
+} from "./lib/tabletAuth";
+import {
+  startSessionHeartbeat,
+  unregisterTabletSession,
+} from "./lib/sessionManager";
 import LoginForm from "./components/LoginForm";
 import MainLayout from "./components/MainLayout";
 import HeroLanding from "./components/HeroLanding";
@@ -9,6 +18,7 @@ import UpdateNotification, {
   VersionBadge,
 } from "./components/UpdateNotification";
 import { View } from "./components/types";
+import { useLandscapeOrientation } from "./hooks/useLandscapeOrientation";
 
 // Lazy loading de componentes pesados
 const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
@@ -23,6 +33,9 @@ const ResultadosPublicos = lazy(
 const DiplomasPublicos = lazy(() => import("./components/DiplomasPublicos"));
 const ConfigurarTablet = lazy(() => import("./components/ConfigurarTablet"));
 const PinGate = lazy(() => import("./components/PinGate"));
+const TabletSessionsManager = lazy(
+  () => import("./components/TabletSessionsManager"),
+);
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -42,6 +55,12 @@ function App() {
     nombre: string;
     email: string;
   } | null>(null);
+  const [heartbeatCleanup, setHeartbeatCleanup] = useState<(() => void) | null>(
+    null,
+  );
+
+  // Forzar orientación horizontal en tablets
+  useLandscapeOrientation();
 
   useEffect(() => {
     let isMounted = true;
@@ -108,6 +127,36 @@ function App() {
           setLoading(false);
         }
         return;
+      }
+
+      // 🆕 INTENTAR AUTO-LOGIN CON TABLET SESSION
+      if (tryAutoLogin()) {
+        const tabletSession = getTabletSession();
+        if (tabletSession) {
+          console.log(`🔄 Auto-login con Tablet ${tabletSession.tablet_id}`);
+
+          // Restaurar estado de usuario
+          setAdminLoggedIn(true);
+          setCurrentUser({
+            nombre: tabletSession.nombre,
+            email: `tablet${tabletSession.tablet_id}@system.local`,
+          });
+
+          // Determinar vista según rol
+          const displayRole = normalizeRole(tabletSession.rol);
+          if (displayRole === "Admin") {
+            setView("admin");
+          } else {
+            setView("catador");
+          }
+
+          // Iniciar heartbeat para mantener sesión activa
+          const cleanup = startSessionHeartbeat(tabletSession.tablet_id);
+          setHeartbeatCleanup(() => cleanup);
+
+          if (isMounted) setLoading(false);
+          return;
+        }
       }
 
       // Verificar sesión REAL de Supabase
@@ -196,8 +245,19 @@ function App() {
       isMounted = false;
       authUnsubscribe?.();
       window.removeEventListener("hashchange", handleHashChange);
+
+      // Limpiar heartbeat si existe
+      if (heartbeatCleanup) {
+        heartbeatCleanup();
+      }
+
+      // Limpiar sesión de tablet al cerrar
+      const tabletSession = getTabletSession();
+      if (tabletSession) {
+        unregisterTabletSession(tabletSession.tablet_id);
+      }
     };
-  }, []);
+  }, [heartbeatCleanup]);
 
   // Ocultar temporalmente vistas de resultados y diplomas (solo accesibles públicamente)
   useEffect(() => {
@@ -340,6 +400,13 @@ function App() {
       {view === "configurarTablet" && (
         <Suspense fallback={<LoadingFallback />}>
           <ConfigurarTablet onDone={() => setView("adminLogin")} />
+        </Suspense>
+      )}
+
+      {/* Gestión de Sesiones de Tablets */}
+      {view === "tabletSessions" && adminLoggedIn && (
+        <Suspense fallback={<LoadingFallback />}>
+          <TabletSessionsManager />
         </Suspense>
       )}
 

@@ -24,9 +24,7 @@ import {
   ChevronLeft,
   User,
   Smartphone,
-  Moon,
-  Sun,
-  Search,
+  Monitor,
 } from "lucide-react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import { supabase } from "../lib/supabase";
@@ -56,6 +54,8 @@ import UserProfile from "./UserProfile";
 import AuthorizedDevicesManager from "./AuthorizedDevicesManager";
 import EmailTest from "./EmailTest";
 import CompanyProfile from "./CompanyProfile";
+import Chequeo from "./Chequeo";
+import TabletSessionsManager from "./TabletSessionsManager";
 // Removed: Estadisticas2 and CompaniesManager2 screens (no longer used)
 
 type Tab =
@@ -83,7 +83,9 @@ type Tab =
   | "templates"
   | "authorizedDevices"
   | "profile"
-  | "companyProfile";
+  | "companyProfile"
+  | "chequeo"
+  | "tabletSessions";
 
 interface MenuItem {
   id: string;
@@ -112,6 +114,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [currentUser, setCurrentUser] = useState<{
     nombre: string;
     email: string;
+    tablet?: string | null;
+    mesa?: number | null;
+    puesto?: number | null;
   } | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["dashboard", "inscriptions", "tastings", "admin"]),
@@ -121,14 +126,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     return saved === "true";
   });
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem("darkMode");
-    return saved === "true";
-  });
   const [selectedInscripcionId, setSelectedInscripcionId] = useState<
     string | null
   >(null);
-  const [globalSearchTerm, setGlobalSearchTerm] = useState("");
 
   const breadcrumbLabels: Record<Tab, string> = {
     resumen: "Resumen",
@@ -157,6 +157,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     authorizedDevices: "Dispositivos autorizados",
     profile: "Perfil",
     companyProfile: "Ficha de Empresa",
+    chequeo: "Chequeo de muestras",
+    tabletSessions: "Sesiones de Tablets",
   };
 
   // Map tab -> source filename for quick reference in breadcrumb
@@ -186,6 +188,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     authorizedDevices: "AuthorizedDevicesManager.tsx",
     profile: "UserProfile.tsx",
     companyProfile: "CompanyProfile.tsx",
+    chequeo: "Chequeo.tsx",
+    tabletSessions: "TabletSessionsManager.tsx",
   };
 
   // Persist sidebar state
@@ -193,23 +197,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     localStorage.setItem("sidebarCollapsed", String(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
-  // Handle Dark Mode
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (isDarkMode) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", String(isDarkMode));
-  }, [isDarkMode]);
-
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
   };
 
   // Obtener datos del usuario actual
@@ -223,12 +212,18 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           // Buscar en tabla usuarios
           const { data: userData } = await supabase
             .from("usuarios")
-            .select("nombre, email")
+            .select("nombre, email, tablet, mesa, puesto")
             .eq("id", session.user.id)
             .single();
 
           if (userData) {
-            setCurrentUser({ nombre: userData.nombre, email: userData.email });
+            setCurrentUser({
+              nombre: userData.nombre,
+              email: userData.email,
+              tablet: userData.tablet,
+              mesa: userData.mesa,
+              puesto: userData.puesto,
+            });
           } else {
             // Fallback al email de auth
             setCurrentUser({
@@ -332,6 +327,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           id: "authorizedDevices",
           label: "Dispositivos Autorizados",
           icon: Smartphone,
+        },
+        {
+          id: "tabletSessions",
+          label: "Sesiones de Tablets",
+          icon: Monitor,
         },
       ],
     },
@@ -570,64 +570,93 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="flex items-center justify-between px-4 py-3">
             {/* Quick Navigation Buttons */}
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => handleTabChange("statistics")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                    activeTab === "statistics"
-                      ? "bg-white/20 text-white"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  Estadísticas
-                </button>
-                <button
-                  onClick={() => handleTabChange("inscripciones")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                    activeTab === "inscripciones"
-                      ? "bg-white/20 text-white"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  Inscripciones
-                </button>
-                <button
-                  onClick={() => handleTabChange("muestras")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                    activeTab === "muestras"
-                      ? "bg-white/20 text-white"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  Listado de Muestras
-                </button>
-              </div>
+              <button
+                onClick={() => handleTabChange("statistics")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                  activeTab === "statistics"
+                    ? "bg-white/20 text-white border-white/40"
+                    : "text-white/80 hover:bg-white/10 hover:text-white border-transparent"
+                }`}
+              >
+                Estadísticas
+              </button>
+              <button
+                onClick={() => handleTabChange("inscripciones")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                  activeTab === "inscripciones"
+                    ? "bg-white/20 text-white border-white/40"
+                    : "text-white/80 hover:bg-white/10 hover:text-white border-transparent"
+                }`}
+              >
+                Inscripciones
+              </button>
+              <button
+                onClick={() => handleTabChange("muestras")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                  activeTab === "muestras"
+                    ? "bg-white/20 text-white border-white/40"
+                    : "text-white/80 hover:bg-white/10 hover:text-white border-transparent"
+                }`}
+              >
+                Listado de Muestras
+              </button>
+              <button
+                onClick={() => handleTabChange("chequeo")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                  activeTab === "chequeo"
+                    ? "bg-white/20 text-white border-white/40"
+                    : "text-white/80 hover:bg-white/10 hover:text-white border-transparent"
+                }`}
+              >
+                Chequeo
+              </button>
             </div>
 
-            {/* Global Search & Theme Toggle */}
-            <div className="flex items-center gap-4 flex-1 max-w-2xl mx-4">
-              <div className="relative flex-1 group">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4 group-focus-within:text-white transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Búsqueda global..."
-                  value={globalSearchTerm}
-                  onChange={(e) => setGlobalSearchTerm(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/20 transition-all shadow-inner"
-                />
+            {/* User Stats Display (Centered) */}
+            <div className="flex-1 flex justify-center items-center gap-6">
+              <div className="flex flex-col items-center">
+                <span className="text-[13px] font-black text-white uppercase tracking-tight">
+                  {currentUser?.nombre}
+                </span>
+                <span className="text-[10px] text-white/60 font-medium">
+                  {currentUser?.email}
+                </span>
               </div>
 
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-lg bg-white/10 border border-white/20 text-white/90 hover:text-white hover:bg-white/20 transition-all"
-                title={isDarkMode ? "Modo claro" : "Modo oscuro"}
-              >
-                {isDarkMode ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
+              <div className="h-8 w-px bg-white/10 mx-2"></div>
+
+              <div className="flex gap-4">
+                {currentUser?.tablet && (
+                  <div className="flex flex-col items-center bg-white/5 px-3 py-1 rounded-lg border border-white/10">
+                    <span className="text-[14px] font-black text-white">
+                      T{currentUser.tablet}
+                    </span>
+                    <span className="text-[8px] text-white/50 font-bold uppercase">
+                      Tablet
+                    </span>
+                  </div>
                 )}
-              </button>
+                {currentUser?.mesa && (
+                  <div className="flex flex-col items-center bg-white/5 px-3 py-1 rounded-lg border border-white/10">
+                    <span className="text-[14px] font-black text-white">
+                      M{currentUser.mesa}
+                    </span>
+                    <span className="text-[8px] text-white/50 font-bold uppercase">
+                      Mesa
+                    </span>
+                  </div>
+                )}
+                {currentUser?.puesto && (
+                  <div className="flex flex-col items-center bg-white/5 px-3 py-1 rounded-lg border border-white/10">
+                    <span className="text-[14px] font-black text-white">
+                      P{currentUser.puesto}
+                    </span>
+                    <span className="text-[8px] text-white/50 font-bold uppercase">
+                      Puesto
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Right side buttons */}
@@ -640,6 +669,18 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 title="Configuración global"
               >
                 <Settings className="w-5 h-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex items-center gap-2 p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-white/10 transition-colors"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="text-xs font-bold hidden xl:inline">
+                  Cerrar sesión
+                </span>
               </button>
 
               {/* User Menu Dropdown */}
@@ -706,7 +747,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <div className="border-t border-gray-100 mt-1 pt-1">
                         <button
                           onClick={onLogout}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 font-bold"
                         >
                           <LogOut className="w-4 h-4" />
                           Cerrar sesión
@@ -792,6 +833,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <UserProfile onBack={() => setActiveTab("statistics")} />
             )}
             {activeTab === "authorizedDevices" && <AuthorizedDevicesManager />}
+            {activeTab === "chequeo" && <Chequeo />}
+            {activeTab === "tabletSessions" && <TabletSessionsManager />}
             {activeTab === "pantallas" && (
               <PantallasManager key={pantallasKey} />
             )}

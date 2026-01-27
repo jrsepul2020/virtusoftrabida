@@ -47,4 +47,5 @@ export type View =
   | "diplomas"
   | "configurarTablet"
   | "companyProfile"
-  | "pinGate";
+  | "pinGate"
+  | "tabletSessions";
