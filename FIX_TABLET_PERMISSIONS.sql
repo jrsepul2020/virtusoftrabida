@@ -6,7 +6,6 @@
 
 -- 1. Asegurar que los roles anónimos y autenticados tengan permisos
 GRANT ALL ON TABLE public.active_tablet_sessions TO anon, authenticated;
-GRANT ALL ON SEQUENCE public.active_tablet_sessions_id_seq TO anon, authenticated;
 
 -- 2. Asegurar que RLS permita todo a todos (las tablets no tienen usuario de auth)
 DROP POLICY IF EXISTS "Allow read active sessions" ON public.active_tablet_sessions;
