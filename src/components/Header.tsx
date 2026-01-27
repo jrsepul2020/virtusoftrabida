@@ -14,7 +14,7 @@ export default function Header({
   adminLoggedIn?: boolean;
   onLogout?: () => void;
   currentView?: View;
-  currentUser?: { nombre: string; email: string } | null;
+  currentUser?: { nombre: string; email: string; rol?: string } | null;
 }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { t, lang, setLang } = useI18n();
@@ -54,6 +54,17 @@ export default function Header({
       onClick: () => handleNavigation("reglamento"),
     },
   ];
+
+  // Añadir Monitor de Tablets si es admin
+  const userRole = currentUser?.rol || localStorage.getItem("userRole") || "";
+  const isAdmin = ["SuperAdmin", "Administrador"].includes(userRole);
+
+  if (isAdmin) {
+    menuItems.push({
+      name: "Tablets",
+      onClick: () => handleNavigation("tabletSessions"),
+    });
+  }
 
   return (
     <header
@@ -178,6 +189,7 @@ export default function Header({
                   </span>
                   <div className="h-0.5 w-full bg-champagne-500 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-right" />
                   <span className="text-[8px] text-midnight-400 font-medium">
+                    {currentUser?.rol ? `${currentUser.rol} | ` : ""}
                     {currentUser?.email || ""}
                   </span>
                 </div>

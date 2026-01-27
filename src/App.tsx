@@ -54,6 +54,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<{
     nombre: string;
     email: string;
+    rol: string;
   } | null>(null);
   const [heartbeatCleanup, setHeartbeatCleanup] = useState<(() => void) | null>(
     null,
@@ -139,7 +140,8 @@ function App() {
           setAdminLoggedIn(true);
           setCurrentUser({
             nombre: tabletSession.nombre,
-            email: `tablet${tabletSession.tablet_id}@system.local`,
+            email: `tablet-${tabletSession.tablet_id}@virtus.com`,
+            rol: tabletSession.rol,
           });
 
           // Determinar vista según rol
@@ -197,6 +199,7 @@ function App() {
             setCurrentUser({
               nombre: (userData as any).nombre,
               email: session.user.email || "",
+              rol: (userData as any).rol,
             });
             localStorage.setItem("adminLoggedIn", "true");
             localStorage.setItem("userRole", userData.rol);
