@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase, type Sample, type PuntuacionCatador } from "../lib/supabase";
+import { getTabletSession } from "../lib/tabletAuth";
 import {
   Wine,
   Star,
@@ -54,10 +55,29 @@ export default function CatadorDashboard({ onLogout }: CatadorDashboardProps) {
 
   const loadCatadorInfo = async () => {
     try {
+      // 1. Intentar obtener sesión de tablet (localStorage)
+      const tabletSession = getTabletSession();
+
+      if (tabletSession) {
+        console.log("📱 Usando sesión de tablet para CatadorDashboard");
+        setCatador({
+          id: tabletSession.usuario_id,
+          nombre: tabletSession.nombre,
+          mesa: tabletSession.mesa,
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 2. Fallback a Supabase Auth
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("No authenticated user");
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("usuarios")
